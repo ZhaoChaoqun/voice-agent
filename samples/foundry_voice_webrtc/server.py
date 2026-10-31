@@ -6,6 +6,7 @@ import binascii
 import copy
 import hashlib
 import hmac
+import ipaddress
 import json
 import logging
 import os
@@ -436,18 +437,24 @@ def load_settings():
                     os.getenv("GPT_LIVE_BACKEND_DEPLOYMENT", "gpt-5.4").strip())
 
 
-def origin_allowed(host_value, scheme, origin, public_origin=""):
+def origin_allowed(host_value, scheme, origin, public_origin="", *, remote=None):
     host = urlsplit(f"http://{host_value}").hostname
     if host not in {"localhost", "127.0.0.1", "::1"}:
         return bool(public_origin and origin == public_origin
                     and host_value == urlsplit(public_origin).netloc)
-    return origin == f"{scheme}://{host_value}"
+    try:
+        peer = ipaddress.ip_address(remote or "")
+    except ValueError:
+        return False
+    if isinstance(peer, ipaddress.IPv6Address) and peer.ipv4_mapped is not None:
+        peer = peer.ipv4_mapped
+    return peer.is_loopback and origin == f"{scheme}://{host_value}"
 
 
 def allowed_origin(request):
     cfg = request.app[SETTINGS]
     return origin_allowed(request.host, request.scheme, request.headers.get("Origin"),
-                          cfg.public_origin)
+                          cfg.public_origin, remote=request.remote)
 
 
 def selected_settings(request):
@@ -1291,4 +1298,5 @@ def create_app(settings=None, token_provider=None):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     app = create_app()
-    web.run_app(app, host="0.0.0.0", port=int(os.getenv("PORT", "8080")))
+    web.run_app(app, host=os.getenv("BIND_HOST", "").strip() or "127.0.0.1",
+                port=int(os.getenv("PORT", "8080")))

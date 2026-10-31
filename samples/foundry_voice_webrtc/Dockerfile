@@ -6,6 +6,7 @@ ARG PIP_INDEX_URL=https://packagefeedproxy.microsoft.io/pypi/simple
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    BIND_HOST=0.0.0.0 \
     PORT=8080
 
 WORKDIR /app

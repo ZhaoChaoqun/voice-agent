@@ -161,6 +161,13 @@ saved Agent without creating or enabling anything:
 Choose either transport and allow the microphone when prompted. Set `PORT` to
 another free port if needed. Use **End** to stop the microphone and connections.
 
+The local server binds to `127.0.0.1` by default. Its loopback-origin guard also
+checks the connection's actual peer address, so a network client cannot impersonate
+a local caller by forging `Host`, `Origin`, or forwarding headers. Do not expose
+the developer's Azure CLI identity through an unauthenticated network listener.
+Non-loopback binding requires an explicit `BIND_HOST` setting and authenticated
+ingress; origin checks are not user authentication.
+
 The main conversation button checks the configured name and creates it from
 `personalized-agent.json` only when the Agent is absent and the project's Agents
 API is reachable. It then enables the Agent before requesting microphone access.
@@ -658,6 +665,9 @@ availability of every model/voice combination in your Azure project.
 The included container uses Azure CLI authentication locally and automatically
 switches to the Container App's system-assigned managed identity in Azure. The
 local `.env` is excluded from the image and deployment build context.
+The Docker image explicitly sets `BIND_HOST=0.0.0.0` for Container Apps ingress;
+keep platform authentication enabled. `PUBLIC_ORIGIN` configures origin checks,
+not caller authentication.
 
 From this directory, sign in and run:
 
