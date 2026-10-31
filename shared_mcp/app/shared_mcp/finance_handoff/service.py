@@ -151,7 +151,11 @@ def _standalone_farewell(value: str) -> bool:
 
 
 def _explicit_end_request(value: str) -> bool:
-    return any(
+    return bool(re.fullmatch(
+        r"(?:कृपया )?(?:यह |इस )?कॉल (?:बंद|समाप्त|खत्म|ख़त्म) "
+        r"(?:कर दीजिए|कर दीजिये|कर दो|करें|कीजिए|कीजिये)",
+        value,
+    )) or any(
         marker in value
         for marker in (
             "end the call",
@@ -324,10 +328,32 @@ _ONES_CARDINAL = {
     "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
     "eight": 8, "nine": 9, "ten": 10,
 }
+_HINDI_MONTHS = {
+    "जनवरी": 1, "फरवरी": 2, "फ़रवरी": 2, "मार्च": 3, "अप्रैल": 4,
+    "मई": 5, "जून": 6, "जुलाई": 7, "अगस्त": 8, "सितंबर": 9,
+    "सितम्बर": 9, "अक्टूबर": 10, "नवंबर": 11, "नवम्बर": 11,
+    "दिसंबर": 12, "दिसम्बर": 12,
+}
+_HINDI_DAYS = {
+    word: day
+    for day, word in enumerate((
+        "एक", "दो", "तीन", "चार", "पाँच", "छह", "सात", "आठ", "नौ", "दस",
+        "ग्यारह", "बारह", "तेरह", "चौदह", "पंद्रह", "सोलह", "सत्रह",
+        "अठारह", "उन्नीस", "बीस", "इक्कीस", "बाईस", "तेईस", "चौबीस",
+        "पच्चीस", "छब्बीस", "सत्ताईस", "अट्ठाईस", "उनतीस", "तीस", "इकतीस",
+    ), start=1)
+}
+_HINDI_DAYS.update({
+    "पहली": 1, "पहला": 1, "पांच": 5, "छः": 6, "पन्द्रह": 15,
+    "अठ्ठाईस": 28,
+})
 
 
 def _spoken_day(text: str) -> int | None:
     """A day of the month written out in words, including 'twenty first'."""
+    for word in text.split():
+        if word in _HINDI_DAYS:
+            return _HINDI_DAYS[word]
     words = re.findall(r"[a-z]+", text)
     for i, word in enumerate(words):
         if word in _ONES:
@@ -349,15 +375,19 @@ def _month_day(spoken: str) -> tuple[int, int] | None:
     The year is ignored on purpose: the caller is asked for a birthday over the
     phone, and people give it as "first of January" far more often than in full.
     """
-    text = (spoken or "").strip().lower()
+    text = unicodedata.normalize("NFC", (spoken or "").strip().lower())
     if not text:
         return None
     iso = re.search(r"\b(\d{4})[-/](\d{1,2})[-/](\d{1,2})\b", text)
     if iso:
         return int(iso.group(2)), int(iso.group(3))
+    text = _normalise_spoken_words(text)
     name = re.search(r"\b([a-z]{3,9})\b", text)
     number = re.findall(r"\b(\d{1,2})(?:st|nd|rd|th)?\b", text)
-    month = None
+    month = next(
+        (_HINDI_MONTHS[word] for word in text.split() if word in _HINDI_MONTHS),
+        None,
+    )
     for token in re.findall(r"[a-z]{3,9}", text):
         if token[:3] in _MONTHS:
             month = _MONTHS[token[:3]]

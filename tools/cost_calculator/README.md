@@ -84,12 +84,11 @@ The GPT Live meter is hourly and is divided by 60 for USD-per-minute pricing.
   meter; `gpt-realtime` uses the original output meter.
 - **Azure Realtime** uses the documented Voice Live **Pro** tier.
   **Azure Realtime Fast** uses a **user-specified Lite-tier reference**,
-  not a verified published Fast tariff. Azure Realtime uses managed native
-  speech-to-speech with no separate STT or Azure HD charge. Azure Realtime Fast
-  uses **Realtime text response + Azure HD**: Lite-tier native audio input,
-  text input/output, and standard-speech output meters, without native audio
-  output charges. Both use the existing Central India tier meters and appear
-  in their respective managed pipeline selection, comparison, and CSV export.
+  not a verified published Fast tariff. Both use **native speech-to-speech
+  billing**: tier-specific text and native audio input/output meters, including
+  replayed audio history, with no separate STT or Azure HD charge. Both use the
+  existing Central India tier meters and appear in managed native
+  speech-to-speech selection, comparison, and CSV export.
   Neither adds a GPT Live session charge; no BYOM or alternate-pipeline prices are
   inferred from GPT models. Fast's assumption is labeled in the UI and CSV.
   The editable audio tokens/second remain planning assumptions, not verified
@@ -167,11 +166,11 @@ Audio defaults follow
 **450 input** and **900 output** audio tokens before the silence adjustment. Both rates
 remain editable for other model families or measured usage.
 
-**Both-parties-silent ratio defaults to 20%** and is editable from 0 to 100%.
-The suggested 10-30% range is a planning assumption, not a universal average.
+**Both-parties-silent ratio defaults to 5%** and is editable from 0 to 100%.
+This default is a planning assumption, not a universal average.
 Multiply each side's entered speech seconds by `1 - silencePercent / 100`
-before calculating audio tokens. The default therefore models **36 seconds
-per side**, **360 input tokens**, and **720 output tokens**, with 18 seconds
+before calculating audio tokens. The default therefore models **42.75 seconds
+per side**, **427.5 input tokens**, and **855 output tokens**, with 4.5 seconds
 of both-parties silence in the 90-second call.
 This scales fresh and replayed native audio, STT, and TTS usage only, not
 unit prices. Text, prompt, reasoning, turn count, GPT Live session minutes,

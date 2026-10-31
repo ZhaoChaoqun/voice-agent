@@ -9,10 +9,12 @@
   "scripts": {
     "build": "esbuild src/main.jsx --bundle --minify --format=iife --jsx=automatic --loader:.jsx=jsx --legal-comments=eof --banner:js=\"/*! Third-party notices: THIRD_PARTY_NOTICES.txt */\" --outfile=../static/bundle.js",
     "build:webrtc": "esbuild src/webrtc/main.jsx --bundle --minify --format=iife --jsx=automatic --loader:.jsx=jsx --legal-comments=eof --banner:js=\"/*! Third-party notices: THIRD_PARTY_NOTICES.txt */\" --outfile=../static/webrtc-bundle.js",
-    "build:all": "npm run build && npm run build:webrtc",
+    "build:yaml": "esbuild js-yaml/browser --bundle --minify --format=esm --legal-comments=eof --banner:js=\"/*! Third-party notices: /static/demo/THIRD_PARTY_NOTICES.txt */\" --outfile=../static/handoff/js-yaml.mjs",
+    "build:all": "npm run build:yaml && npm run build && npm run build:webrtc",
     "test": "node --test src/lib/*.test.mjs",
     "test:ui": "npm run build:all && playwright test",
     "test:local": "npm run build:all && playwright test --config=playwright.local.config.mjs",
+    "test:defaults": "playwright test --config=playwright.local.config.mjs default-flows.spec.mjs --output=test-results/default-flows",
     "watch": "esbuild src/main.jsx --bundle --sourcemap --format=iife --jsx=automatic --loader:.jsx=jsx --legal-comments=eof --banner:js=\"/*! Third-party notices: THIRD_PARTY_NOTICES.txt */\" --outfile=../static/bundle.js --watch",
     "watch:webrtc": "esbuild src/webrtc/main.jsx --bundle --sourcemap --format=iife --jsx=automatic --loader:.jsx=jsx --legal-comments=eof --banner:js=\"/*! Third-party notices: THIRD_PARTY_NOTICES.txt */\" --outfile=../static/webrtc-bundle.js --watch"
   },

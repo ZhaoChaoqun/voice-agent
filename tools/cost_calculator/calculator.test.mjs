@@ -30,7 +30,7 @@ test("every supported model/hosting/pipeline combination resolves without a miss
   }
 });
 
-test("Azure Realtime uses Pro native audio and Fast uses Lite realtime text plus HD", () => {
+test("Azure Realtime uses Pro and Fast uses Lite native speech-to-speech billing", () => {
   for (const [id, tier, expected] of [
     ["azure-realtime", "Pro", [4, 0.4, 16, 32, 0.4, 64]],
     ["azure-realtime-fast", "Lite", [0.11, 0.04, 0.44, 4, 0.04, 12]],
@@ -39,6 +39,7 @@ test("Azure Realtime uses Pro native audio and Fast uses Lite realtime text plus
     assert.equal(m.tier, tier);
     assert.equal(Boolean(m.tierAssumption), id === "azure-realtime-fast");
     const pipeline = m.managedPipeline;
+    assert.equal(pipeline, "native");
     const { rates, sources, usesGlobalReference } = getRates(snapshot, m, "managed", pipeline);
     assert.equal(usesGlobalReference, false);
     const keys = ["textInput", "textCached", "textOutput", "audioInput", "audioCached", "audioOutput"];
@@ -49,27 +50,14 @@ test("Azure Realtime uses Pro native audio and Fast uses Lite realtime text plus
     });
     const result = calculate({ ...DEFAULTS, nativeText: 150 }, pipeline, rates);
     const [textInput, textCached, textOutput, audioInput, audioCached, audioOutput] = expected;
-    if (pipeline === "hybrid") {
-      close(rates.speechOutput, 25);
-      assert.equal(sources.speechOutput.meterName, "Voice Live API Lite - Standard Speech Audio Output Tokens");
-      assert.equal(sources.speechOutput.armRegionName, "centralindia");
-      close(result.list, (5000 * textInput + 15225 * textCached + 150 * textOutput +
-        360 * audioInput + 540 * audioCached + 720 * 25) / 1e6);
-      assert.ok(result.rows.some(r => r.key === "speechOutput"));
-      assert.ok(result.rows.every(r => !["audioOutput", "speechInput", "liveMinute"].includes(r.key)));
-      const noCache = calculate({ ...DEFAULTS, cachePercent: 0 }, pipeline, rates);
-      close(noCache.list, (20225 * textInput + 900 * audioInput + 150 * textOutput + 720 * 25) / 1e6);
-      const reasoning = calculate({ ...DEFAULTS, reasoning: 100 }, pipeline, rates);
-      close(reasoning.list - result.list, 100 * textOutput / 1e6);
-      const silent = calculate({ ...DEFAULTS, silencePercent: 100 }, pipeline, rates);
-      close(silent.list, (5000 * textInput + 15225 * textCached + 150 * textOutput) / 1e6);
-    } else {
-      close(result.list, (5000 * textInput + 15225 * textCached + 150 * textOutput +
-        360 * audioInput + 1620 * audioCached + 720 * audioOutput) / 1e6);
-      assert.ok(result.rows.every(r => !["speechInput", "speechOutput", "liveMinute"].includes(r.key)));
-      const noCache = calculate({ ...DEFAULTS, cachePercent: 0 }, pipeline, rates);
-      close(noCache.list, (20000 * textInput + 1980 * audioInput + 720 * audioOutput) / 1e6);
-    }
+    close(result.list, (5000 * textInput + 15225 * textCached + 150 * textOutput +
+      427.5 * audioInput + 1923.75 * audioCached + 855 * audioOutput) / 1e6);
+    assert.ok(result.rows.some(r => r.key === "audioOutput"));
+    assert.ok(result.rows.every(r => !["speechInput", "speechOutput", "liveMinute"].includes(r.key)));
+    const noCache = calculate({ ...DEFAULTS, cachePercent: 0 }, pipeline, rates);
+    close(noCache.list, (20000 * textInput + 2351.25 * audioInput + 855 * audioOutput) / 1e6);
+    const silent = calculate({ ...DEFAULTS, nativeText: 150, silencePercent: 100 }, pipeline, rates);
+    close(silent.list, (5000 * textInput + 15225 * textCached + 150 * textOutput) / 1e6);
     close(result.listPerMinute, result.list / 1.5);
     assert.deepEqual(result.missing, []);
   }
@@ -78,7 +66,7 @@ test("Azure Realtime uses Pro native audio and Fast uses Lite realtime text plus
 test("Azure models use their correct managed pipeline, never substituted with GPT BYOM rates", () => {
   for (const id of ["azure-realtime", "azure-realtime-fast"]) {
     for (const hosting of ["managed", "byom"]) for (const pipeline of ["native", "hybrid", "cascade", "live"]) {
-      const supported = hosting === "managed" && pipeline === (id === "azure-realtime-fast" ? "hybrid" : "native");
+      const supported = hosting === "managed" && pipeline === "native";
       assert.equal(supportsScenario(model(id), hosting, pipeline), supported);
       if (!supported) assert.throws(() => getRates(snapshot, model(id), hosting, pipeline), /no BYOM or alternative-pipeline rates/);
     }
@@ -115,7 +103,7 @@ test("South India GPT-4.1 and realtime prices do not reuse managed tier rates", 
   close(book("gpt-realtime-2.1-mini", "byom").textCached, 0.06);
   close(book("gpt-realtime", "byom").audioOutput, 64);
   const result = calculate({ ...DEFAULTS, prompt: 0 }, "cascade", rates);
-  close(result.list, (150 * 2 + 450 * 0.5 + 150 * 8 + 360 * 12.5 + 720 * 23) / 1e6);
+  close(result.list, (150 * 2 + 450 * 0.5 + 150 * 8 + 427.5 * 12.5 + 855 * 23) / 1e6);
 });
 
 test("unverified managed tiers use explicit Global model references, not invented tier rates", () => {
@@ -147,7 +135,7 @@ test("GPT-5.6 Luna BYOM uses exact Standard Global inference meters and BYO spee
   }
   const textCost = (5000 * 0.2 + 15000 * 0.02 + 150 * 0.2 + 450 * 0.02 + 150 * 1.2) / 1e6;
   const cascade = calculate(DEFAULTS, "cascade", rates);
-  close(cascade.list, textCost + (360 * 12.5 + 720 * 23) / 1e6);
+  close(cascade.list, textCost + (427.5 * 12.5 + 855 * 23) / 1e6);
   close(cascade.listPerMinute, cascade.list / 1.5);
   const live = calculate(DEFAULTS, "live", book("gpt-5.6-luna", "byom", "live"));
   close(live.list, textCost + 1.5 * 0.05);
@@ -167,10 +155,10 @@ test("default native call counts fresh audio and cached history without speech d
   const result = calculate({ ...DEFAULTS, prompt: 0 }, "native", book("gpt-realtime-2.1"));
   assert.equal(DEFAULTS.inputAudioRate, 10);
   assert.equal(DEFAULTS.outputAudioRate, 20);
-  assert.equal(DEFAULTS.silencePercent, 20);
-  assert.equal(result.inputAudio, 360);
-  assert.equal(result.outputAudio, 720);
-  close(result.list, (360 * 32 + 720 * 64 + 1620 * 0.4) / 1e6);
+  assert.equal(DEFAULTS.silencePercent, 5);
+  assert.equal(result.inputAudio, 427.5);
+  assert.equal(result.outputAudio, 855);
+  close(result.list, (427.5 * 32 + 855 * 64 + 1923.75 * 0.4) / 1e6);
   assert.ok(result.rows.every(r => !r.label.includes("Azure")));
 });
 
@@ -178,12 +166,12 @@ test("input audio rate overrides do not change output audio usage", () => {
   const rates = book("gpt-realtime-2.1");
   const original = calculate({ ...DEFAULTS, prompt: 0, inputAudioRate: 20 }, "native", rates);
   const updated = calculate({ ...DEFAULTS, prompt: 0 }, "native", rates);
-  assert.equal(original.inputAudio, 720);
-  assert.equal(updated.inputAudio, 360);
-  assert.equal(original.outputAudio, 720);
-  assert.equal(updated.outputAudio, 720);
-  close(original.list, (720 * 32 + 720 * 64 + 2160 * 0.4) / 1e6);
-  close(original.list - updated.list, (360 * 32 + 540 * 0.4) / 1e6);
+  assert.equal(original.inputAudio, 855);
+  assert.equal(updated.inputAudio, 427.5);
+  assert.equal(original.outputAudio, 855);
+  assert.equal(updated.outputAudio, 855);
+  close(original.list, (855 * 32 + 855 * 64 + 2565 * 0.4) / 1e6);
+  close(original.list - updated.list, (427.5 * 32 + 641.25 * 0.4) / 1e6);
 });
 
 test("system prompt is full price once, reused across the remaining turns", () => {
@@ -192,7 +180,7 @@ test("system prompt is full price once, reused across the remaining turns", () =
   const full = calculate(DEFAULTS, "native", rates);
   close(full.list - base.list, 5000 * (4 + 3 * 0.4) / 1e6);
   const noCache = calculate({ ...DEFAULTS, cachePercent: 0 }, "native", rates);
-  close(noCache.list, (20000 * 4 + 1980 * 32 + 720 * 64) / 1e6);
+  close(noCache.list, (20000 * 4 + 2351.25 * 32 + 855 * 64) / 1e6);
   const halfCache = calculate({ ...DEFAULTS, cachePercent: 50 }, "native", rates);
   close(halfCache.list, (noCache.list + full.list) / 2);
 });
@@ -200,13 +188,13 @@ test("system prompt is full price once, reused across the remaining turns", () =
 test("single turn does not charge replayed context", () => {
   const result = calculate({ ...DEFAULTS, turns: 1 }, "hybrid", book("gpt-realtime-2.1"));
   assert.ok(result.rows.every(r => !r.label.includes("/ cached")));
-  close(result.list, (5000 * 4 + 360 * 32 + 150 * 24 + 720 * 31) / 1e6);
+  close(result.list, (5000 * 4 + 427.5 * 32 + 150 * 24 + 855 * 31) / 1e6);
 });
 
 test("hybrid uses 150 text output tokens and HD list price, no native output audio charge", () => {
   const result = calculate({ ...DEFAULTS, prompt: 0 }, "hybrid", book("gpt-realtime-2.1"));
-  const llm = (360 * 32 + 540 * 0.4 + 225 * 0.4 + 150 * 24) / 1e6;
-  close(result.list, llm + 720 * 31 / 1e6);
+  const llm = (427.5 * 32 + 641.25 * 0.4 + 225 * 0.4 + 150 * 24) / 1e6;
+  close(result.list, llm + 855 * 31 / 1e6);
   assert.ok(result.rows.every(r => r.key !== "audioOutput"));
 });
 
@@ -217,7 +205,7 @@ test("BYOM uses BYO speech meters, not managed tier prices", () => {
   close(rates.textOutput, 15);
   const result = calculate({ ...DEFAULTS, prompt: 0 }, "cascade", rates);
   const llm = (150 * 2.5 + 450 * 0.25 + 150 * 15) / 1e6;
-  close(result.list, llm + (360 * 12.5 + 720 * 23) / 1e6);
+  close(result.list, llm + (427.5 * 12.5 + 855 * 23) / 1e6);
   close(result.listPerMinute, result.list / 1.5);
 });
 
@@ -303,7 +291,7 @@ test("zero-priced input is explicit and unused missing rates do not block a tota
   const rates = { ...book("gpt-realtime"), textInput: null, textCached: null, audioOutput: 0 };
   const result = calculate({ ...DEFAULTS, prompt: 0 }, "native", rates);
   assert.deepEqual(result.missing, []);
-  close(result.list, (360 * 32 + 1620 * 0.4) / 1e6);
+  close(result.list, (427.5 * 32 + 1923.75 * 0.4) / 1e6);
 });
 
 test("silence scales only audio rows, with zero preserving baseline and full silence removing audio", () => {
@@ -316,7 +304,7 @@ test("silence scales only audio rows, with zero preserving baseline and full sil
       const baseline = calculate({ ...a, silencePercent: 0 }, pipeline, rates);
       assert.equal(baseline.inputAudio, 450);
       assert.equal(baseline.outputAudio, 900);
-      for (const silencePercent of [10, 20, 30, 100]) {
+      for (const silencePercent of [5, 10, 20, 30, 100]) {
         const result = calculate({ ...a, silencePercent }, pipeline, rates);
         const fraction = 1 - silencePercent / 100;
         close(result.inputAudio, 450 * fraction);

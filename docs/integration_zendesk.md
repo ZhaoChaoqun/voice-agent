@@ -1,5 +1,11 @@
 # Integrating a real Zendesk backend
 
+**Optional backend development, not a Portal prerequisite.** The default
+Elevator Template calls the public no-auth MCP using fictional ticket data.
+No local MCP, Dev Tunnel, or Zendesk deployment is needed to try it in the
+[Portal](../portal/README.md). Only follow this guide to replace that demo
+backend with your own integration.
+
 ## Conclusion
 
 Example 3 intentionally uses a replica-local filesystem-backed mock Zendesk

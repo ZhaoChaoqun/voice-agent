@@ -1,6 +1,6 @@
 {
   "name": "finance-example-realtime",
-  "description": "Finance with Handoff using the managed GPT Realtime speech-to-speech pipeline.",
+  "description": "Finance with Handoff using the managed GPT Realtime speech-to-speech pipeline and Azure Speech input transcription.",
   "definition": {
     "kind": "voice",
     "model_type": "managed",
@@ -32,7 +32,7 @@
           "type": "azure_deep_noise_suppression"
         },
         "transcription": {
-          "model": "whisper-1"
+          "model": "azure-speech"
         }
       },
       "output": {

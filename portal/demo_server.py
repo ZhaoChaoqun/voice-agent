@@ -13,14 +13,17 @@ import json
 import logging
 import os
 import re
+import time
 import urllib.parse
 import uuid
+from dataclasses import dataclass, field
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 import requests
 import websockets
 from aiohttp import WSMsgType, web
+from azure.core.exceptions import AzureError
 from dotenv import load_dotenv
 
 from voice_policy import VOICE_POLICY_KEY, VOICE_PRESETS, VoicePolicy, VoicePolicyError
@@ -50,8 +53,10 @@ except ImportError:
 
 try:
     from .handoff_portal import install_handoff_routes
+    from .voice_catalog import load_default_voice_catalog, load_voice_catalog
 except ImportError:
     from handoff_portal import install_handoff_routes
+    from voice_catalog import load_default_voice_catalog, load_voice_catalog
 
 try:
     from .common import (
@@ -68,6 +73,7 @@ try:
         AgentsConfig,
         build_voice_config,
         list_byom_deployments,
+        regional_model_publish_fallback,
         validate_project_endpoint,
     )
     from .foundry_trace import build_foundry_trace_url
@@ -86,6 +92,7 @@ except ImportError:
         AgentsConfig,
         build_voice_config,
         list_byom_deployments,
+        regional_model_publish_fallback,
         validate_project_endpoint,
     )
     from foundry_trace import build_foundry_trace_url
@@ -100,6 +107,7 @@ MAX_STRUCTURED_INPUT_BYTES = 32 * 1024
 REDACTED_QUERY_VALUE = "<redacted>"
 VOICE_WS_BASE_ENV = "VOICE_DEMO_VOICE_WS_BASE"
 PORTAL_REQUEST_ID_HEADER = "X-Portal-Request-Id"
+VOICE_DISCOVERY_TIMEOUT = 5
 # Upper bound for forwarding already-received service events after the service closes.
 UPSTREAM_CLOSE_DRAIN_SECONDS = 10
 _SENSITIVE_QUERY_KEYS = frozenset({
@@ -124,6 +132,7 @@ class ProjectWebSocketConnect(websockets.connect):
 
 DEFAULT_CONFIG_KEY = web.AppKey("voice_demo_default_config", AgentsConfig)
 PROJECT_CONFIGS_KEY = web.AppKey("voice_portal_project_configs", dict)
+VOICE_CATALOG_KEY = web.AppKey("voice_portal_voice_catalog", dict)
 # None disables recording; the demo still runs, it just leaves nothing behind.
 SESSION_LOG_ROOT = web.AppKey("voice_demo_session_log_root", object)
 LIVE_SOCKETS_KEY = web.AppKey("voice_portal_live_sockets", set)
@@ -131,6 +140,13 @@ VOICE_WS_BASE_KEY = web.AppKey("voice_portal_voice_ws_base", str)
 REQUEST_ID_KEY = web.RequestKey("voice_portal_request_id", str)
 PROJECT_COOKIE = "voice_agent_portal_project"
 LOGGER = logging.getLogger("voice_agent_portal")
+
+
+@dataclass
+class VoiceCatalogCacheEntry:
+    catalog: dict | None = None
+    expires_at: float = 0
+    lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
 def _request_id(request: web.Request) -> str:
@@ -202,6 +218,9 @@ _ASSET_FILENAMES = (
 _HANDOFF_ASSET_FILENAMES = (
     "handoff/handoff.html", "handoff/handoff-app.js",
     "handoff/handoff-core.mjs", "handoff/handoff.css",
+    "handoff/transcription-languages.mjs",
+    "handoff/anchored-popover.mjs",
+    "handoff/voice-picker.mjs", "handoff/voice-catalog.mjs",
 )
 
 
@@ -215,8 +234,13 @@ def _asset_version() -> str:
 
 
 async def portal_home(request: web.Request) -> web.Response:
-    path = "/demo/" if request.query.get("agent") else "/editor/"
+    path = "/runtime/" if request.query.get("agent") else "/editor/"
     raise web.HTTPFound(location=str(request.rel_url.with_path(path, keep_query=True)))
+
+
+async def runtime_redirect(request: web.Request) -> web.Response:
+    location = str(request.rel_url.with_path("/runtime/", keep_query=True))
+    raise web.HTTPPermanentRedirect(location=location)
 
 
 async def index(request: web.Request) -> web.Response:
@@ -328,6 +352,20 @@ async def service_proxy(request: web.Request) -> web.StreamResponse:
     try:
         headers.update(await asyncio.to_thread(cfg.auth_headers))
         resp = await asyncio.to_thread(_forward_to_service, request.method, url, params, headers, body)
+        if request.method == "POST" and request.path.endswith("/versions") and resp.status_code == 400:
+            try:
+                payload = json.loads(body)
+            except (ValueError, UnicodeError):
+                payload = None
+            if isinstance(payload, dict) and isinstance(payload.get("definition"), dict):
+                retry_definition = regional_model_publish_fallback(
+                    payload["definition"], resp.status_code, resp.text,
+                )
+                if retry_definition is not None:
+                    retry_body = json.dumps({**payload, "definition": retry_definition}).encode("utf-8")
+                    resp = await asyncio.to_thread(
+                        _forward_to_service, request.method, url, params, headers, retry_body,
+                    )
     except Exception as exc:
         # Authentication exceptions can contain credential details; do not echo them.
         LOGGER.error(
@@ -438,10 +476,34 @@ def _mcp_auth_presets(cfg: AgentsConfig) -> list:
     return presets
 
 
+async def voices(request: web.Request) -> web.Response:
+    cfg = await _request_config(request)
+    catalogs = request.app[VOICE_CATALOG_KEY]
+    entry = catalogs.setdefault(cfg.host, VoiceCatalogCacheEntry())
+    async with entry.lock:
+        if entry.catalog is None or time.monotonic() >= entry.expires_at or request.query.get("refresh") == "1":
+            try:
+                catalog = await asyncio.wait_for(
+                    asyncio.to_thread(load_voice_catalog, cfg), timeout=VOICE_DISCOVERY_TIMEOUT,
+                )
+            except (requests.RequestException, AzureError, ValueError, OSError, TimeoutError) as error:
+                LOGGER.warning("[voices] Using bundled reference catalog: %s", _safe_exception_text(error))
+                catalog = load_default_voice_catalog()
+                response = getattr(error, "response", None)
+                status = getattr(response, "status_code", None)
+                reason = f"HTTP {status}" if status is not None else type(error).__name__
+                catalog["discoveryError"] = {"code": "voice_discovery_unavailable", "reason": reason}
+                catalog["notice"] = f"Live voice discovery unavailable ({reason}). {catalog['notice']}"
+            entry.catalog = catalog
+            entry.expires_at = time.monotonic() + (300 if catalog.get("source") == "live" else 60)
+    return web.json_response(entry.catalog)
+
+
 async def config(request: web.Request) -> web.Response:
     """Selectable models/voices + defaults for the UI."""
     cfg = await _request_config(request)
     deployed = list_byom_deployments(cfg)
+    voice_defaults = load_default_voice_catalog()
     return web.json_response({
         "models": list(dict.fromkeys([cfg.voice_model, *MODELS])),
         "realtimeModels": REALTIME_MODELS,
@@ -453,6 +515,9 @@ async def config(request: web.Request) -> web.Response:
         "openaiVoices": OPENAI_VOICES,
         "azureVoices": AZURE_VOICES,
         "voiceLanguages": list(VOICE_PRESETS),
+        "voiceCatalog": voice_defaults["voices"],
+        "voiceCatalogNotice": voice_defaults["notice"],
+        "voiceCatalogSource": voice_defaults["source"],
         "transcriptionModels": TRANSCRIPTION_MODELS,
         "realtimeTranscriptionModels": TRANSCRIPTION_MODELS,
         "cascadedTranscriptionModels": CASCADED_TRANSCRIPTION_MODELS,
@@ -980,15 +1045,21 @@ def build_app(args: argparse.Namespace) -> web.Application:
         root.mkdir(parents=True, exist_ok=True)
     app[SESSION_LOG_ROOT] = root
     app.router.add_get("/", portal_home)
-    for path in ("/demo", "/demo/"):
-        app.router.add_get(path, index)
-    for path in ("/webrtc", "/webrtc/", "/demo/webrtc", "/demo/webrtc/"):
+    app.router.add_get("/runtime/", index)
+    for path in ("/runtime", "/demo", "/demo/"):
+        app.router.add_get(path, runtime_redirect)
+    for path in (
+        "/webrtc", "/webrtc/", "/runtime/webrtc", "/runtime/webrtc/",
+        "/demo/webrtc", "/demo/webrtc/",
+    ):
         app.router.add_get(path, webrtc_index)
     app.router.add_get("/healthz", health)
     app.router.add_get("/api/projects", list_foundry_projects)
     app.router.add_post("/api/project", select_foundry_project)
     app.router.add_get("/config", config)
     app.router.add_post("/api/voices/resolve", resolve_voice)
+    app[VOICE_CATALOG_KEY] = {}
+    app.router.add_get("/api/voices", voices)
     app.router.add_get("/deployments", deployments)
     app.router.add_get("/foundry-trace", foundry_trace)
     app.router.add_post("/api/mcp/probe", mcp_probe)

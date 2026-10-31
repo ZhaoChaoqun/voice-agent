@@ -13,7 +13,9 @@ Voice Agent endpoint.
 Use the [architecture and documentation index](./README.md) for the component
 map, the [portal guide](../portal/README.md) for startup, and
 [02: MCP settings](./02_mcp_settings.md) when local evidence assigns the
-failure to MCP hosting or a business tool.
+failure to a customer-owned MCP host or business tool. Default Templates use
+the public no-auth MCP; local MCP, Dev Tunnel, and local E2E are optional and
+must not be started merely to diagnose a normal Portal publication.
 
 ## Canonical debugging Skill
 
@@ -35,13 +37,18 @@ the `VoiceAgent` level.
 If **Try it now** is disabled or Agent publication fails before a Voice
 WebSocket opens, there is no session to analyze yet:
 
-1. Open **Templates** and run **Test MCP**. It must complete an authenticated
-   handshake and verify every required tool.
-2. Check `curl -sS http://127.0.0.1:18003/healthz`.
-3. Confirm `VoiceAgent/shared_mcp/scripts/e2e-local.sh` is still running and
-   the two `VoiceAgent/shared_mcp/config/generated/*.local.env` files exist.
-4. Confirm the UI selected the intended Foundry Project and identity.
-5. Use the UI server log for connection creation or Agent publication errors.
+1. Check the Portal's own `http://127.0.0.1:9527/healthz` and server log.
+2. Confirm the UI selected the intended Foundry Project and identity.
+3. Inspect the actual version-creation response. Local graph diagnostics and
+   voice/region discovery are not publication gates. If creation succeeded but
+   readback failed, report those outcomes separately.
+4. If evidence points to tools, optionally probe the published MCP URL.
+   Default Templates use a public no-auth handshake; no local server, bearer
+   token, or Project connection is required.
+5. Only if the Agent deliberately uses a customer-owned local MCP, check
+   `http://127.0.0.1:18003/healthz`, the owning E2E process, and its generated
+   `shared_mcp/config/generated/*.local.env` files. For an already deployed MCP,
+   inspect that host instead; no Dev Tunnel is required.
 
 Continue with the recorded-session workflow below only after the Voice
 WebSocket attempt creates a session directory.

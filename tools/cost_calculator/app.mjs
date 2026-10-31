@@ -112,9 +112,7 @@ function rateEditor(model, pipeline, book) {
   if (pipeline === "live") $("price-note").textContent += " GPT Live uses Azure OpenAI's South India Global voice rate: $3/hour = $0.05/minute in this snapshot. Backend model usage is charged separately. GPT Live generates its own audio, so no Azure HD charge is added.";
   if (model.oss && (hosting === "byom" || book.usesGlobalReference)) $("price-note").textContent += " No OSS cached-input meter was found; reused text is conservatively charged at full input price.";
   if (model.managedPipeline) {
-    $("price-note").textContent += model.managedPipeline === "hybrid" ?
-      " Azure Realtime Fast uses native audio input, text response, and Azure HD speech output. No native audio output, separate Azure STT, or GPT Live session charge is added." :
-      " Azure Realtime uses native audio only in this calculator; no separate Azure STT, HD voice, or GPT Live session charge is added.";
+    $("price-note").textContent += ` ${model.name} uses native audio input/output billing; no separate Azure STT, HD voice, or GPT Live session charge is added.`;
     $("price-note").textContent += " Audio token rates remain editable assumptions, not verified Azure Realtime tokenization.";
   }
   if (model.tierAssumption) $("price-note").textContent += " Azure Realtime Fast uses the user-specified Voice Live Lite tier reference, not a verified published Fast tariff.";
@@ -140,10 +138,7 @@ function renderOverview(a, model, pipeline, result, book) {
     "Managed tariff unavailable: showing an AOAI Global model-price + Central India BYO speech reference instead. This does not establish managed model support." :
     `Economic scenario only. ${$("hosting").value === "managed" ? `Central India managed-tier reference: ${model.tier || "unverified"}.` : "Model rates: South India Global. STT: Central India BYO reference."} Azure HD: Central India. Confirm model and transport availability.`;
   if (model.managedPipeline) {
-    const audioNote = model.managedPipeline === "hybrid" ?
-      "Native audio input + text response + Central India Azure HD output; no native audio output charge." :
-      "Native audio only; no separate STT/HD charge.";
-    $("model-note").textContent = `${model.tierAssumption ? "User-specified Lite-tier reference, not a verified published Azure Realtime Fast tariff." : "Central India Voice Live Pro tier reference."} ${audioNote} Confirm regional availability and actual audio token rates.`;
+    $("model-note").textContent = `${model.tierAssumption ? "User-specified Lite-tier reference, not a verified published Azure Realtime Fast tariff." : "Central India Voice Live Pro tier reference."} Native audio input/output billing; no separate STT/HD charge. Confirm regional availability and actual audio token rates.`;
   }
 }
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>Editor · Voice Agents</title>
-  <link rel="stylesheet" href="/static/handoff/handoff.css?v=20261020-template-versions">
+  <link rel="stylesheet" href="/static/handoff/handoff.css?v=20261028-entrypoint-settings-only">
 </head>
 <body>
   <div class="app">
@@ -16,7 +16,7 @@
       </a>
       <nav aria-label="Portal pages">
         <span aria-current="page">Editor</span>
-        <a href="/demo/">AgentRuntime</a>
+        <a href="/runtime/">Runtime</a>
       </nav>
       <div class="environment" id="environment">Connecting to Foundry…</div>
     </header>
@@ -38,6 +38,8 @@
       <div class="primary-actions" aria-label="Definition actions">
         <div class="starting-actions">
           <button id="create-blank-action" class="canvas-action canvas-arrange" type="button">Create blank</button>
+          <button id="view-agent-yaml" class="canvas-action canvas-arrange" type="button"
+            data-agent-yaml aria-controls="definition-drawer">Export/Import</button>
           <button id="template-action" class="canvas-action canvas-template" type="button">
             <span class="template-spark" aria-hidden="true">✦</span>
             <span class="canvas-action-label">Load from templates</span>
@@ -46,6 +48,11 @@
         <button id="publish-run-action" class="button publish canvas-template" type="button" disabled>Try it now</button>
       </div>
     </header>
+
+    <aside id="voice-catalog-status" class="voice-catalog-status" role="status" aria-label="Voice catalog status" hidden>
+      <span id="voice-catalog-status-text"></span>
+      <button id="retry-voice-catalog" type="button">Retry live voice discovery</button>
+    </aside>
 
     <aside id="mock-tools-banner" class="mock-tools-banner" role="note" hidden>
       <div>
@@ -77,7 +84,6 @@
           <div id="agent-select" class="agent-list" role="listbox" aria-label="Voice Agents"
             aria-describedby="agent-result-count" tabindex="0"></div>
           <button id="load-more-agents" class="button ghost compact full agent-load-more" type="button" hidden>Load more Agents</button>
-          <button id="load-agent" class="button source-open full" type="button" disabled>Open selected Agent</button>
         </section>
 
         <section class="rail-section outline-section">
@@ -110,10 +116,9 @@
         <div class="canvas-meta">
           <div class="canvas-copy">
             <span id="canvas-label">Definition canvas</span>
-            <small id="canvas-help">Top-to-bottom flow keeps routes readable. Drag cards to fine-tune or connect handles.</small>
+            <small id="canvas-help">Drag cards to arrange the graph.</small>
           </div>
           <div class="canvas-meta-actions">
-            <button id="export-action" class="canvas-action canvas-arrange" type="button" disabled>Export</button>
             <button id="layout-action" class="canvas-action canvas-arrange" type="button"
               aria-label="Format view" title="Format view" disabled>
               <span aria-hidden="true">↧</span>
@@ -162,6 +167,32 @@
         </div>
       </section>
     </main>
+
+    <dialog id="playground-welcome-dialog" class="playground-welcome-dialog"
+      aria-labelledby="playground-welcome-title" aria-describedby="playground-welcome-description">
+      <form method="dialog">
+        <span class="kicker">Azure Voice Agent</span>
+        <h2 id="playground-welcome-title">Welcome to the Azure Voice Agent Playground</h2>
+        <div id="playground-welcome-description">
+          <p>This lightweight playground lets you try Azure Voice Agent with sample templates and
+            real-time voice conversations. It provides a limited set of capabilities for evaluation.</p>
+          <p>For the full development experience, use your own Azure resources:
+            <a class="playground-foundry-link"
+              href="https://learn.microsoft.com/en-us/azure/foundry/tutorials/quickstart-create-foundry-resources?tabs=portal"
+              target="_blank" rel="noopener noreferrer">Set up Microsoft Foundry</a>,
+            then follow the
+            <a class="playground-foundry-link"
+              href="https://learn.microsoft.com/en-us/azure/foundry/agents/quickstarts/prompt-voice-agent?pivots=portal"
+              target="_blank" rel="noopener noreferrer">Voice Agent quickstart</a>
+            to create and test your first voice agent.</p>
+        </div>
+        <p class="playground-welcome-warning">Please use sample data only. Do not enter sensitive or
+          confidential information.</p>
+        <div class="playground-welcome-actions">
+          <button class="button publish" type="submit" autofocus>Try the playground</button>
+        </div>
+      </form>
+    </dialog>
 
     <section id="agent-name-dialog" class="node-mcp-dialog agent-name-dialog" aria-label="Name this Agent" hidden>
       <form id="agent-name-form" class="node-mcp-dialog-shell" role="dialog" aria-modal="true"
@@ -217,7 +248,7 @@
         <ol class="publish-progress-steps">
           <li data-publish-step="validate">
             <span class="publish-step-indicator" aria-hidden="true"></span>
-            <div><strong>Validate working copy</strong><small>Check graph topology and required Agent fields.</small></div>
+            <div><strong>Review working copy</strong><small>Local checks are advisory; Foundry decides whether publication succeeds.</small></div>
           </li>
           <li data-publish-step="mcp">
             <span class="publish-step-indicator" aria-hidden="true"></span>
@@ -233,7 +264,7 @@
           </li>
           <li data-publish-step="open">
             <span class="publish-step-indicator" aria-hidden="true"></span>
-            <div><strong>Open AgentRuntime</strong><small>Launch the verified Agent with its runtime handoff graph expanded.</small></div>
+            <div><strong>Open Runtime</strong><small>Launch the published Agent with its runtime handoff graph expanded.</small></div>
           </li>
         </ol>
         <footer class="publish-progress-footer">
@@ -297,9 +328,9 @@
       <div class="template-picker-shell" role="dialog" aria-modal="true" aria-labelledby="template-picker-title">
         <header class="template-picker-header">
           <div>
-            <span class="template-picker-kicker">Curated starting points</span>
-            <h2 id="template-picker-title">Load a proven workflow into this canvas</h2>
-            <p>Choose a version, then load the template to replace the local working copy. Nothing is published until you choose Try it now.</p>
+            <span class="template-picker-kicker">Voice Agent templates</span>
+            <h2 id="template-picker-title">A starting point in your callers' language</h2>
+            <p>Choose a target locale, then a workflow. Instructions can stay in English; the locale describes the customer conversation.</p>
           </div>
           <button id="close-template-picker" class="icon-button" type="button" aria-label="Close template picker">×</button>
         </header>
@@ -307,10 +338,16 @@
           <p id="template-picker-status" role="status">Loading the template catalog…</p>
           <div>
             <input id="template-picker-search" type="search" autocomplete="off"
-              placeholder="Search templates" aria-label="Search templates"
+              placeholder="Search workflows, languages or locales" aria-label="Search templates"
               aria-controls="template-picker-grid">
             <span id="template-picker-count" aria-live="polite"></span>
             <button id="reload-template-picker" type="button">Reload</button>
+          </div>
+        </div>
+        <div class="template-locale-toolbar">
+          <div class="template-grouping" role="group" aria-label="Group templates">
+            <button type="button" data-template-grouping="locale" aria-pressed="true" aria-controls="template-picker-grid">By locale</button>
+            <button type="button" data-template-grouping="domain" aria-pressed="false" aria-controls="template-picker-grid">By domain</button>
           </div>
         </div>
         <div id="template-picker-grid" class="template-picker-grid" aria-live="polite"></div>
@@ -323,6 +360,37 @@
       </div>
     </section>
 
+    <dialog id="agent-import-dialog" class="agent-import-dialog" aria-labelledby="agent-import-title">
+      <header class="agent-import-header">
+        <div>
+          <span class="kicker">Local working copy</span>
+          <h2 id="agent-import-title">Import from agent</h2>
+          <p>Validate your configuration before loading it. Importing never publishes an Agent.</p>
+        </div>
+        <button id="close-agent-import" class="icon-button" type="button" aria-label="Close Agent import">×</button>
+      </header>
+      <div class="agent-import-body">
+        <label class="agent-import-file" for="agent-import-file">
+          <strong>Choose a JSON or YAML file</strong>
+          <span>Exported definition, a definition wrapper, or an Agent resource. Maximum 2 MB.</span>
+          <input id="agent-import-file" type="file" accept=".json,.yaml,.yml,application/json,application/yaml,application/x-yaml,text/yaml,text/x-yaml">
+        </label>
+        <label for="agent-import-source">Or paste Agent JSON or YAML</label>
+        <textarea id="agent-import-source" rows="12" spellcheck="false"
+          placeholder='{ "definition": { "kind": "voice", "model": "gpt-realtime", "...": "..." } }'></textarea>
+        <p id="agent-import-status" role="status">Known configuration fields and graph routes are checked locally. Model and project availability are checked by Foundry when you publish.</p>
+        <ul id="agent-import-errors" class="agent-import-errors" aria-label="Import validation errors" role="alert" hidden></ul>
+        <label id="agent-import-replace-label" class="settings-checkbox" hidden>
+          <input id="agent-import-replace" type="checkbox">
+          <span>Replace my current working copy, including unsaved edits.</span>
+        </label>
+      </div>
+      <footer class="agent-import-footer">
+        <button id="validate-agent-import" class="button secondary" type="button">Validate</button>
+        <button id="apply-agent-import" class="button publish" type="button" disabled>Import working copy</button>
+      </footer>
+    </dialog>
+
     <section id="node-editor" class="node-editor" aria-label="Node setup" hidden>
       <div class="node-editor-shell">
         <header class="node-editor-header">
@@ -331,10 +399,12 @@
             <div>
               <span id="node-editor-kind-label" class="editor-kind-badge node-kind">Node</span>
               <h2 id="node-editor-title">Configure node</h2>
-              <p>Graph defines topology. This workspace defines the selected node behavior.</p>
+              <p id="node-editor-description-text">Graph defines topology. This workspace defines the selected node behavior.</p>
             </div>
           </div>
           <div class="editor-header-actions">
+            <button id="import-agent-settings" class="button secondary" type="button" data-agent-import hidden>Import from agent</button>
+            <button class="button secondary" type="button" data-agent-yaml aria-controls="definition-drawer">Export/Import</button>
             <button id="close-node-editor" class="button secondary" type="button">Back to graph</button>
             <button id="delete-node-editor" class="button danger-action" type="button" hidden>Delete node</button>
             <button id="done-node-editor" class="button publish" type="button">Save node</button>
@@ -380,37 +450,36 @@
       </div>
     </section>
 
-    <section id="definition-drawer" class="definition-drawer" aria-label="Generated definition" hidden>
+    <section id="definition-drawer" class="definition-drawer" role="dialog" aria-labelledby="definition-title" hidden>
       <div class="drawer-heading">
         <div>
-          <span class="kicker">Canonical Agent definition</span>
-          <h2>Export now, publish here or through the Foundry API later</h2>
+          <span class="kicker">Complete working copy · read only</span>
+          <h2 id="definition-title">Entire Agent definition</h2>
         </div>
         <div class="definition-tabs" role="tablist" aria-label="Definition format">
           <button type="button" role="tab" data-format="yaml" aria-selected="true">YAML</button>
           <button type="button" role="tab" data-format="json" aria-selected="false">JSON</button>
         </div>
         <div class="drawer-actions">
-          <button id="copy-definition" class="button ghost compact" type="button">Copy</button>
-          <button id="download-definition" class="button ghost compact" type="button">Download</button>
-          <button id="copy-publish-body" class="button accent-soft compact" type="button">Copy publish body</button>
+          <button class="button import-definition" type="button" data-agent-import>Import from agent</button>
           <button id="close-definition" class="icon-button" type="button" aria-label="Close definition drawer">×</button>
         </div>
       </div>
       <div class="definition-drawer-body">
-        <aside class="export-guide" aria-label="How to publish this export">
+        <aside class="export-guide" aria-label="How to use this definition">
+          <p class="definition-scope-note">Choose <strong>JSON</strong> or <strong>YAML</strong> above to view the complete working definition. Includes overall Agent settings, every node, and every edge, not just the selected node. Use <strong>Import from agent</strong> to validate and load a JSON or YAML configuration into your working copy.</p>
           <span class="kicker">Publication contract</span>
-          <h3>This export is the <code>definition</code>, not the entire API request.</h3>
+          <h3>This is the <code>definition</code>, not the entire API request.</h3>
           <p id="export-format-guidance"></p>
           <ol>
-            <li>Choose the destination Agent name. The name belongs in the URL, not in this file.</li>
+            <li>Choose the destination Agent name. The name belongs in the URL, not in the definition.</li>
             <li>
               Send <code id="export-api-path">POST /agents/&lt;agent-name&gt;/versions?api-version=v1</code>.
             </li>
-            <li>Wrap the exported object in the request below and send it as JSON.</li>
+            <li>Wrap the definition object in the request below and send it as JSON.</li>
           </ol>
           <pre class="publish-body-example" aria-label="Foundry version request example">{
-  "definition": { "...": "this export" },
+  "definition": { "...": "this definition" },
   "description": "Optional version description",
   "metadata": {},
   "draft": false
@@ -421,13 +490,12 @@
             <p><strong>Required headers:</strong> <code>Authorization</code>, <code>Content-Type: application/json</code>, and <code id="export-feature-header">Foundry-Features</code>.</p>
           </div>
           <p class="export-guide-shortcut">
-            The page-level <strong>Publish &amp; run</strong> button builds this wrapper automatically.
-            <strong>Copy publish body</strong> copies a complete JSON request body for external publication.
+            The page-level <strong>Try it now</strong> button builds this wrapper automatically.
           </p>
         </aside>
         <div class="definition-output-pane">
           <div class="definition-output-heading">
-            <span>Exported definition</span>
+            <span>Working definition</span>
             <strong id="export-format-label">YAML</strong>
           </div>
           <pre id="definition-output" tabindex="0"></pre>
@@ -443,6 +511,6 @@
     </div>
   </template>
 
-  <script type="module" src="/static/handoff/handoff-app.js?v=20261020-template-versions"></script>
+  <script type="module" src="/static/handoff/handoff-app.js?v=20261028-yaml-import-entrypoint-only"></script>
 </body>
 </html>

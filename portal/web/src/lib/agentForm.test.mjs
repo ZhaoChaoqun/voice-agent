@@ -6,6 +6,7 @@ import { createAgentDraft, draftCreateOptions, updateAgentDraft, DEFAULT_INSTRUC
 import { buildCreateAgentBody } from "./serviceContract.js";
 import { buildGreetingConfig } from "./greeting.mjs";
 import { HANDOFF_ENTRYPOINT_INSTRUCTIONS } from "./handoff.mjs";
+import { transcriptionGroups, voiceGroups } from "../config.js";
 
 const cfg = {
   defaultModel: "gpt-realtime",
@@ -35,6 +36,8 @@ test("editor defaults preserve the existing managed voice request", () => {
   assert.equal(request.definition.model_type, "managed");
   assert.equal(request.definition.model, cfg.defaultModel);
   assert.equal(request.definition.audio.input.transcription.model, "azure-speech");
+  assert.equal(draft.transcriptionLanguage, "Auto");
+  assert.equal("language" in request.definition.audio.input.transcription, false);
   assert.equal(request.definition.instructions, DEFAULT_INSTRUCTIONS);
   assert.equal(request.definition.store, true);
   assert.deepEqual(request.definition.audio.input.echo_cancellation, {
@@ -45,6 +48,24 @@ test("editor defaults preserve the existing managed voice request", () => {
 
 test("a backend can still default conversation storage off", () => {
   assert.equal(createAgentDraft({ ...cfg, defaultStore: false }).store, false);
+});
+
+test("selected input language reaches both managed and hosted-agent create requests", () => {
+  const draft = { ...createAgentDraft(cfg), transcriptionLanguage: "hi-IN" };
+  assert.equal(body(draft).definition.audio.input.transcription.language, "hi-IN");
+  const hosted = {
+    ...draft, inferenceMode: "hosted_agent", targetAgentName: "hosted-target",
+  };
+  assert.equal(body(hosted).definition.audio.input.transcription.language, "hi-IN");
+  const auto = updateAgentDraft(cfg, draft, "transcriptionLanguage", "");
+  assert.equal("language" in body(auto).definition.audio.input.transcription, false);
+});
+
+test("changing transcription models preserves the language and reports incompatibility", () => {
+  const draft = { ...createAgentDraft(cfg), transcriptionLanguage: "en-IN,hi-IN" };
+  const next = updateAgentDraft(cfg, draft, "transcriptionModel", "mai-transcribe-2");
+  assert.equal(next.transcriptionLanguage, "en-IN,hi-IN");
+  assert.throws(() => body(next), /only one input language/);
 });
 
 test("switching sources picks a valid model and does not erase the draft", () => {
@@ -76,13 +97,28 @@ test("changing models with an avatar keeps an Azure voice", () => {
   assert.equal(next.voice, "en-US-AvaNeural");
 });
 
-test("changing model families keeps STT only when the next model supports it", () => {
+test("changing model families never replaces the selected STT", () => {
   const realtime = { ...createAgentDraft(cfg), transcriptionModel: "whisper-1" };
   const cascaded = updateAgentDraft(cfg, realtime, "model", "gpt-4.1");
-  assert.equal(cascaded.transcriptionModel, "azure-speech");
-  assert.equal(body(cascaded).definition.audio.input.transcription.model, "azure-speech");
+  assert.equal(cascaded.transcriptionModel, "whisper-1");
+  assert.equal(body(cascaded).definition.audio.input.transcription.model, "whisper-1");
   const restored = updateAgentDraft(cfg, cascaded, "model", "gpt-realtime");
-  assert.equal(restored.transcriptionModel, "azure-speech");
+  assert.equal(restored.transcriptionModel, "whisper-1");
+});
+
+test("runtime transcription choices ignore model-family and project subsets", () => {
+  const restricted = {
+    ...cfg, transcriptionModels: ["whisper-1"], realtimeTranscriptionModels: ["whisper-1"],
+    cascadedTranscriptionModels: ["azure-speech"],
+  };
+  const items = transcriptionGroups(restricted).flatMap((group) => group.items);
+  assert.ok(items.some((item) => item.value === "azure-speech"));
+  assert.ok(items.some((item) => item.value === "gpt-4o-transcribe"));
+  assert.ok(items.every((item) => !item.disabled && !item.label.includes("unavailable")));
+  for (const inferenceMode of ["model", "deployment", "hosted_agent"]) {
+    const draft = { ...createAgentDraft(cfg), transcriptionModel: "whisper-1" };
+    assert.equal(updateAgentDraft(cfg, draft, "inferenceMode", inferenceMode).transcriptionModel, "whisper-1");
+  }
 });
 
 test("changing model families preserves transcription and voice when both remain compatible", () => {
@@ -94,6 +130,30 @@ test("changing model families preserves transcription and voice when both remain
   const cascaded = updateAgentDraft(cfg, realtime, "model", "gpt-4.1");
   assert.equal(cascaded.transcriptionModel, "mai-transcribe-2");
   assert.equal(cascaded.voice, "en-US-AvaNeural");
+});
+
+test("changing models and model sources never replaces the selected voice", () => {
+  for (const voice of ["emma", "alloy", "en-US-Emma:DragonHDOmniLatestNeural"]) {
+    const original = { ...createAgentDraft(cfg), voice };
+    assert.equal(updateAgentDraft(cfg, original, "model", "gpt-4.1").voice, voice);
+    assert.equal(updateAgentDraft(cfg, original, "inferenceMode", "deployment").voice, voice);
+    assert.equal(updateAgentDraft(cfg, original, "inferenceMode", "hosted_agent").voice, voice);
+  }
+});
+
+test("runtime voice selectors group choices by locale without disabling voices", () => {
+  const groups = voiceGroups({
+    ...cfg,
+    azureVoices: ["fr-FR-DeniseNeural"],
+  });
+  assert.ok(groups.find((group) => group.locale === "en-US").items.some(
+    (voice) => voice.value === "en-US-Emma:DragonHDOmniLatestNeural",
+  ));
+  assert.ok(groups.find((group) => group.locale === "fr-FR").items.some(
+    (voice) => voice.value === "fr-FR-DeniseNeural",
+  ));
+  assert.ok(groups.at(-1).items.some((voice) => voice.value === "emma"));
+  assert.ok(groups.every((group) => group.items.every((voice) => !voice.disabled)));
 });
 
 test("hosted wrappers exclude target-owned fields without destroying local selections", () => {

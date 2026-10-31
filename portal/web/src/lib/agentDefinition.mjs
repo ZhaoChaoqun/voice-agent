@@ -6,6 +6,13 @@ function isObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+export function agentDefinitionToJson(definition) {
+  if (!isObject(definition)) {
+    throw new Error("The selected agent does not have a definition");
+  }
+  return JSON.stringify(definition, null, 2);
+}
+
 export function agentDefinitionToYaml(definition) {
   if (!isObject(definition)) {
     throw new Error("The selected agent does not have a definition");

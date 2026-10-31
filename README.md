@@ -70,6 +70,7 @@ https://github.com/user-attachments/assets/c62c179a-f181-4d29-ab99-c84dc6091fdd
 
 ## Voice Agent Blogs
 
+- 2026.10 [**Turn enterprise knowledge into a personalized voice and avatar agent in minutes with Voice Agent**](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/turn-enterprise-knowledge-into-a-personalized-voice-and-avatar-agent-in-minutes-/4564809) — Combine Foundry IQ, Personal Voice, and a custom photo avatar to create a knowledge-grounded Voice Agent in the Foundry portal.
 - 2026.09 [**Ship agents faster with expanded model choice, voice agents, and continuous optimization**](https://azure.microsoft.com/en-us/blog/ship-ai-agents-faster-with-new-capabilities-in-microsoft-foundry-expanded-model-choice-voice-agents-and-built-in-optimization/) — Overview of the latest Foundry Agents capabilities, including a Voice Agent video overview.
 - 2026.09 [**Introducing voice agents in Microsoft Foundry**](https://aka.ms/VoicefirstagentsSept2026) — Voice Agent public preview announcement.
 - 2026.06 [**Azure Speech at Build 2026: Powering Voice Agents with Real-Time and Life-like Experiences**](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/azure-speech-at-build-2026-powering-voice-agents-with-real-time-and-life-like-ex/4524638) — Azure Speech updates from Build 2026 for real-time voice agents and lifelike experiences.
@@ -136,14 +137,18 @@ Foundry Project connection. **You do not need to start [`shared_mcp/`](shared_mc
 Every Portal Template calls its tools on the public no-auth MCP configured in
 `portal/templates.config.json`: Examples 1–4 use their business routes and
 Examples 5–34 use mock tool calls on `/mcp/mock-tool-call`. Start `shared_mcp`
-only for the Finance CLI samples or to host those Finance routes yourself.
+only when you deliberately choose customer-owned MCP development or hosting.
+`setup-local-examples.sh`, Dev Tunnel installation/login, and local MCP E2E are
+**optional, separate workflows**, not Portal setup or release prerequisites.
+Using an already deployed MCP does not require Dev Tunnel either. The Finance
+CLI samples retain their own managed-MCP configuration requirements.
 
 ```bash
 az login
 cd /path/to/voice-agent/portal
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
-cp .env.example .env
+[ -f .env ] || cp .env.example .env
 # Set AZURE_VOICE_AGENTS_ENDPOINT in .env.
 .venv/bin/python demo_server.py
 ```
@@ -163,6 +168,7 @@ curl -fsS http://127.0.0.1:9527/healthz
 | Migrate Voice Live to Voice Agent | [`samples/voice_live_to_voice_agent/README.md`](samples/voice_live_to_voice_agent/README.md) | Two Python files with identical STT, GPT-4.1 mini, TTS, and audio settings; move from session configuration to a reusable agent |
 | Run realtime speech transcription | [`samples/realtime_stt/README.md`](samples/realtime_stt/README.md) | MAI Transcribe 2 or Azure Speech with VAD, microphone or WAV input, disabled LLM responses, and reported session usage |
 | Collect spoken identifiers with digit recognition | [`samples/digit_recognition/README.md`](samples/digit_recognition/README.md) | Server-managed transcript lookup, silent tool calls, complete digit readback, and caller confirmation with GPT Realtime and MAI Transcribe 2 |
+| Ask a voice agent about images or camera frames | [`samples/voice_agent_image_input/README.md`](samples/voice_agent_image_input/README.md) | Send uploaded images or sampled camera frames as `input_image` parts in a Voice Agent session; web UI, latency CLI, sizing guidance, and integration patterns |
 | Run Data Zone and regional realtime voice agents | [`samples/realtime_datazone_voice_agent.md`](samples/realtime_datazone_voice_agent.md) | East US 2 `gpt-realtime-2.1-datazone` with US inference, Japan East `azure-realtime` with confirmed GPU routing, and eligible Central India `gpt-realtime`; model-specific voices and microphone setup |
 | Run the GPT Live terminal samples | [`samples/gpt_live/python/README.md`](samples/gpt_live/python/README.md) | Use direct Responses or managed prompt-agent delegation, create agents and stream microphone audio with the preview Projects SDK, and view independently scrollable GPT Live, delegation, and user transcripts |
 | Run the GPT Live browser sample | [`samples/gpt_live/js/README.md`](samples/gpt_live/js/README.md) | Talk to the same Responses or managed prompt-agent English teacher from a browser with your microphone; the page connects to GPT Live directly with the preview `@azure/ai-projects` package, and a small Node.js server creates the agents and gives the page an access token. The managed mode adds the MCP calculator and a local date/time function |
@@ -182,6 +188,7 @@ When the user asks to run or debug something from this directory:
    running commands.
 3. Treat **UI** without a qualifier as the general [`portal/`](portal/README.md).
 4. Treat all Portal Templates as part of the normal local Portal workflow.
+   Do not run local MCP setup, Dev Tunnel login, or MCP E2E for this default path.
    Route explicit Finance CLI or shared MCP work to
    [`docs/03_run_samples.md`](docs/03_run_samples.md).
 5. Reuse an existing component-local `.env` and virtual environment when they
@@ -201,8 +208,8 @@ verify:
 GET http://127.0.0.1:9527/healthz
 ```
 
-For the Finance CLI route, follow the ordered [`docs/README.md`](docs/README.md)
-workflow. The local MCP entry point is:
+Only when the user explicitly chooses the Finance CLI with a locally hosted
+MCP, follow [`docs/README.md`](docs/README.md). Its optional local entry point is:
 
 ```bash
 ./scripts/setup-local-examples.sh --project-endpoint "https://<account>.services.ai.azure.com/api/projects/<project>"
@@ -224,6 +231,8 @@ user did not choose.
 **On Windows, WSL2 is required for the Bash-based Finance MCP automation.**
 Run that workflow from a checkout in the WSL Linux filesystem, such as
 `~/src/`, not `/mnt/c/`, and authenticate Azure CLI inside WSL.
+This optional automation is not needed for the Portal; the Portal guide also
+provides native Windows PowerShell commands.
 
 **Other standalone Python and .NET samples can run natively on Windows.**
 Follow each sample's prerequisites and commands. Bash-only wrappers still need

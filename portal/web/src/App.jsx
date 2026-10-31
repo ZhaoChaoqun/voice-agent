@@ -1,50 +1,33 @@
 // Copyright (c) Microsoft. All rights reserved.
-// Top-level demo app: loads /config, owns agent-creation state, wires the voice-session
-// hook, and lays out the editor and playground. Workflow and generated definitions
-// are playground tabs so they don't squeeze the conversation on smaller screens.
+// Runtime workspace: selects published agents and displays their live sessions and graphs.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadConfig, loadDeployments, isCascaded } from "./config.js";
-import {
-  buildCreateAgentBody,
-  buildVersionCreateRequest,
-  agentResourceFromVersion,
-  buildGenerateAgentBody,
-  newAgentName,
-  withApiVersion,
-  serviceHeaders,
-} from "./lib/serviceContract.js";
-import { buildGreetingConfig } from "./lib/greeting.mjs";
 import { createDigitDemoFunctions } from "./lib/digitDemo.mjs";
-import { definitionFromResponse, shouldApplyGenerateResponse } from "./lib/agentReview.mjs";
 import {
   asVoiceAgent,
-  hostedAgentTargetPath,
   loadVoiceAgent,
   loadVoiceAgentPage,
-  validateHostedAgentTarget,
 } from "./lib/agentCatalog.mjs";
 import { useVoiceSession } from "./hooks/useVoiceSession.js";
 import { buildHandoffGraph } from "./lib/handoffGraph.mjs";
 import { withSelectedAgent, withSessionTransport } from "./lib/agentUrl.mjs";
 import { AgentDefinitionDialog } from "./components/AgentDefinitionDialog.jsx";
 import { Icon } from "./components/ConfigControls.jsx";
-import { Sidebar, MODE_CREATE, MODE_GENERATE } from "./components/Sidebar.jsx";
-import { ReviewPanel } from "./components/ReviewPanel.jsx";
 import { ChatPanel } from "./components/ChatPanel.jsx";
 import { HandoffGraphPanel } from "./components/HandoffGraphPanel.jsx";
 import { SessionControls } from "./components/SessionControls.jsx";
-import { resolveVoiceSelection, sessionVoiceOverride, voiceSelectionNotice } from "../../static/voice-selection.mjs";
 import { StudioHeader } from "./components/StudioHeader.jsx";
+import { VoiceCatalogStatus } from "./components/VoiceCatalogStatus.jsx";
+import { useVoiceCatalog } from "./hooks/useVoiceCatalog.js";
 
 const WORKSPACE_MIN_SIDE_WIDTH = 360;
 const WORKSPACE_MIN_PLAYGROUND_WIDTH = 320;
 const WORKSPACE_SPLITTER_WIDTH = 14;
 
-function forPortal(cfg, agent, sessionStores) {
+function forPortal(cfg, agent) {
   return agent ? {
     ...agent,
-    ...(sessionStores?.has(agent.name) ? { sessionStoreDefault: sessionStores.get(agent.name) } : {}),
     // Hosted agents use the cascaded voice path; voice overrides must use Azure voices.
     cascaded: agent.inferenceMode === "hosted_agent" || isCascaded(cfg, agent.model),
   } : null;
@@ -61,9 +44,9 @@ function mergeAgentLists(...lists) {
 }
 
 export function App() {
-  const showRuntimeGraph = new URLSearchParams(window.location.search).get("view") === "handoff";
   const [cfg, setCfg] = useState(null);
   const [loadError, setLoadError] = useState(null);
+  const voiceCatalogState = useVoiceCatalog(cfg, setCfg);
   const [agent, setAgent] = useState(null); // { name, model, voice, cascaded }
   const [transport, setTransport] = useState(
     () => new URLSearchParams(window.location.search).get("transport") ?? "websocket",
@@ -71,7 +54,7 @@ export function App() {
   const [transportNotice, setTransportNotice] = useState("");
   const transportError = transport === "websocket" || transport === "webrtc"
     ? ""
-    : `Unsupported transport '${transport}'. Choose WebSocket or WebRTC in Session settings.`;
+    : `Unsupported transport '${transport}'. Set transport=websocket or transport=webrtc in the URL.`;
   const [agents, setAgents] = useState([]);
   const [agentListState, setAgentListState] = useState({
     loading: true,
@@ -80,30 +63,15 @@ export function App() {
     hasMore: false,
     nextCursor: "",
   });
-  const [editingAgentName, setEditingAgentName] = useState("");
-  const [authorMode, setAuthorMode] = useState(MODE_CREATE);
-  const [configurationCollapsed, setConfigurationCollapsed] = useState(showRuntimeGraph);
-  const [debugCollapsed, setDebugCollapsed] = useState(!showRuntimeGraph);
+  const [exportingAgentName, setExportingAgentName] = useState("");
+  const [debugCollapsed, setDebugCollapsed] = useState(false);
   const [sideColumnWidth, setSideColumnWidth] = useState(window.innerWidth / 2);
   const [resizingWorkspace, setResizingWorkspace] = useState(false);
   const shellRef = useRef(null);
   const splitDragRef = useRef(null);
   const workspaceResizedRef = useRef(false);
-  // What the last generate returned, kept so the review stage has something
-  // to show. Cleared when the caller switches away from generating, because a
-  // definition left on screen would describe an agent they are no longer making.
-  const [generated, setGenerated] = useState(null);
-  /* Generate is a slow round trip the user can walk away from. Each request takes a
-   * token; leaving the Generate tab bumps the counter, so a response that lands after
-   * the user moved on is dropped instead of repopulating the review they abandoned. */
-  const generateToken = useRef(0);
-  // A generation preference is a session override, never an unsupported field
-  // on /agents:generate or a silent rewrite of the service's returned version.
-  const generatedSessionStores = useRef(new Map());
   const session = useVoiceSession();
   const { setClientFunctions } = session;
-  const connectedRef = useRef(session.isConnected);
-  connectedRef.current = session.isConnected;
   const editorRunHandled = useRef(false);
 
   useEffect(() => {
@@ -118,14 +86,6 @@ export function App() {
       window.history.state, "", withSessionTransport(window.location.href, "websocket"),
     );
   }, [agent?.clientReferenceEc, transport]);
-
-  const onTransportChange = (value) => {
-    window.history.replaceState(
-      window.history.state, "", withSessionTransport(window.location.href, value),
-    );
-    setTransport(value);
-    setTransportNotice("");
-  };
 
   const sideWidthBounds = () => {
     const shell = shellRef.current;
@@ -202,27 +162,10 @@ export function App() {
     setClampedSideColumnWidth(sideWidthBounds().balanced);
   };
 
-  const toggleConfigurationPanel = () => {
-    if (configurationCollapsed) {
-      setConfigurationCollapsed(false);
-      setDebugCollapsed(true);
-    } else {
-      setConfigurationCollapsed(true);
-    }
-  };
-
-  const toggleDebugPanel = () => {
-    if (debugCollapsed) {
-      setDebugCollapsed(false);
-      setConfigurationCollapsed(true);
-    } else {
-      setDebugCollapsed(true);
-    }
-  };
+  const toggleDebugPanel = () => setDebugCollapsed((current) => !current);
 
   useEffect(() => {
     if (session.isConnected) {
-      setConfigurationCollapsed(true);
       setDebugCollapsed(false);
     }
   }, [session.isConnected]);
@@ -249,10 +192,6 @@ export function App() {
     setClientFunctions(createDigitDemoFunctions());
   }, [setClientFunctions]);
 
-  /* The workflow tab exists only for agents that have one. An agent selected from the
-   * list carries its full definition; one just created here carries only the handoff block.
-   * Either is enough to draw the graph before a session exists, and a live session refines
-   * it with the compiled topology. The conversation keeps its full width. */
   const handoffGraph = useMemo(() => {
     const definition = agent?.definition || (agent?.handoff ? { handoff: agent.handoff } : null);
     if (!definition && !session.handoffState) return null;
@@ -278,9 +217,9 @@ export function App() {
         try {
           const page = await loadVoiceAgentPage(cfg);
           let portalAgents = page.agents.map(
-            (item) => forPortal(cfg, item, generatedSessionStores.current),
+            (item) => forPortal(cfg, item),
           );
-          // Template publishing opens AgentRuntime with the new agent selected, so an
+          // Template publishing opens Runtime with the new agent selected, so an
           // agent named in the URL is a selection, not a filter.
           const requested = new URLSearchParams(window.location.search).get("agent");
           let selected = portalAgents[0] || null;
@@ -291,7 +230,6 @@ export function App() {
                 selected = forPortal(
                   cfg,
                   asVoiceAgent(await loadVoiceAgent(cfg, requested)),
-                  generatedSessionStores.current,
                 );
                 if (selected) portalAgents = mergeAgentLists([selected], portalAgents);
               } catch (error) {
@@ -326,34 +264,11 @@ export function App() {
       .catch((e) => setLoadError(String(e)));
   }, []);
 
-  /* `keepReview` is false for every caller except the generate flow itself. The review
-   * describes one specific agent at one specific version; the moment the connection
-   * points somewhere else -- a different agent from the dropdown, or the same name after
-   * an edit saved a new version -- the text on screen no longer describes what Connect
-   * will talk to. Reading one agent and speaking to another is precisely the failure
-   * this review step exists to prevent, so the review is dropped rather than left to
-   * look authoritative. */
-  const selectAndRememberAgent = (selected, { keepReview = false } = {}) => {
-    const portalAgent = forPortal(cfg, selected, generatedSessionStores.current);
-    if (!portalAgent) return;
-    setAgents((current) => [
-      portalAgent,
-      ...current.filter((item) => item.name !== portalAgent.name),
-    ]);
-    // Creation may finish after the user connected to an existing agent. Keep
-    // the new resource in the picker without relabelling the active session.
-    if (connectedRef.current) return;
-    setAgent(portalAgent);
-    window.history.replaceState(null, "", withSelectedAgent(window.location.href, portalAgent.name));
-    if (!keepReview) setGenerated(null);
-  };
-
   const onSelectAgent = async (name) => {
     const requested = String(name || "").trim();
     if (!requested) {
       setAgent(null);
       window.history.replaceState(null, "", withSelectedAgent(window.location.href));
-      setGenerated(null);
       return "";
     }
 
@@ -365,7 +280,6 @@ export function App() {
       selected = forPortal(
         cfg,
         asVoiceAgent(resource),
-        generatedSessionStores.current,
       );
       if (!selected) {
         throw new Error(`Agent '${requested}' is not a Voice Agent`);
@@ -375,7 +289,6 @@ export function App() {
 
     setAgent(selected);
     window.history.replaceState(null, "", withSelectedAgent(window.location.href, selected.name));
-    setGenerated(null);
     return selected.name;
   };
 
@@ -391,7 +304,7 @@ export function App() {
     try {
       const page = await loadVoiceAgentPage(cfg);
       let listed = page.agents.map(
-        (item) => forPortal(cfg, item, generatedSessionStores.current),
+        (item) => forPortal(cfg, item),
       );
       let selected = selectedName
         ? listed.find((item) => item.name === selectedName) || null
@@ -401,7 +314,6 @@ export function App() {
           selected = forPortal(
             cfg,
             asVoiceAgent(await loadVoiceAgent(cfg, selectedName)),
-            generatedSessionStores.current,
           );
           if (selected) listed = mergeAgentLists([selected], listed);
         } catch (error) {
@@ -440,7 +352,7 @@ export function App() {
     try {
       const page = await loadVoiceAgentPage(cfg, { after: agentListState.nextCursor });
       const listed = page.agents.map(
-        (item) => forPortal(cfg, item, generatedSessionStores.current),
+        (item) => forPortal(cfg, item),
       );
       setAgents((current) => mergeAgentLists(current, listed));
       setAgentListState({
@@ -481,159 +393,10 @@ export function App() {
       session.logError(`Could not start Editor Agent '${requested}': it is not available in this Project.`);
       return;
     }
-    let cancelled = false;
-    resolveVoiceSelection(agent.definition).then((result) => {
-      if (cancelled) return;
-      session.logStatus(voiceSelectionNotice(result));
-      return session.connect(
-        agent.name, sessionVoiceOverride(result), "", cfg.apiVersion, transport, Boolean(agent.clientReferenceEc),
-      );
-    }).catch((error) => { if (!cancelled) session.logError(error.message); });
-    return () => { cancelled = true; };
-  }, [cfg, agent, agentListState.loading, transport, transportError, session.connect, session.logError, session.logStatus]);
-
-  const onCreateAgent = async ({
-    name: requestedName, model, voice, tools, subagents, inferenceMode, store, avatar,
-    greeting, handoff, handoffInstructions, targetAgentName, targetAgentVersion, clientReferenceEc,
-    instructions, structuredInputs, description, namePrefix, inputTranscriptionModel,
-  }) => {
-    // Build the REAL service create request: name (client-generated) + full AgentDefinition body,
-    // the api-version query, and Foundry-Features + Content-Type headers — matching the service
-    // contract exactly. The demo backend forwards it verbatim and injects only the bearer token.
-    if (inferenceMode === "hosted_agent") {
-      session.logApi(
-        "GET",
-        hostedAgentTargetPath(cfg, targetAgentName, targetAgentVersion),
-      );
-      await validateHostedAgentTarget(
-        cfg,
-        targetAgentName,
-        targetAgentVersion,
-      );
-    }
-    const name = requestedName?.trim() || newAgentName(
-      namePrefix || (inferenceMode === "hosted_agent" ? "web-voice-hosted" : "web-voice"),
+    session.connect(
+      agent.name, "", "", cfg.apiVersion, transport, Boolean(agent.clientReferenceEc),
     );
-    const body = buildCreateAgentBody({
-      name, model, voice, tools, subagents, inferenceMode, store, avatar, handoff,
-      handoffInstructions, targetAgentName, targetAgentVersion, clientReferenceEc,
-      instructions, structuredInputs, description,
-      greeting: buildGreetingConfig(greeting),
-      inputTranscriptionModel,
-    });
-    const voiceSelection = await resolveVoiceSelection(body.definition);
-    body.definition = voiceSelection.definition;
-    session.logStatus(voiceSelectionNotice(voiceSelection));
-    const { path, body: requestBody } = buildVersionCreateRequest(cfg, body);
-    session.logApi("POST", path);
-    const resp = await fetch(path, {
-      method: "POST",
-      headers: serviceHeaders(cfg, { "Content-Type": "application/json" }),
-      body: JSON.stringify(requestBody),
-    });
-    const result = await resp.json();
-    if (!resp.ok) throw new Error(result.error?.message || result.error || result.message || `HTTP ${resp.status}`);
-    const data = agentResourceFromVersion(name, result);
-    const definition = body.definition;
-    selectAndRememberAgent(asVoiceAgent(data) || {
-      name,
-      version: data.versions?.latest?.version || "",
-      model: definition.model || "",
-      voice: typeof definition.audio?.output?.voice === "string"
-        ? definition.audio.output.voice : definition.audio?.output?.voice?.name || voice,
-      avatar: definition.avatar || null,
-      greeting: definition.greeting || null,
-      toolCount: (definition.tools || []).length,
-      inferenceMode,
-      targetAgent: definition.target_agent || null,
-      clientReferenceEc,
-      store: typeof definition.store === "boolean" ? definition.store : false,
-      handoff: definition.handoff || null,
-      definition,
-    });
-    return data;
-  };
-
-  // Guided authoring: the service expands {useCase, goal?} into a full voice agent — generating
-  // the instructions, audio stack, and defaults. Post agentic-creation refactor only `useCase` is
-  // required: `model`/`inferenceMode` are optional (the service defaults to a managed
-  // gpt-realtime), and `description`/`draft` fall back to values chosen by VOICE LIVE, not by
-  // the service or this client. See buildGenerateAgentBody for the full contract.
-  const onGenerateAgent = async ({
-    name: requestedName, model, modelType, useCase, goal, tools, description, draft, store = false,
-  }) => {
-    const name = requestedName?.trim() || newAgentName("web-voice-gen");
-    const body = buildGenerateAgentBody({
-      name, model, modelType, useCase, goal, tools, description, draft,
-    });
-    const path = withApiVersion(cfg, "/agents:generate");
-    session.logApi("POST", path);
-    // Wall-clock from here rather than a server-reported duration: the caller is
-    // waiting on the whole round trip, and the service does not report its own.
-    // A failure must not leave the previous definition on screen beside it.
-    setGenerated(null);
-    const startedAt = Date.now();
-    // Per-request, not per-tab: two generates in flight must not share an identity.
-    const token = (generateToken.current += 1);
-    const resp = await fetch(path, {
-      method: "POST",
-      headers: serviceHeaders(cfg, { "Content-Type": "application/json" }),
-      body: JSON.stringify(body),
-    });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || data.message || `HTTP ${resp.status}`);
-    // Real service response: { name, versions: { latest: { definition } }, ... }.
-    const found = definitionFromResponse(data);
-    if (!found) throw new Error("service returned no agent definition");
-    const { definition: def, latest } = found;
-    /* A generate the user walked away from must have no effect at all. Guarding only
-     * the review panel was not enough: `selectAndRememberAgent` decides which agent
-     * Connect talks to, so a late response could leave the panel showing one agent
-     * while the microphone was wired to another -- the exact mismatch this review step
-     * exists to prevent. Both the display and the selection sit inside the guard.
-     *
-     * Connecting counts as walking away. Connect lives in the footer, outside the panes,
-     * and is enabled the moment an agent is selected -- so it can be pressed while a
-     * generate is still outstanding. The session then binds to the agent that was
-     * selected at that moment, and a response landing afterwards would repoint `agent`
-     * and the review at the generated one while the microphone stayed on the first. */
-    const apply = shouldApplyGenerateResponse({
-      requestToken: token,
-      currentToken: generateToken.current,
-      isConnected: connectedRef.current,
-    });
-    if (!apply) return data;
-    generatedSessionStores.current.set(data.name || name, store === true);
-
-    const identity = {
-      name: data.name || name,
-      version: latest.version,
-      description: latest.description,
-      draft: latest.draft,
-    };
-    const elapsedMs = Date.now() - startedAt;
-    setGenerated({ definition: def, identity, elapsedMs });
-
-    const genModel = def.model;
-    const outputVoice = def.audio?.output?.voice;
-    const voice = typeof outputVoice === "string" ? outputVoice : outputVoice?.name;
-    selectAndRememberAgent(asVoiceAgent(data) || {
-      name: data.name || name,
-      model: genModel,
-      voice,
-      toolCount: (tools || []).length,
-      // Derive the inference mode from what the SERVICE returned rather than what the user picked —
-      // when model_type is omitted the service resolves it, and connect needs the resolved value to
-      // pick the right model family.
-      inferenceMode: def.model_type === "self_deployed" ? "deployment" : "model",
-      store: def.store === true,
-      definition: def,
-      generated: true,
-      instructions: def.instructions,
-      avatar: def.avatar || null,
-    }, { keepReview: true });
-    return data;
-  };
+  }, [cfg, agent, agentListState.loading, transport, transportError, session.connect, session.logError]);
 
   if (loadError) return <div className="studio-loading" role="alert">Could not load configuration: {loadError}</div>;
   if (!cfg) return <div className="studio-loading" role="status">Loading your voice workspace…</div>;
@@ -642,6 +405,7 @@ export function App() {
     <div className="studio">
       <StudioHeader cfg={cfg} disabled={session.isConnected}
         debugMode={session.verbose} />
+      <VoiceCatalogStatus cfg={cfg} {...voiceCatalogState} />
       <div
         ref={shellRef}
         className={`shell${resizingWorkspace ? " is-resizing" : ""}`}
@@ -649,47 +413,7 @@ export function App() {
           ? `${sideColumnWidth}px`
           : `calc((100% - ${WORKSPACE_SPLITTER_WIDTH}px) / 2)` }}
       >
-        <aside className="studio-side-column" aria-label="Agent creation and debugging">
-          <section className={`studio-panel studio-config-panel${configurationCollapsed ? " is-collapsed" : ""}`}>
-            <button
-              type="button"
-              className="studio-panel-header-button"
-              aria-expanded={!configurationCollapsed}
-              aria-controls="agent-creation-panel"
-              onClick={toggleConfigurationPanel}
-            >
-              <span className="studio-panel-heading-copy">
-                <span className="eyebrow">BUILD</span>
-                <span className="studio-panel-heading-title" role="heading" aria-level="2">Agent Creation</span>
-                <span className="studio-panel-heading-hint">
-                  Click to {configurationCollapsed ? "expand" : "collapse"}
-                </span>
-              </span>
-              <span className="studio-panel-heading-actions">
-                <span className="subtle-badge">New agent</span>
-                <span className="studio-panel-fold-control">
-                  <span>{configurationCollapsed ? "Expand panel" : "Collapse panel"}</span>
-                  <Icon name="chevron" />
-                </span>
-              </span>
-            </button>
-            <div id="agent-creation-panel" className="studio-panel-content" hidden={configurationCollapsed}>
-              <Sidebar
-                cfg={cfg}
-                session={session}
-                onCreateAgent={onCreateAgent}
-                onGenerateAgent={onGenerateAgent}
-                authorMode={authorMode}
-                onAuthorModeChange={(next) => {
-                  setAuthorMode(next);
-                  if (next !== MODE_GENERATE) {
-                    generateToken.current += 1;
-                    setGenerated(null);
-                  }
-                }}
-              />
-            </div>
-          </section>
+        <aside className="studio-side-column" aria-label="Agent debugging">
           <section className={`studio-panel studio-workflow-panel${debugCollapsed ? " is-collapsed" : ""}`}
             aria-label="Agent debug">
             <button
@@ -757,26 +481,17 @@ export function App() {
         <section className="playground-column" aria-label="Agent playground">
           <SessionControls cfg={cfg} session={session} agent={agent} agents={agents}
             transport={transport} transportError={transportError} transportNotice={transportNotice}
-            onTransportChange={onTransportChange}
             agentListState={agentListState} onSelectAgent={onSelectAgent} onRefreshAgents={onRefreshAgents}
             onLoadMoreAgents={onLoadMoreAgents}
-            onEditAgent={() => setEditingAgentName(agent?.name || "")} />
-          <ReviewPanel
-            definition={authorMode === MODE_GENERATE ? generated?.definition : null}
-            identity={generated?.identity}
-            elapsedMs={generated?.elapsedMs}
-          >
-            <ChatPanel session={session} agent={agent} cfg={cfg} />
-          </ReviewPanel>
+            onExportAgent={() => setExportingAgentName(agent?.name || "")} />
+          <ChatPanel session={session} agent={agent} cfg={cfg} />
         </section>
       </div>
       <AgentDefinitionDialog
         cfg={cfg}
-        agentName={editingAgentName}
-        open={Boolean(editingAgentName)}
-        logApi={session.logApi}
-        onClose={() => setEditingAgentName("")}
-        onSaved={(resource) => selectAndRememberAgent(asVoiceAgent(resource))}
+        agentName={exportingAgentName}
+        open={Boolean(exportingAgentName)}
+        onClose={() => setExportingAgentName("")}
       />
     </div>
   );

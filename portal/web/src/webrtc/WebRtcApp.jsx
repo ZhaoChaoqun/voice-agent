@@ -17,9 +17,12 @@ import { useVoiceSession } from "../hooks/useVoiceSession.js";
 import { AgentPicker } from "./components/AgentPicker.jsx";
 import { LiveStage } from "./components/LiveStage.jsx";
 import { PersistedShowcase } from "./components/PersistedShowcase.jsx";
+import { VoiceCatalogStatus } from "../components/VoiceCatalogStatus.jsx";
+import { useVoiceCatalog } from "../hooks/useVoiceCatalog.js";
 
 export function WebRtcApp() {
   const [cfg, setCfg] = useState(null);
+  const voiceCatalogState = useVoiceCatalog(cfg, setCfg);
   const [loadError, setLoadError] = useState(null);
   const [agents, setAgents] = useState([]);
   const [agentsState, setAgentsState] = useState({
@@ -148,7 +151,8 @@ export function WebRtcApp() {
           </span>
         </div>
       </header>
-      <p className="info-note">{cfg.notice} <a href="/demo/">Return to studio</a></p>
+      <p className="info-note">{cfg.notice} <a href="/runtime/">Return to Runtime</a></p>
+      <VoiceCatalogStatus cfg={cfg} {...voiceCatalogState} />
 
       <main className="wrtc-body">
         {phase === "setup" ? (

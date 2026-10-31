@@ -62,6 +62,10 @@ test("builds canonical OpenAI and Azure voice types", () => {
     type: "azure-standard",
     name: "en-US-AvaNeural",
   });
+  assert.deepEqual(buildVoiceOutput("emma"), { voice: "emma", voice_type: "azure-realtime-native" });
+  assert.deepEqual(buildVoiceOutput("en-US-Emma:DragonHDOmniLatestNeural"), {
+    voice: "en-US-Emma:DragonHDOmniLatestNeural", voice_type: "azure-standard",
+  });
 });
 
 test("prefers configured routing capabilities over stale shadow descriptions", () => {

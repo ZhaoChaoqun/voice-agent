@@ -1,0 +1,18 @@
+{
+  "id": "ignite2026",
+  "name": "Microsoft Ignite 2026",
+  "short_name": "Ignite",
+  "official_site": "https://ignite.microsoft.com",
+  "city": "San Francisco",
+  "venue_summary": "Moscone Center and nearby venues in San Francisco, plus online sessions.",
+  "dates": {"start": "2026-11-17", "end": "2026-11-20"},
+  "time_zone": "America/Los_Angeles",
+  "time_zone_label": "PT",
+  "utc_offset_fallback": "-08:00",
+  "facts_source": "Dates, sessions, rooms, speakers, and keynote times come from the public session catalog snapshot (sessions.json). FAQ and on-site logistics answers paraphrase the official event FAQ and event guide. Room and time changes come from comparing the live official catalog with the snapshot.",
+  "dev_mode": {
+    "session_code": "BRK244",
+    "summary": "This concierge is a Microsoft Foundry Voice Agent: a speech-to-speech realtime model with an Azure HD neural voice, server semantic voice activity detection with barge-in, and MCP tools for the session catalog, agenda, and the official FAQ. The tools are stateless; your agenda lives in this conversation.",
+    "template": "voice-agent samples/example35_conference_concierge (Conference Concierge template, Ignite 2026 official catalog)"
+  }
+}

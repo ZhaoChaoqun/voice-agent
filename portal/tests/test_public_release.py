@@ -34,13 +34,15 @@ class ReleaseArtifactTests(unittest.TestCase):
 
     def test_built_and_watch_bundles_retain_notice_references(self):
         package = json.loads((ROOT / "web/package.json").read_text(encoding="utf-8"))
-        for name in ("build", "build:webrtc", "watch", "watch:webrtc"):
+        for name in ("build", "build:webrtc", "build:yaml", "watch", "watch:webrtc"):
             self.assertIn("THIRD_PARTY_NOTICES.txt", package["scripts"][name])
             self.assertIn("--legal-comments=eof", package["scripts"][name])
         for name in ("bundle.js", "webrtc-bundle.js"):
             text = (ROOT / "static" / name).read_text(encoding="utf-8")
             self.assertIn("THIRD_PARTY_NOTICES.txt", text.splitlines()[0])
             self.assertIn("Copyright (c) Facebook", text)
+        yaml = (ROOT / "static/handoff/js-yaml.mjs").read_text(encoding="utf-8")
+        self.assertIn("/static/demo/THIRD_PARTY_NOTICES.txt", yaml.splitlines()[0])
 
 
 class SerializedToolRedactionTests(unittest.TestCase):

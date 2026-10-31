@@ -4,13 +4,18 @@
 
 The normal Portal Template workflow uses public no-auth MCP and needs no
 local MCP setup. Follow the [Portal guide](../portal/README.md) for that path.
-The CLI samples below still use customer-managed MCP connections.
+The CLI samples below still use customer-managed MCP connections. Local MCP,
+Dev Tunnel, `setup-local-examples.sh`, and local E2E are **optional**: choose them
+only when developing or hosting your own MCP on this machine. An already
+deployed customer-owned MCP needs no Dev Tunnel.
 
-This is the executable local setup and validation sequence. Start with the
+The local setup and validation sequence below is for that opt-in CLI path,
+not Portal onboarding. Start with the
 [architecture and documentation index](./README.md) when choosing a
 component or looking for a specific guide.
 
-After completing the one-time prerequisites, run
+If you choose locally hosted MCP for the Finance CLIs, complete its one-time
+prerequisites and run
 `VoiceAgent/shared_mcp/scripts/e2e-local.sh` before publishing either Finance
 example with its CLI. The command starts the MCP implementation as a native
 Python process, exposes it to Microsoft Foundry through a persistent named Dev
@@ -18,7 +23,7 @@ Tunnel, creates the required Foundry connections, generates the shared local
 config, and verifies both public MCP route contracts. Each sample CLI then
 publishes the selected Agent independently.
 
-The complete local path is:
+That optional local path is:
 
 ```text
 local Python process
@@ -71,6 +76,11 @@ same-named tools with different schemas:
 
 ## Prerequisites
 
+These are prerequisites for the optional local MCP/CLI path only. For the
+default Portal, use the smaller prerequisite list in its
+[README](../portal/README.md); Dev Tunnel, its GitHub sign-in, and local MCP
+connection creation are not required.
+
 - Python 3.10 or later.
 - Azure CLI authenticated with `az login`.
 - A GitHub identity that can authenticate Dev Tunnel by device code. The setup
@@ -110,6 +120,9 @@ device-code steps in
 [02: MCP settings and E2E](./02_mcp_settings.md#install-dev-tunnel-cli-on-linux-or-wsl).
 
 ## Create the sample and Portal Python environments
+
+For Portal only, follow the [Portal setup](../portal/README.md#set-up) and skip
+the MCP/CLI installer below. It does not prepare the Portal environment.
 
 The two Finance scenarios and portal have separate requirements and separate
 virtual environments. Setup also creates `shared_mcp/.venv` for the native MCP
@@ -207,21 +220,26 @@ npm run build:all
 
 ## Configure the Finance sample and portal environment files
 
-Configure the three Finance sample `.env` files. They must use the same Foundry Project:
+Configure only the components you intend to run. The Finance CLI path uses the
+sample `.env` files; Portal-only users need only `portal/.env`. Use the same
+Foundry Project when intentionally comparing the CLI and Portal paths.
 
 ```bash
 cd "$SAMPLES_ROOT"
-cp example1_finance_with_handoff_realtime/.env.example \
+[ -f example1_finance_with_handoff_realtime/.env ] || \
+  cp example1_finance_with_handoff_realtime/.env.example \
   example1_finance_with_handoff_realtime/.env
-cp example1_finance_with_handoff_cascade/.env.example \
+[ -f example1_finance_with_handoff_cascade/.env ] || \
+  cp example1_finance_with_handoff_cascade/.env.example \
   example1_finance_with_handoff_cascade/.env
-cp example2_finance_with_OTP_and_Officer_Search/.env.example \
+[ -f example2_finance_with_OTP_and_Officer_Search/.env ] || \
+  cp example2_finance_with_OTP_and_Officer_Search/.env.example \
   example2_finance_with_OTP_and_Officer_Search/.env
 
-cp ../portal/.env.example ../portal/.env
+[ -f ../portal/.env ] || cp ../portal/.env.example ../portal/.env
 ```
 
-Set the same valid Project endpoint in all four files. Portal uses
+Set a valid Project endpoint in each selected component's file. Portal uses
 `AZURE_VOICE_AGENTS_ENDPOINT`; the samples use `AZURE_AI_PROJECT_ENDPOINT`.
 Use `AZURE_CREDENTIAL_MODE=cli` in all four when the intended identity is the one
 selected by `az login`. To find an existing endpoint rather than guessing it,
@@ -264,6 +282,10 @@ VOICE_AGENT_MCP_CONFIG=../../shared_mcp/config/generated/example2.local.env
 These generated files do not exist until the local MCP E2E starts.
 
 ## Start the local MCP path for CLI samples
+
+**Optional: skip this section for default Portal Templates or an already
+deployed customer-owned MCP.** Dev Tunnel is used here only so Foundry can
+reach the MCP running on this developer machine.
 
 This path is only for the CLI samples. It does not start or configure the
 Portal, whose default Templates use the public no-auth MCP.
@@ -430,19 +452,21 @@ remote port `9527` and open the exact forwarded address shown by VS Code.
 
 The default [`portal/templates.config.json`](../portal/templates.config.json)
 maps each Template to its sibling `agent.json` and a fixed public no-auth MCP
-route. On **Try it now**, the UI:
-
-1. probes the public MCP with no bearer token;
-2. verifies every tool declared by the Template;
-3. materializes the public MCP URL without a Project connection;
-4. publishes a new independent Agent in the selected Foundry Project;
-5. opens that Agent in the Live session page.
+route. On **Try it now**, the UI configures the selected Template MCP URL without
+creating a Project connection for public mode, submits the authored Agent
+definition to Foundry, reads the published version back, and opens Runtime.
+Local diagnostics are advisory. A public MCP probe or voice/region discovery is
+not a prerequisite for submission; explicit connection probes are separate
+diagnostic actions.
 
 The Portal initially uses `AZURE_VOICE_AGENTS_ENDPOINT` from `portal/.env`.
 Project selection, local startup, and Remote-SSH guidance are maintained in
 the [Portal README](../portal/README.md).
 
 ## Verify the closed loop
+
+The MCP runtime and generated-config checks below apply only to the optional
+locally hosted CLI workflow. Skip them for the default Portal.
 
 ### MCP runtime
 
@@ -488,18 +512,16 @@ development tunnel.
 
 ### Portal
 
-The independently started local Templates page should:
+The independently started Portal Editor should:
 
-- show both Finance examples;
-- show a successful MCP reachability check;
-- not display an MCP token field;
-- expose **Test MCP** for a manual retry;
-- allow **Try it now**;
-- open the newly published Agent in Live session.
+- offer Finance examples in **Load from templates**;
+- require no local MCP token, generated config, or Dev Tunnel login;
+- allow **Try it now**, showing the actual Foundry publication result;
+- read the published version back and open Runtime on success.
 
-The Portal does not depend on local E2E or generated MCP config. Readiness is
-complete only when the public no-auth probes report HTTP 200 and list the
-expected tools.
+The Portal does not depend on local E2E or generated MCP config. A successful
+public no-auth probe proves reachability and tool inventory only; it is not a
+startup or publication gate, nor proof that a business conversation succeeds.
 
 ## Troubleshooting
 
@@ -523,9 +545,9 @@ MCP route/tools, Portal bridge, and session recordings.
 | A sample command cannot import its requirements | That scenario's `.venv` was not created | Install that scenario's requirements; the UI `.venv` is not a substitute |
 | E2E cannot find the Project | The active Azure CLI subscription is wrong or the endpoint was guessed | Select the exact subscription and discover the Project through Azure CLI as documented in guide 01 |
 | `Model '<name>' is not supported in managed mode in this region` | The exact managed model identifier is unavailable in the selected Project, or the Project is not eligible | Try the documented versioned fallback (`gpt-realtime-2.1`, then `gpt-realtime-1.5`), use another exact identifier confirmed for that Project, or move to an eligible Project; do not switch to self-deployed mode merely to bypass the error |
-| Published Agent cannot list MCP tools | Local Python server or tunnel host stopped | Restart `shared_mcp/scripts/e2e-local.sh` and leave it running |
+| CLI Agent using a local MCP cannot list tools | Local Python server or tunnel host stopped | Restart the optional `shared_mcp/scripts/e2e-local.sh` and leave it running; default Portal Templates use the public service instead |
 | Tool returns `unknown_call` after a runtime replacement | The call started before state persistence was enabled, or `state/local/runtime` was removed | End that Voice Agent session and reconnect; retain the native state directory |
-| HTTP 401 from a direct MCP request | Request omitted the bearer token | Expected for unauthenticated probes; Foundry supplies it from the connection |
+| HTTP 401 from a customer-owned managed MCP | Request omitted the bearer token | Foundry supplies it from the configured connection; the default public no-auth MCP should not require this token |
 | Generated config is missing | Local E2E has not completed CLI connection setup | Run `e2e-local.sh` to its final success lines |
 | UI publish reports Agent write permission denied | UI used the wrong Azure identity | Set `AZURE_CREDENTIAL_MODE=cli`, run `az login` with the intended identity, and restart UI |
 | Port 18003 is already allocated | An older E2E/native process is still running | Stop the older owning script, then start the canonical E2E |
@@ -533,6 +555,9 @@ MCP route/tools, Portal bridge, and session recordings.
 | New immutable versions appear | Foundry Agent versions are append-only | Expected after each successful publish |
 
 ## Rotate or revoke local access
+
+This applies only to the optional local MCP, not the shared public no-auth
+service or normal Portal startup.
 
 Stop the running E2E with `Ctrl+C` before rotating its credential. From
 `VoiceAgent/shared_mcp/`, remove only the local token and rerun E2E:

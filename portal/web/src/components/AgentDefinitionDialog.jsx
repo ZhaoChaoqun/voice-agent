@@ -1,48 +1,14 @@
 // Copyright (c) Microsoft. All rights reserved.
 
 import { useEffect, useRef, useState } from "react";
-
 import { loadVoiceAgent } from "../lib/agentCatalog.mjs";
-import {
-  agentDefinitionToYaml,
-  parseAgentDefinitionYaml,
-} from "../lib/agentDefinition.mjs";
-import {
-  serviceHeaders,
-  withApiVersion,
-} from "../lib/serviceContract.js";
+import { agentDefinitionToJson, agentDefinitionToYaml } from "../lib/agentDefinition.mjs";
 
-function responseError(data, fallback) {
-  if (typeof data?.error === "string") return data.error;
-  if (typeof data?.error?.message === "string") return data.error.message;
-  if (typeof data?.message === "string") return data.message;
-  return fallback;
-}
-
-function latestVersion(resource) {
-  return resource?.versions?.latest || {};
-}
-
-export function AgentDefinitionDialog({
-  cfg,
-  agentName,
-  open,
-  logApi,
-  onClose,
-  onSaved,
-}) {
+export function AgentDefinitionDialog({ cfg, agentName, open, onClose }) {
   const dialogRef = useRef(null);
-  const [yaml, setYaml] = useState("");
-  const [versionContext, setVersionContext] = useState({
-    description: "",
-    metadata: {},
-  });
-  const [state, setState] = useState({
-    loading: false,
-    saving: false,
-    kind: "",
-    text: "",
-  });
+  const [format, setFormat] = useState("yaml");
+  const [output, setOutput] = useState(null);
+  const [state, setState] = useState({ loading: false, error: "", version: "" });
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -54,170 +20,79 @@ export function AgentDefinitionDialog({
   useEffect(() => {
     if (!open || !agentName) return undefined;
     let cancelled = false;
-    setYaml("");
-    setState({
-      loading: true,
-      saving: false,
-      kind: "warn",
-      text: "Loading current definition…",
-    });
-
+    setFormat("yaml");
+    setOutput(null);
+    setState({ loading: true, error: "", version: "" });
     loadVoiceAgent(cfg, agentName)
       .then((resource) => {
         if (cancelled) return;
-        const latest = latestVersion(resource);
-        setYaml(agentDefinitionToYaml(latest.definition));
-        setVersionContext({
-          description: latest.description || "",
-          metadata: latest.metadata ? { ...latest.metadata } : {},
+        const latest = resource.versions?.latest;
+        setOutput({
+          yaml: agentDefinitionToYaml(latest?.definition),
+          json: agentDefinitionToJson(latest?.definition),
         });
-        setState({
-          loading: false,
-          saving: false,
-          kind: "",
-          text: latest.version
-            ? `Editing current version ${latest.version}`
-            : "Editing current definition",
-        });
+        setState({ loading: false, error: "", version: latest.version || "" });
       })
       .catch((error) => {
         if (cancelled) return;
-        setState({
-          loading: false,
-          saving: false,
-          kind: "err",
-          text: String(error),
-        });
+        setState({ loading: false, error: String(error), version: "" });
       });
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [agentName, cfg, open]);
 
-  const close = () => {
-    if (!state.saving) onClose();
-  };
-
-  const save = async () => {
-    setState((current) => ({
-      ...current,
-      saving: true,
-      kind: "warn",
-      text: "Creating a new version…",
-    }));
-    try {
-      const definition = parseAgentDefinitionYaml(yaml);
-      const body = { definition };
-      if (versionContext.description) {
-        body.description = versionContext.description;
-      }
-      if (Object.keys(versionContext.metadata).length) {
-        body.metadata = versionContext.metadata;
-      }
-
-      const path = withApiVersion(
-        cfg,
-        `/agents/${encodeURIComponent(agentName)}/versions`,
-      );
-      logApi("POST", path);
-      const response = await fetch(path, {
-        method: "POST",
-        headers: serviceHeaders(cfg, { "Content-Type": "application/json" }),
-        body: JSON.stringify(body),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(
-          responseError(
-            data,
-            `Create version failed with HTTP ${response.status}`,
-          ),
-        );
-      }
-
-      const resource = await loadVoiceAgent(cfg, agentName);
-      const latest = latestVersion(resource);
-      setYaml(agentDefinitionToYaml(latest.definition));
-      setVersionContext({
-        description: latest.description || "",
-        metadata: latest.metadata ? { ...latest.metadata } : {},
-      });
-      onSaved(resource);
-      setState({
-        loading: false,
-        saving: false,
-        kind: "ok",
-        text: `Version ${data.version || latest.version || "new"} created`,
-      });
-    } catch (error) {
-      setState({
-        loading: false,
-        saving: false,
-        kind: "err",
-        text: String(error),
-      });
-    }
+  const selectFormat = (event) => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const next = event.key === "Home" ? "yaml" : event.key === "End" ? "json"
+      : format === "yaml" ? "json" : "yaml";
+    setFormat(next);
+    dialogRef.current.querySelector(`[data-format="${next}"]`).focus();
   };
 
   return (
     <dialog
       ref={dialogRef}
       className="definition-dialog"
-      onCancel={(event) => {
-        event.preventDefault();
-        close();
-      }}
-      onClick={(event) => {
-        if (event.target === dialogRef.current) close();
-      }}
+      aria-labelledby="runtime-export-title"
+      onCancel={(event) => { event.preventDefault(); onClose(); }}
+      onClick={(event) => { if (event.target === dialogRef.current) onClose(); }}
     >
       <div className="definition-dialog-shell">
         <header>
           <div>
-            <h2>Edit agent definition</h2>
-            <p>
-              <code>{agentName}</code>
-            </p>
+            <h2 id="runtime-export-title">Export agent definition</h2>
+            <p><code>{agentName}</code></p>
           </div>
-          <button
-            type="button"
-            className="dialog-close"
-            aria-label="Close definition editor"
-            disabled={state.saving}
-            onClick={close}
-          >
-            ×
-          </button>
+          <button type="button" className="dialog-close" aria-label="Close export" onClick={onClose}>×</button>
         </header>
         <div className="definition-dialog-copy">
-          Edit the current YAML definition. Saving validates it and creates an
-          immutable new agent version.
+          The complete published definition, including all settings, nodes, routes and extension fields.
+          Import the JSON or YAML in Editor using Export/Import &gt; Import from agent, as a file or pasted text.
+          Export does not change or publish the Agent.
         </div>
-        <textarea
-          className="definition-editor"
-          aria-label="Agent definition YAML"
-          value={yaml}
-          disabled={state.loading || state.saving}
-          spellCheck="false"
-          onChange={(event) => setYaml(event.target.value)}
-        />
+        <div className="definition-format-tabs" role="tablist" aria-label="Export format">
+          {["yaml", "json"].map((value) => (
+            <button key={value} type="button" role="tab" id={`runtime-export-${value}`}
+              data-format={value} aria-selected={format === value} aria-controls="runtime-export-output"
+              tabIndex={format === value ? 0 : -1}
+              onClick={() => setFormat(value)} onKeyDown={selectFormat}>
+              {value.toUpperCase()}
+            </button>
+          ))}
+        </div>
+        <div className="definition-export-panel" role="tabpanel" id="runtime-export-output"
+          aria-labelledby={`runtime-export-${format}`} aria-busy={state.loading}>
+          <textarea className="definition-editor" aria-label={`Agent definition ${format.toUpperCase()}`}
+            value={output?.[format] || ""} readOnly spellCheck="false" />
+        </div>
         <footer>
-          <span className={`definition-save-state ${state.kind || ""}`}>
-            {state.text}
+          <span className={`definition-save-state ${state.error ? "err" : ""}`}
+            role={state.error ? "alert" : "status"}>
+            {state.loading ? "Loading current definition…" : state.error
+              || (state.version ? `Published version ${state.version}` : "Published definition")}
           </span>
           <div className="definition-dialog-actions">
-            <button type="button" disabled={state.saving} onClick={close}>
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="primary"
-              disabled={state.loading || state.saving || !yaml.trim()}
-              onClick={save}
-            >
-              {state.saving ? "Saving…" : "Save as new version"}
-            </button>
+            <button type="button" onClick={onClose}>Close</button>
           </div>
         </footer>
       </div>

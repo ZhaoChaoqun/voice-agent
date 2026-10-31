@@ -28,9 +28,10 @@ The sample and Portal publishers expand that inheritance at the publication
 boundary for Foundry service deployments that do not yet accept the inheritance
 field. The authored definition stays concise while the deployed Agent receives
 the same combined instructions.
-The Portal Template uses this repository's `shared_mcp` runtime. The Portal
-creates or updates the required RemoteTool connection in the customer's
-selected Foundry Project; it does not rely on a pre-existing connection.
+The default Portal Template uses the public no-auth `/mcp/elevator-service`
+endpoint. It requires no local MCP, Dev Tunnel, setup script, local E2E, or
+RemoteTool connection. The implementation in this repository's `shared_mcp`
+is an optional customer-owned development/hosting path, not Portal setup.
 
 ## When to use this example
 
@@ -97,16 +98,21 @@ end_service_call
 The selected MCP server may expose the additional diagnostic tool
 `get_call_state`, but it is not available to the Agent graph.
 
-The Portal allowlist uses `connection_mode: managed` and reads
-`shared_mcp/config/generated/example3.local.env`. Run the local shared MCP E2E
-first so the Dev Tunnel URL, bearer token, and customer-Project connection are
-ready.
+The default [Portal allowlist](../../portal/templates.config.json) uses
+`connection_mode: public`; start the [Portal](../../portal/README.md), load this
+Template, and choose **Try it now**. No generated local MCP config is needed.
 
 ## Configure the CLI sample
 
+This is the optional customer-managed CLI path. It still needs an MCP URL and
+Project connection. If you choose locally hosted MCP, run the local E2E to
+generate `shared_mcp/config/generated/example3.local.env`; if you use an
+already deployed MCP, select its managed configuration instead. Dev Tunnel is
+only needed for the locally hosted option.
+
 ```bash
 cd /path/to/Cognitive-Speech-TTS/VoiceAgent/samples/example3_elevator_service_with_safety_zendesk_and_handoff
-cp .env.example .env
+[ -f .env ] || cp .env.example .env
 ```
 
 Set the Project endpoint, then select the generated managed MCP config:

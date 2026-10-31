@@ -42,6 +42,9 @@ selected Foundry Project
 The default Portal path has no MCP token or Project connection. In the CLI
 path, Foundry invokes MCP using the credential stored in the customer Project
 connection; the CLI never receives the token.
+Local MCP hosting and Dev Tunnel are optional developer choices. Neither
+`setup-local-examples.sh` nor local MCP E2E is part of default Portal startup
+or publication. Reusing an already deployed MCP also needs no tunnel.
 
 ## Project and Agent ownership
 
@@ -127,7 +130,7 @@ shared_mcp/state/e2e/<UTC-run>/
 
 | Boundary | Evidence |
 | --- | --- |
-| Local dependencies/auth | `setup-local-examples.sh --check` |
+| Optional local MCP/CLI dependencies/auth | `setup-local-examples.sh --check` (not a Portal prerequisite) |
 | Local Portal process | `http://127.0.0.1:9527/healthz`, Portal terminal output |
 | Local MCP process | `http://127.0.0.1:18003/healthz`, newest E2E artifacts |
 | Public MCP/tools | Portal template probe JSON for the no-auth service |
@@ -145,13 +148,13 @@ shared_mcp/state/e2e/<UTC-run>/
 Run from `VoiceAgent/`. These commands do not print the MCP bearer token.
 
 ```bash
-# Dependency, environment, and authentication readiness.
+# Optional local MCP/CLI readiness only; skip for default Portal Templates.
 ./scripts/setup-local-examples.sh --check
 
 # Local Portal health.
 curl -fsS http://127.0.0.1:9527/healthz
 
-# Local MCP health.
+# Local MCP health only if this runtime was deliberately started.
 curl -fsS http://127.0.0.1:18003/healthz
 
 curl -fsS \

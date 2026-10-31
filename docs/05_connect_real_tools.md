@@ -12,6 +12,12 @@ book, send, or store anything real. The fixed test data is listed in the
 You can switch any system of a Template, for example only Salesforce, to your own
 MCP server and keep mock data for the others.
 
+**This integration is optional.** To try the default Templates, use the shared
+public no-auth MCP; do not install or start a local MCP, Dev Tunnel, or Logic
+Apps workflow. Reuse an existing public HTTPS MCP when connecting real tools.
+Dev Tunnel is only a development option for exposing a server on your machine,
+not a requirement for connecting an already deployed service.
+
 | I want to | Read |
 | --- | --- |
 | Use my own server for a system in the Playground | Section 1 |

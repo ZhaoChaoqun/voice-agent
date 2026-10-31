@@ -125,12 +125,14 @@ class PersonalizationTests(unittest.TestCase):
         self.assertNotIn("You are Foundry Voice Agent.", instructions)
         self.assertNotIn("interim_response", definition)
 
-    def test_tool_descriptions_stay_in_toolbox_not_agent_instructions(self):
+    def test_search_policy_complements_general_toolbox_descriptions(self):
         root = Path(__file__).parent
         definition = json.loads((root / "personalized-agent.json").read_text())
         instructions = definition["instructions"]
         toolbox = json.loads((root / "weather-toolbox.json").read_text())
-        for removed in ("WEB SEARCH", "WEATHER LOOKUP", "TOOL ACKNOWLEDGEMENT", "web search", "lookup request"):
+        self.assertEqual(instructions.count("\n\nWEB SEARCH\n"), 1)
+        self.assertIn("current time in a city", instructions)
+        for removed in ("WEATHER LOOKUP", "TOOL ACKNOWLEDGEMENT"):
             self.assertNotIn(removed, instructions)
         self.assertEqual(definition["tool_choice"], "auto")
         self.assertEqual(definition["tools"][0]["toolbox_name"], "weather")

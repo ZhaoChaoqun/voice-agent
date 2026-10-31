@@ -2,8 +2,9 @@
 
 This Python sample demonstrates inbound SIP calls to a native GPT Live Voice
 Agent. It creates an Agent, creates or reuses a `SipInbound` project connection,
-binds it, retrieves the SIP address, reads call records, and removes the binding
-after testing.
+binds it, retrieves the SIP address, configures transfer targets, reads call records,
+and removes the binding after testing. It enables spoken call ending and optionally
+voice-requested transfer, with explicit commands for operator transfer and hangup.
 
 The sample uses **direct model Responses delegation**: GPT Live delegates to a
 Responses model deployment, not to another Foundry Agent. SIP signaling and media
@@ -28,6 +29,9 @@ readiness, and delegation to the Responses model.
   and manage bindings in the specified project.
 - A target region/deployment with SIP ingress, GPT Live, and Live telephony enabled.
   Verify runtime availability and SIP/RTP connectivity separately from resource creation.
+- The service must include shared Live/Realtime system-tool
+  execution support. Older versions can reject `tools` or return an
+  unsupported function result. Updating the sample does not deploy that support.
 - A GPT Live deployment and a Responses model deployment available to the project.
 - A **same-project `SipInbound` Connection**, not `SipOutbound`, ACS, or Twilio.
   Reuse one, or create it with the `connection` command below. That command needs
@@ -111,8 +115,26 @@ the backend model deployment directly, not an Agent name. The definition contain
 }
 ```
 
-The sample uses `store=false` and declares no tools. Recording, transfer, SMS,
-DTMF, and model-initiated hangup are outside its scope.
+The sample uses `store=false` and declares
+`"tools": [{"type": "system", "name": "end_conversation"}]`. The service owns the ending
+workflow; do not replace this with an ordinary backend function of the same name.
+To enable voice-requested transfer, create the Agent with the configured target names:
+
+```powershell
+Copy-Item transfer_targets.example.json transfer_targets.local.json
+# Edit transfer_targets.local.json to use an authorized destination before running create.
+.venv/Scripts/python sip_voice_agent.py create --agent-name sip-live-demo --transfer-targets-file transfer_targets.local.json --dry-run
+.venv/Scripts/python sip_voice_agent.py create --agent-name sip-live-demo --transfer-targets-file transfer_targets.local.json
+```
+
+Use this **instead of** the earlier create command for the same Agent name.
+The Agent declares `type: system, name: transfer` in its root `tools`, using the
+same targets, routing and timeout contract as Realtime. Copy the example target
+file and set its authorized number before creating the Agent. The service builds
+any protocol-specific backend schema and invokes the shared system-tool executor;
+customers do not define a Responses transfer function. Destinations are executor
+settings and are not included in the model-facing schema. Recording, SMS, and DTMF
+remain outside this sample.
 
 The dry-run command can also run with just Python and explicit model arguments,
 without Azure credentials, dependencies, or network access:
@@ -237,7 +259,29 @@ before retrying; the service may already have created the binding. For Agent
 creation, inspect the named Agent before retrying. Create operations are not
 retried or rolled back automatically.
 
-## 5. Call and verify both directions
+## 5. Configure transfer destinations
+
+Copy `transfer_targets.example.json` to `transfer_targets.local.json` and replace
+the example number with a real, authorized E.164 destination, such as a Genesys
+queue's externally reachable number. The same file supplies the Agent system tool during
+`create --transfer-targets-file`. The current SIP provider accepts
+`destination: {"type": "phone_number", "value": "+..."}`; a Genesys queue ID,
+extension, or SIP URI is not an interchangeable destination.
+
+```powershell
+.venv/Scripts/python sip_voice_agent.py targets --agent-name sip-live-demo
+.venv/Scripts/python sip_voice_agent.py targets --agent-name sip-live-demo --file transfer_targets.local.json --dry-run
+.venv/Scripts/python sip_voice_agent.py targets --agent-name sip-live-demo --file transfer_targets.local.json --yes
+```
+
+The `targets` command replaces the **complete agent-scoped target list** used by
+operator `transfer` commands. Voice system-tool targets are in the immutable Agent
+definition created above; changing the operator list does not rewrite that Agent version.
+The command GETs the current ETag and sends `If-Match` on PUT; it stops on a
+missing ETag or conflict. An empty array clears all targets. Inspect the result
+after a timeout before deciding whether to retry.
+
+## 6. Call and verify both directions
 
 In your SIP client or PBX route:
 
@@ -252,7 +296,11 @@ In your SIP client or PBX route:
    reachable in both directions; successful SIP/TLS alone does not prove media works.
 4. Speak first (for example, "Hello, explain what SIP does in one sentence").
    Check that the agent understands the request, responds audibly, handles a
-   follow-up, and stops speaking when interrupted. End the call from the client.
+   follow-up, and stops speaking when interrupted.
+5. On separate calls, ask to speak to `human_support`, then test an explicit
+   goodbye. Confirm that transfer reaches the intended party and the farewell
+   plays before hangup. Also test a busy/rejected destination and verify the
+   original conversation can continue. A submitted transfer is not proof of answer.
 
 The Agent's **24 kHz PCM is the internal MG-to-Live media format**, not a forced
 SIP codec. The SIP offer/answer determines the external codec. If SDP selects
@@ -275,7 +323,27 @@ For `bridge_failed`, correlate the call ID and time with Media Gateway Runtime
 Attach and Agents/model logs. Check deployment, authentication, runtime attach,
 NAT, and firewall configuration before changing codec settings.
 
-## 6. Remove test routing
+### Operator call controls
+
+Use the service-generated `call.id` from `calls`, not the SIP `Call-ID` header:
+
+```powershell
+.venv/Scripts/python sip_voice_agent.py transfer --agent-name sip-live-demo --call-id '<call-id>' --target human_support --dry-run
+.venv/Scripts/python sip_voice_agent.py transfer --agent-name sip-live-demo --call-id '<call-id>' --target human_support
+.venv/Scripts/python sip_voice_agent.py end --agent-name sip-live-demo --call-id '<call-id>' --dry-run
+.venv/Scripts/python sip_voice_agent.py end --agent-name sip-live-demo --call-id '<call-id>'
+```
+
+These commands POST once to `.../telephony/calls/{id}:transfer` with
+`{"target":"human_support"}` or `.../{id}:end` without a body. They require
+Agent write permission and an active call. They do not synthesize an announcement
+or farewell. Check the call record and actual call outcome; do not blindly repeat
+a timed-out action. Hold/resume and summary delivery are not implemented here.
+
+For Genesys Cloud trunk, routing, authentication, and transfer settings, see
+[Genesys SIP integration](GENESYS.md).
+
+## 7. Remove test routing
 
 Hang up first. Delete only the binding you created:
 
@@ -303,7 +371,8 @@ Tests use the real dotenv parser and mock HTTP responses and credentials without
 calling live services.
 They cover direct model Responses delegation, required deployment configuration,
 connection reuse and creation, digest/IP ACL validation, ARM token isolation, secret-free output, exact binding
-fields, URL escaping, ETag cleanup, and failure propagation.
+fields, transfer declarations, target replacement, call-control requests,
+URL escaping, ETag cleanup, and failure propagation.
 They do **not** validate real SIP/TLS/RTP, model behavior, audio quality, or deployed
 feature gates. Those require the manual two-way call above.
 

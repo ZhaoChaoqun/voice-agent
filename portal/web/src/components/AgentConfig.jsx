@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 
-import { isCascaded, modelGroups, transcriptionGroups, voiceGroups } from "../config.js";
+import { isCascaded, modelGroups, transcriptionGroups } from "../config.js";
 import { AVATAR_PRESETS } from "../lib/avatar.mjs";
 import { DEFAULT_INSTRUCTIONS } from "../lib/agentForm.mjs";
 import { LIMITS } from "../lib/authoringContract.mjs";
@@ -8,6 +8,12 @@ import { GREETING_MODES, GREETING_TOOL_CHOICES } from "../lib/greeting.mjs";
 import { HANDOFF_ENTRYPOINT_INSTRUCTIONS } from "../lib/handoff.mjs";
 import { Field, GroupedSelect, SectionHeading, Toggle } from "./ConfigControls.jsx";
 import { StructuredInputsConfig } from "./StructuredInputsConfig.jsx";
+import { VoicePicker } from "./VoicePicker.jsx";
+import { InputLanguagePicker } from "./InputLanguagePicker.jsx";
+import {
+  INPUT_LANGUAGE_HINT,
+  transcriptionLanguageError,
+} from "../../../static/handoff/transcription-languages.mjs";
 
 export function AgentConfig({ cfg, draft, update, disabled, structuredInputConfigs, onStructuredInputsChange }) {
   const hosted = draft.inferenceMode === "hosted_agent";
@@ -117,8 +123,8 @@ export function AgentConfig({ cfg, draft, update, disabled, structuredInputConfi
         <section className="structured-input-settings" aria-label="Structured inputs">
           <h3>Structured inputs</h3>
           <p className="field-hint">
-            Personalize instructions and greetings with variables. Defaults are saved with the agent;
-            override their values in the playground’s Session settings.
+            Personalize instructions and greetings with variables. Defaults are saved with the agent
+            and used by Runtime. Publish a new version to change them.
           </p>
           <StructuredInputsConfig configs={structuredInputConfigs} disabled={disabled} onChange={onStructuredInputsChange} />
         </section>
@@ -147,7 +153,7 @@ export function AgentConfig({ cfg, draft, update, disabled, structuredInputConfi
 export function VoiceConfig({ cfg, draft, update, disabled }) {
   const hosted = draft.inferenceMode === "hosted_agent";
   const cascaded = hosted || isCascaded(cfg, draft.model);
-  const azureOnly = cascaded || draft.avatarEnabled;
+  const languageError = transcriptionLanguageError(draft.transcriptionModel, draft.transcriptionLanguage);
   return (
     <>
       <SectionHeading title="Speech input & output"
@@ -161,26 +167,31 @@ export function VoiceConfig({ cfg, draft, update, disabled }) {
           ? "This STT output is the text consumed by the cascaded model."
           : "The Realtime model understands audio directly; this selection still produces transcript events."}>
           <GroupedSelect value={draft.transcriptionModel}
-            groups={transcriptionGroups(cfg, draft.model, hosted)} disabled={disabled}
+            groups={transcriptionGroups(cfg)} disabled={disabled}
             onChange={(event) => update("transcriptionModel", event.target.value)} />
         </Field>
+        <Field label="Input language" hint={INPUT_LANGUAGE_HINT}>
+          <InputLanguagePicker model={draft.transcriptionModel} value={draft.transcriptionLanguage}
+            disabled={disabled} aria-invalid={Boolean(languageError)}
+            onChange={(language) => update("transcriptionLanguage", language || "Auto")} />
+        </Field>
+        {languageError ? <p role="alert" className="field-hint">{languageError}</p> : null}
       </div>
       <div className="speech-direction-card output">
         <div className="speech-direction-heading">
           <span className="speech-direction-arrow" aria-hidden="true">Agent →</span>
           <div><strong>Speech output (TTS / voice)</strong><small>The reply becomes audio</small></div>
         </div>
-        <Field label="Output voice" hint={azureOnly
-          ? "This model, avatar, or wrapper requires an Azure Speech voice. Incompatible native voices remain visible but disabled."
-          : "GPT Realtime supports either an OpenAI native voice or an Azure Speech voice."}>
-          <GroupedSelect value={draft.voice} groups={voiceGroups(cfg, azureOnly)} disabled={disabled}
+        <Field label="Output voice" hint="Grouped by voice locale, independently of the model. Service errors are shown if a configuration is rejected.">
+          <VoicePicker cfg={cfg} value={draft.voice} disabled={disabled}
             onChange={(event) => update("voice", event.target.value)} />
         </Field>
+        <p className="field-hint">{cfg.voiceCatalogNotice}</p>
       </div>
       <div className={`audio-compatibility-note ${cascaded ? "cascaded" : "realtime"}`}>
         <strong>{cascaded ? "Cascaded pipeline" : "Realtime audio pipeline"}</strong>
         <span>{cascaded
-          ? "STT feeds text to the model. Spoken output uses Azure Speech."
+          ? "STT feeds text to the model. Voice controls spoken output separately."
           : "The model reads caller audio natively. STT runs alongside it for transcripts; voice controls output only."}</span>
       </div>
       <div className="audio-format-note"><span>24 kHz PCM</span><span>Server VAD</span><span>Audio response</span></div>

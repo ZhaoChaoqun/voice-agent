@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import unittest
 from pathlib import Path
+from urllib.parse import parse_qsl, urlsplit
 
 from aiohttp.test_utils import TestClient, TestServer
 
@@ -36,11 +37,14 @@ class HandoffPortalRouteTests(unittest.IsolatedAsyncioTestCase):
         markup = await response.text()
         self.assertIn("Editor · Voice Agents", markup)
         self.assertIn('aria-label="Portal pages"', markup)
-        self.assertIn(">AgentRuntime<", markup)
+        self.assertIn(">Runtime<", markup)
         self.assertNotIn('href="/templates/"', markup)
         self.assertNotIn(">Dashboard<", markup)
 
-        for asset in ("handoff-app.js", "handoff-core.mjs", "handoff.css"):
+        for asset in (
+            "handoff-app.js", "handoff-core.mjs", "js-yaml.mjs", "voice-picker.mjs",
+            "transcription-languages.mjs", "anchored-popover.mjs", "handoff.css",
+        ):
             with self.subTest(asset=asset):
                 response = await self.client.get(f"/static/handoff/{asset}")
                 self.assertEqual(200, response.status)
@@ -54,15 +58,33 @@ class HandoffPortalRouteTests(unittest.IsolatedAsyncioTestCase):
         for source, target in (
             ("/", "/editor/"),
             ("/?backend=sample", "/editor/?backend=sample"),
-            ("/?agent=existing&view=handoff", "/demo/?agent=existing&view=handoff"),
+            ("/?agent=existing&view=handoff", "/runtime/?agent=existing&view=handoff"),
         ):
             with self.subTest(source=source):
                 response = await self.client.get(source, allow_redirects=False)
                 self.assertEqual(302, response.status)
                 self.assertEqual(target, response.headers["Location"])
-        response = await self.client.get("/demo/")
+        response = await self.client.get("/runtime/")
         self.assertEqual(200, response.status)
         self.assertIn("/static/demo/bundle.js", await response.text())
+
+    async def test_runtime_aliases_preserve_deep_link_parameters(self) -> None:
+        query = "?agent=existing&view=handoff&transport=webrtc&debug=1&value=a%26b%2Fc&tag=one&tag=two"
+        for path in ("/runtime", "/demo", "/demo/"):
+            for suffix in ("", query):
+                with self.subTest(path=path, suffix=suffix):
+                    response = await self.client.get(path + suffix, allow_redirects=False)
+                    self.assertEqual(308, response.status)
+                    location = urlsplit(response.headers["Location"])
+                    self.assertEqual("/runtime/", location.path)
+                    self.assertEqual(
+                        parse_qsl(suffix.removeprefix("?"), keep_blank_values=True),
+                        parse_qsl(location.query, keep_blank_values=True),
+                    )
+                    response = await self.client.get(path + suffix)
+                    self.assertEqual(200, response.status)
+                    self.assertEqual("/runtime/", response.url.path)
+                    self.assertIn("<title>Voice agent runtime</title>", await response.text())
 
     async def test_legacy_handoff_url_redirects_to_editor(self) -> None:
         for source, target in (
@@ -136,15 +158,19 @@ class HandoffPortalStaticContractTests(unittest.TestCase):
         self.assertIn("detail.definition", app)
         self.assertNotIn("publishDefinition(true)", app)
         self.assertIn("view=handoff", app)
-        self.assertIn('get("view") === "handoff"', studio)
-        self.assertIn('<span aria-current="page">AgentRuntime</span>', studio_header)
+        self.assertNotIn("Agent Creation", studio)
+        self.assertNotIn("onCreateAgent", studio)
+        self.assertIn('<span aria-current="page">Runtime</span>', studio_header)
         self.assertNotIn('href="/templates"', studio_header)
         self.assertIn('href="/editor/"', studio_header)
         self.assertIn(">Editor</a>", studio_header)
-        self.assertIn(">AgentRuntime</a>", templates)
+        self.assertIn(">Runtime</a>", templates)
         self.assertNotIn('href="/templates/"', templates)
         self.assertIn('href="/editor/"', templates)
-        self.assertIn('href="/demo/"', templates)
+        self.assertIn('href="/runtime/"', templates)
+        self.assertIn('href="/runtime/"', html)
+        self.assertIn('href="/runtime/"', studio_header)
+        self.assertIn('window.location.assign(`/runtime/?agent=', app)
 
 
 if __name__ == "__main__":

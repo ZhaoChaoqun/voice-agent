@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export PATH="${ROOT}/../.local-tools/devtunnel/bin:${HOME}/bin:${PATH}"
 SAMPLES_ROOT="$(cd "${ROOT}/../samples" && pwd)"
 HANDOFF_SAMPLE="${SAMPLES_ROOT}/example1_finance_with_handoff_realtime"
 OTP_SAMPLE="${SAMPLES_ROOT}/example2_finance_with_OTP_and_Officer_Search"

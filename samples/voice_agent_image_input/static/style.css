@@ -1,0 +1,31 @@
+:root { font-family: system-ui, sans-serif; color: #1b1b1f; background: #f5f6f8; }
+body { margin: 0; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.75rem 1.25rem; background: #fff; border-bottom: 1px solid #ddd; flex-wrap: wrap; }
+header h1 { font-size: 1.15rem; margin: 0; }
+.session { display: flex; gap: 0.75rem; align-items: center; }
+.status { font-size: 0.85rem; color: #555; }
+main { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 1rem; padding: 1rem 1.25rem; }
+@media (max-width: 820px) { main { grid-template-columns: 1fr; } }
+section { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 0.75rem; }
+.chat { display: flex; flex-direction: column; min-height: 70vh; }
+#log { list-style: none; padding: 0; margin: 0; flex: 1; overflow-y: auto; max-height: 62vh; }
+#log li { margin: 0.4rem 0; padding: 0.5rem 0.7rem; border-radius: 8px; max-width: 85%; white-space: pre-wrap; }
+#log li.user { background: #e6f0ff; margin-left: auto; }
+#log li.assistant { background: #f0f0f3; }
+#log li.notice { background: #fff8e1; font-size: 0.85rem; }
+#log li.error { background: #fde7e9; font-size: 0.85rem; }
+#log li img { display: block; max-width: 160px; max-height: 120px; margin-top: 0.35rem; border-radius: 4px; }
+.latency { font-size: 0.8rem; color: #555; min-height: 1.2em; margin: 0.25rem 0; }
+.row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+#text { flex: 1; min-width: 12rem; padding: 0.5rem; }
+button, .file { padding: 0.45rem 0.9rem; border: 1px solid #888; border-radius: 6px; background: #fff; cursor: pointer; font: inherit; }
+button:disabled { opacity: 0.5; cursor: default; }
+.previews { display: flex; gap: 0.4rem; margin-bottom: 0.4rem; flex-wrap: wrap; }
+.previews span { position: relative; }
+.previews img { width: 72px; height: 54px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
+.previews button { position: absolute; top: -6px; right: -6px; padding: 0 0.35rem; border-radius: 50%; }
+.preview-shell { position: relative; background: #222; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; margin-bottom: 0.5rem; }
+video { width: 100%; height: 100%; object-fit: contain; }
+.badge { position: absolute; top: 6px; left: 6px; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: #666; color: #fff; }
+.badge.on { background: #c62828; }
+.hint { font-size: 0.8rem; color: #555; }

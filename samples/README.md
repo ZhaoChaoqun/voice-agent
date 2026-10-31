@@ -14,13 +14,21 @@ For the general browser UI, use the local
 independent shared MCP reference implementation, start with the
 [Finance documentation index](../docs/README.md).
 
+**Default Portal Templates use the public no-auth MCP.** Local MCP hosting,
+Dev Tunnel, `setup-local-examples.sh`, and local E2E are optional development
+paths, not prerequisites for browsing, publishing, or trying Templates.
+Finance CLI examples have separate managed-MCP configuration requirements;
+an existing customer-hosted MCP does not need a local tunnel.
+
 ## Choose a sample
 
 | Sample | What it demonstrates |
 | --- | --- |
 | [Voice Agent Cost Lab](../tools/cost_calculator/README.md) | Standalone browser list-price calculator in `tools`: South India model prices, labeled Central India HD/Voice Live references, managed/BYOM model selection, prompt sensitivity, and CSV export. No Azure credentials required. |
 | [Add voice to an existing customer agent](existing_agent_voice_design/README.md) | Design guide: use a Hosted Agent as the Foundry Voice Agent conversation engine to connect managed voice to an existing customer agent or API endpoint. Includes a high-level architecture diagram; not a runnable sample. |
+| [Google ADK with an existing Voice Agent](adk_voice_agent/README.md) | One ADK live-audio application with configuration-only selection of Gemini Live or an existing Foundry Voice Agent, SDK transport, PCM resampling, transcripts, interruption handling, and offline tests. |
 | [Voice Live to Voice Agent migration](voice_live_to_voice_agent/README.md) | Compare the same Azure Speech -> GPT-4.1 mini -> Azure TTS cascade and shared local functions before and after migration. Includes dynamic session context and mid-session instruction-update examples. |
+| [Voice Agent with image and camera input](voice_agent_image_input/README.md) | Send text, uploaded images, or sampled camera frames as `input_image` parts and hear the answer. Includes a loopback web UI, a latency-measuring CLI, a bounded camera-frame window, sizing guidance, and direct-vs-separate-vision integration patterns. |
 | [Vehicle voice agent with local tools](vehicle_local_tools/README.md) | Web cockpit with cloud voice interaction and locally executed simulated climate, media, and navigation functions. Includes an offline dashboard, local policy enforcement, and a tool execution log. |
 | [Long tool waits with spoken reminders](long_tool_wait/README.md) | Keep callers informed during slow local tools using out-of-band Voice Agent speech, with both GPT Realtime and an Azure Speech / GPT-5.4 pipeline. |
 | [Language learning with pronunciation assessment](language_learning/README.md) | Have a hands-free conversation with a voice coach that asks you to read specified sentences, then gives per-sentence and word-level feedback through an Azure Speech Pronunciation Assessment function tool. Supports spoken retries and a WAV-file mode. |
@@ -29,6 +37,7 @@ independent shared MCP reference implementation, start with the
 | [Agent-based transcript refinement, summary, and translation](audio_transcribe_and_translate/README.md) | Transcribe a WAV recording with mai-transcribe-2 and process it with a gpt-5.4 Voice Agent. Includes refinement and translation modes, guidance for adapting the instructions to summarization, and a 60-second input limit. Supports native Windows PowerShell. |
 | [Knowledge, Andrew Dragon HD, and Harry Business](create_agent_with_iq_avatar_voice/README.md) | Portal creation is recommended; optional Python validation/create/readback is included. Supports optional custom photo avatar and Personal Voice workflows. |
 | [Scenario-driven conversation simulation and evaluation](simulation_evaluation/README.md) | Use Foundry's cloud simulation API to generate adaptive conversations from user goals, score task completion and coherence, and preserve results. Text by default; optional cloud voice configuration requires a supported target/project. |
+| [Foundry evaluation with a custom rubric](foundry_evaluation/README.md) | Illustrated airline refund-eligibility evaluation tutorial, reported two-stage simulation/transcript-grading workflow, and a preliminary Python runner with documented live compatibility issues. |
 | [`simple_rest_lifecycle.py`](simple_rest_lifecycle.py) | Create a simple Agent with REST, or retrieve an existing Agent. |
 | [`basic_voice_agent.py`](basic_voice_agent.py) | Create and version a basic Agent, or connect to an existing Agent, then converse through the microphone. |
 | [Create, converse, and evaluate](conversation_evaluation/README.md) | Create one stored Voice Agent and run four three-turn sessions with real audio input/output; evaluate actual spoken transcripts, compare successful and deliberately failed tasks, and export WAVs/results with bounded polling and persistence checks. |
@@ -47,6 +56,8 @@ independent shared MCP reference implementation, start with the
 | [Hosted GitHub Copilot subagent](subagent/voice_subagent_hosted_agent/README.md) | Create a voice agent that delegates research, learning, and coding tasks to an existing hosted GitHub Copilot agent. |
 | [Finance with Handoff - Realtime](example1_finance_with_handoff_realtime/README.md) | Finance graph on the Realtime pipeline (`gpt-realtime-regional`) with a text Voice WebSocket CLI. |
 | [Finance with Handoff - Cascade](example1_finance_with_handoff_cascade/README.md) | Finance graph on the Cascade pipeline (`gpt-4.1-mini`, Azure Speech) in its own directory, with its own CLI. |
+| [Finance with Handoff - Realtime, Hindi](example1_finance_with_handoff_realtime_hi_in/README.md) | Independent `hi-IN` input/output version using GPT Realtime, Azure Speech, and Swara, with English business instructions. |
+| [Finance with Handoff - Cascade, Hindi](example1_finance_with_handoff_cascade_hi_in/README.md) | Independent `hi-IN` input/output version using GPT-4.1 mini, Azure Speech, and Swara, with English business instructions. |
 | [Finance with OTP and Officer Search](example2_finance_with_OTP_and_Officer_Search/README.md) | Publish a flat Finance Agent for OTP verification and loan-officer search, then run a text smoke test. |
 | [Elevator Service with Safety, Zendesk, and Handoff](example3_elevator_service_with_safety_zendesk_and_handoff/README.md) | Publish an inbound field-service graph with deterministic safety checks, explicit Zendesk ticket confirmation, exact-ID status queries, and human-assistance routing. |
 | [Front Desk with Fluency and Handoff](example4_frontdesk_with_fluency_and_handoff/README.md) | Load a response-first receptionist Template with company FAQ, grounded support search, honest transfer fallback, and callback-message persistence only after explicit confirmation. |
@@ -80,6 +91,7 @@ independent shared MCP reference implementation, start with the
 | [Technical Support Agent with Handoff](example32_technical_support_agent/README.md) | Run a technical support graph that troubleshoots one step at a time and reads back an escalation without filing a ticket. |
 | [Travel Agency Trip Planner with Handoff](example33_travel_agency_trip_planner/README.md) | Run a trip planning graph that recommends sample packages with ballpark pricing and captures a trip request without booking it. |
 | [User Research Interviewer with Handoff](example34_user_research_interviewer/README.md) | Run a interview graph that branches on available time between a deep dive and priority questions and recaps the answers. |
+| [Conference Concierge (Ignite 2026)](example35_conference_concierge/README.md) | Find sessions, get recommendations, build an agenda with clash checks, hear what is starting now and official room changes, and get FAQ and on-site logistics answers in any language, on the stateless conference MCP pack with the live public catalog, the official FAQ, and the event guide. |
 | [C# voice agent sample](CSharp/README.md) | Create and manage a temporary Agent or use an existing Agent, stream audio over WebSocket, and read persisted conversations and recordings. |
 | [Java live audio Voice Agent sample](java/README.md) | Create a temporary Agent and run an asynchronous microphone and speaker conversation with Enter-to-end, barge-in, persisted conversation readback, and cleanup. |
 | [`download_conversation_artifacts.py`](download_conversation_artifacts.py) | Download conversation JSON, per-turn WAV files, and the merged stereo WAV. |
@@ -119,7 +131,7 @@ this voice-first Agent sample.
 
 ## Choose the right setup
 
-The Voice Live migration, Finance, Elevator, language-learning, vehicle-local-tools, long-tool-wait, and documentation-generated voice web
+The Voice Live migration, Finance, Elevator, language-learning, vehicle-local-tools, image-input, long-tool-wait, and documentation-generated voice web
 samples use their own `requirements.txt` files. The voice web sample uses a standalone HTTP/WebSocket
 backend and does not require the Projects SDK; follow its README for setup.
 The common Python SDK samples require `azure-ai-projects>=2.7.0` from PyPI.
@@ -154,7 +166,7 @@ PowerShell:
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r samples\requirements.txt
-Copy-Item samples\.env.example samples\.env
+if (-not (Test-Path samples\.env)) { Copy-Item samples\.env.example samples\.env }
 ```
 
 Linux, macOS, or WSL2:
@@ -162,7 +174,7 @@ Linux, macOS, or WSL2:
 ```bash
 python3 -m venv .venv
 .venv/bin/python -m pip install -r samples/requirements.txt
-cp samples/.env.example samples/.env
+[ -f samples/.env ] || cp samples/.env.example samples/.env
 ```
 
 The single `pip install` command installs every common Python sample

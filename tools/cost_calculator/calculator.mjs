@@ -2,7 +2,7 @@ export const DEFAULTS = Object.freeze({
   duration: 90, turns: 4, humanSeconds: 45, agentSeconds: 45,
   inputAudioRate: 10, outputAudioRate: 20,
   userText: 150, agentText: 150, nativeText: 0, reasoning: 0,
-  cachePercent: 100, silencePercent: 20, prompt: 5000, calls: 10000,
+  cachePercent: 100, silencePercent: 5, prompt: 5000, calls: 10000,
 });
 
 export const PROMPTS = [0, 1000, 5000, 10000, 20000];
@@ -16,7 +16,7 @@ export const MODELS = [
   { id: "gpt-realtime-1.5", name: "GPT Realtime 1.5", tier: "Pro", realtime: true },
   { id: "azure-realtime", name: "Azure Realtime", tier: "Pro", realtime: true, managedPipeline: "native" },
   { id: "azure-realtime-fast", name: "Azure Realtime Fast", tier: "Lite", realtime: true,
-    managedPipeline: "hybrid", tierAssumption: true },
+    managedPipeline: "native", tierAssumption: true },
   { id: "gpt-4.1", name: "GPT-4.1", tier: "Pro" },
   { id: "gpt-4.1-mini", name: "GPT-4.1 mini", tier: "Std" },
   { id: "gpt-4.1-nano", name: "GPT-4.1 nano", tier: "Lite" },

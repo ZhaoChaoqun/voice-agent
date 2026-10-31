@@ -22,7 +22,7 @@ export default defineConfig({
   },
   webServer: {
     command: "node tests/serve.mjs",
-    url: "http://127.0.0.1:8098/demo/",
+    url: "http://127.0.0.1:8098/runtime/",
     reuseExistingServer: false,
   },
 });

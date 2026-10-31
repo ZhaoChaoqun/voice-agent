@@ -15,6 +15,9 @@ Every new example intended for the portal **must** follow this contract:
 Default examples use `connection_mode: public` with the public no-auth MCP
 configured in `portal/templates.config.json`. They work in a newly created
 Foundry Project without local files, bearer tokens, or Project connections.
+Local MCP hosting, Dev Tunnel, setup scripts, and local E2E are optional
+developer workflows, not requirements for adding or using a public-mode
+Template that reuses the existing hosted service.
 The business-pack reference implementation remains in this repository's
 `shared_mcp` directory. A checked-in example must never assume that a
 connection already exists in a Microsoft test Project.
@@ -158,8 +161,9 @@ No Foundry Project connection is created.
 
 ### `managed` — customer-owned MCP mode
 
-Use this for examples backed by this repository's native `shared_mcp` runtime
-and Dev Tunnel.
+This is an optional customer-owned development mode, not the default Template
+path. Use it when deliberately selecting this repository's native `shared_mcp`
+runtime and Dev Tunnel. Reusing a deployed public no-auth MCP requires neither.
 
 - `config_file` must resolve under `VoiceAgent/shared_mcp/` and provide:
 
@@ -175,7 +179,7 @@ and Dev Tunnel.
 - Agents published through this mode receive the `local-only-` prefix because
   they depend on this machine's native MCP process and Dev Tunnel.
 
-When an example introduces a new business pack implemented in this repository,
+Only when an example introduces a new business pack implemented in this repository,
 add it to `shared_mcp` before allowlisting it:
 
 1. create or extend a business pack under `shared_mcp/app/shared_mcp/`;
@@ -184,6 +188,9 @@ add it to `shared_mcp` before allowlisting it:
    `shared_mcp/scripts/e2e-local.sh`;
 4. generate a non-secret route config under `shared_mcp/config/generated/`;
 5. add route inventory and authenticated probe tests.
+
+Do not run local E2E, generate local connection files, or install Dev Tunnel
+for an example that simply reuses the existing public service.
 
 An example may instead reuse an existing external hosted MCP contract, as the
 [Front Desk sample](example4_frontdesk_with_fluency_and_handoff/README.md) does.

@@ -9,13 +9,20 @@ const modelChoices = ['gpt-realtime-2.1', 'gpt-realtime-2.1-mini', 'azure-realti
 let preparingAgent = false;
 let agentAvailability = 'unknown';
 let savedModel = null, savedVersion = null, savedTranscription = null, latestDownload = null, downloading = false;
+let selectedAgent = null;
+let realtimeTranscription = null, transcriptionChanged = false;
+
+function agentPath(path, agent = selectedAgent) {
+  return agent && agent !== config?.agent ?
+    `${path}${path.includes('?') ? '&' : '?'}agent=${encodeURIComponent(agent)}` : path;
+}
 
 function updateAgentControls() {
   const busy = Boolean(call) || preparingAgent;
   $('start').disabled = busy || !config?.configured || agentAvailability === 'unknown';
   $('start').textContent = agentAvailability === 'missing' ? 'Create Agent & start' :
     agentAvailability === 'error' ? 'Retry setup & start' : 'Start conversation';
-  $('recreate-agent').disabled = busy || !config?.configured || !config?.agentRecreateAllowed || agentAvailability !== 'ready';
+  $('recreate-agent').disabled = busy || !config?.configured || !config?.agentRecreateAllowed || agentAvailability !== 'ready' || savedModel === 'gpt-live-1';
   $('agent-model-choice').disabled = busy || agentAvailability !== 'ready';
   const live = $('agent-model-choice').value === 'gpt-live-1';
   $('agent-transcription-choice').disabled = busy || agentAvailability !== 'ready' || live;
@@ -34,18 +41,25 @@ function updateVoiceChoices(model) {
   $('voice').hidden = native || live;
   $('native-voice').hidden = !native;
   $('live-voice').hidden = !live;
-  for (const id of ['voice', 'native-voice', 'live-voice']) $(id).disabled = Boolean(call) || $(id).hidden;
+  if (live) $('live-voice').value = '';
+  for (const id of ['voice', 'native-voice', 'live-voice'])
+    $(id).disabled = Boolean(call) || $(id).hidden || id === 'live-voice';
   $('voice-label').htmlFor = live ? 'live-voice' : native ? 'native-voice' : 'voice';
   $('live-model-hint').hidden = !live;
 }
 
 function applyAgentDetails(result) {
+  selectedAgent = result.agent || selectedAgent || config?.agent;
+  $('agent').textContent = selectedAgent || 'Not configured';
   savedModel = result.modelChoice || (typeof result.model === 'string' ? result.model : null);
   savedVersion = typeof result.version === 'string' ? result.version : null;
   savedTranscription = typeof result.transcriptionModel === 'string' ? result.transcriptionModel : null;
+  if (savedModel !== 'gpt-live-1') realtimeTranscription = savedTranscription;
+  transcriptionChanged = false;
   $('agent-transcription').textContent = savedModel === 'gpt-live-1' ? 'Built into GPT Live' : savedTranscription ?
     savedTranscription + (result.exists === false ? ' (after setup)' : '') : 'Unavailable';
-  $('agent-transcription-choice').value = savedTranscription || (savedModel === 'gpt-live-1' ? config.defaultTranscriptionModel || 'mai-transcribe-2' : '');
+  $('agent-transcription-choice').value = savedTranscription ||
+    (savedModel === 'gpt-live-1' ? realtimeTranscription || config.defaultTranscriptionModel || 'mai-transcribe-2' : '');
   $('agent-version').textContent = savedVersion || (result.exists === false ? 'Not created' : 'Unavailable');
   $('agent-model-choice').value = modelChoices.includes(savedModel) ?
     savedModel : 'gpt-realtime-2.1';
@@ -65,8 +79,9 @@ function applyAgentDetails(result) {
     savedModel === 'azure-realtime-flash-2026-10-14' ?
     'Automatic interruption truncation is disabled for this model. Interrupted replies may still show text that was not heard; the transcript is not authoritative retained history.' :
     "Replies stream here as live drafts. After an interruption, only the service's retained text remains; unheard text is removed.";
-  if (result.personalizationRequired) {
-    config.personalizationRequired = true;
+  config.personalizationRequired = Boolean(result.personalizationRequired);
+  $('personalize').disabled = config.personalizationRequired;
+  if (config.personalizationRequired) {
     $('personalize').checked = true;
     $('personalize').disabled = true;
   }
@@ -78,14 +93,17 @@ async function saveAgentModel() {
   updateAgentControls();
   $('error').hidden = true;
   try {
-    const response = await fetch('/api/agent/model', {method:'POST', signal:AbortSignal.timeout(95000),
+    const response = await fetch(agentPath('/api/agent/model'), {method:'POST', signal:AbortSignal.timeout(95000),
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:$('agent-model-choice').value, version:savedVersion,
-        ...($('agent-model-choice').value === 'gpt-live-1' ? {} : {transcriptionModel:$('agent-transcription-choice').value})})});
+        ...($('agent-model-choice').value !== 'gpt-live-1' && (savedModel !== 'gpt-live-1' || transcriptionChanged) ?
+          {transcriptionModel:$('agent-transcription-choice').value} : {})})});
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Could not save the model version.');
     applyAgentDetails(result);
-    $('agent-preparation').textContent = `Version ${savedVersion} is saved and ready.`;
+    $('agent-preparation').textContent = result.switchedAgent ?
+      `Switched to "${selectedAgent}", version ${savedVersion}. Both Agents and their previous versions are preserved.` :
+      `Version ${savedVersion} is saved and ready.`;
   } catch (error) {
     showError(error.message);
   } finally {
@@ -97,7 +115,7 @@ async function saveAgentModel() {
 async function showAgentSettings() {
   $('show-settings').disabled = true;
   try {
-    const response = await fetch('/api/agent/settings', {signal:AbortSignal.timeout(40000)});
+    const response = await fetch(agentPath('/api/agent/settings'), {signal:AbortSignal.timeout(40000)});
     const result = await response.json();
     if (!response.ok || typeof result.yaml !== 'string') throw new Error(result.error || 'Could not read Agent settings.');
     $('settings-yaml').textContent = result.yaml;
@@ -116,7 +134,7 @@ async function downloadConversation() {
   updateAgentControls();
   $('download-status').textContent = 'Preparing your log and audio. Azure may need a minute to finalize the recording...';
   try {
-    const response = await fetch('/api/conversation/download', {method:'POST',
+    const response = await fetch(agentPath('/api/conversation/download', latestDownload.agent), {method:'POST',
       headers:{'Content-Type':'application/json'}, signal:AbortSignal.timeout(95000),
       body:JSON.stringify({downloadToken:latestDownload.downloadToken})});
     if (!response.ok) {
@@ -149,7 +167,7 @@ async function inspectAgent() {
   $('agent-preparation').textContent = 'Checking for your saved Agent...';
   $('agent-model').textContent = 'Checking...';
   try {
-    const response = await fetch('/api/agent', {signal:AbortSignal.timeout(95000)});
+    const response = await fetch(agentPath('/api/agent'), {signal:AbortSignal.timeout(95000)});
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Could not check the saved Agent.');
     if (typeof result.exists !== 'boolean') throw new Error('The server returned an invalid Agent status.');
@@ -178,6 +196,7 @@ async function prepareAgent(recreate = false) {
   if (call) throw new Error('End the conversation before changing the Agent.');
   if (preparingAgent) throw new Error('Agent preparation is already running.');
   if (recreate) {
+    if (savedModel === 'gpt-live-1') throw new Error('Switch to the realtime Agent before resetting it.');
     if (!config.agentRecreateAllowed) throw new Error('Agent recreation is disabled by the server.');
     if (agentAvailability !== 'ready') throw new Error('Start a conversation to set up the Agent before resetting it.');
     const confirmation = window.prompt(
@@ -192,7 +211,7 @@ async function prepareAgent(recreate = false) {
   $('agent-preparation').textContent = recreate ? 'Resetting your Agent and preparing web search tools...' :
     agentAvailability === 'missing' ? 'Preparing web search tools, then creating and saving your Agent...' : 'Getting your Agent ready...';
   try {
-    const response = await fetch(recreate ? '/api/agent/recreate' : '/api/agent/prepare', {
+    const response = await fetch(agentPath(recreate ? '/api/agent/recreate' : '/api/agent/prepare'), {
       method:'POST', signal:AbortSignal.timeout(95000),
       ...(recreate ? {headers:{'Content-Type':'application/json'}, body:JSON.stringify({confirm_agent:config.agent})} : {}),
     });
@@ -383,7 +402,8 @@ function markReady(session) {
   }
 }
 function openSocket(session, onOpen) {
-  const ws = session.ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/api/voice?transport=${session.transport}${session.live ? '&protocol=live' : ''}${session.personalization ? '&personalize=true' : ''}${session.voice ? `&voice=${encodeURIComponent(session.voice)}` : ''}`);
+  const path = agentPath(`/api/voice?transport=${session.transport}${session.live ? '&protocol=live' : ''}${session.personalization ? '&personalize=true' : ''}${session.voice ? `&voice=${encodeURIComponent(session.voice)}` : ''}`, session.agent);
+  const ws = session.ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}${path}`);
   ws.onopen = () => {
     if (call !== session) return;
     if (session.personalization) ws.send(JSON.stringify(session.personalization));
@@ -477,7 +497,8 @@ async function handleEvent(session, event) {
     if (typeof event.downloadToken !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(event.conversationId)) {
       throw new Error('Invalid conversation download reference.');
     }
-    latestDownload = {downloadToken:event.downloadToken, conversationId:event.conversationId};
+    latestDownload = {downloadToken:event.downloadToken, conversationId:event.conversationId,
+      agent:event.agent || session.agent};
     $('download-status').textContent = 'Audio is being saved in Azure. End the conversation to download.';
     updateAgentControls();
   } else if (type === 'session.updated' && session.transport === 'websocket') {
@@ -554,7 +575,7 @@ async function start() {
     english_only:$('english-only').checked,
   } : null;
   const session = {abort:new AbortController(), muted:false, transport:$('transport').value, ready:false, personalization,
-    model:savedModel,
+    model:savedModel, agent:selectedAgent,
     live:savedModel === 'gpt-live-1',
     voice:savedModel === 'gpt-live-1' ? $('live-voice').value :
       savedModel === 'azure-realtime' ? $('native-voice').value : $('voice').value}; call = session;
@@ -633,7 +654,7 @@ $('agent-model-choice').onchange = () => {
   updateVoiceChoices($('agent-model-choice').value);
   updateAgentControls();
 };
-$('agent-transcription-choice').onchange = updateAgentControls;
+$('agent-transcription-choice').onchange = () => { transcriptionChanged = true; updateAgentControls(); };
 $('save-model').onclick = saveAgentModel;
 $('show-settings').onclick = showAgentSettings;
 $('close-settings').onclick = () => $('settings-dialog').close();

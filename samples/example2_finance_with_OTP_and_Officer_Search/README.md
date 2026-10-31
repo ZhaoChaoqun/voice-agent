@@ -1,7 +1,9 @@
 # Finance with OTP and Officer Search - Projects SDK sample
 
 Start with the [architecture and documentation index](../../docs/README.md).
-For the complete local MCP serving, publication, and UI workflow, use
+To try the Template, use the [Portal](../../portal/README.md) and its public
+no-auth MCP. No local MCP, Dev Tunnel, setup script, or local E2E is required.
+For the optional customer-managed CLI/local MCP workflow, use
 [03: Start and run the samples](../../docs/03_run_samples.md).
 
 ## Conclusion
@@ -9,8 +11,9 @@ For the complete local MCP serving, publication, and UI workflow, use
 This sample publishes a customer-neutral, flat, MCP-only Finance Voice Agent
 through the `azure-ai-projects` unified Agents API and runs a text-only
 Voice WebSocket smoke test. It defaults to service-managed `gpt-realtime`,
-American English, and business tools for OTP, loan-offer discussion, explicit interest,
-loan-officer selection, callback, and call disposition.
+`azure-speech` input transcription, American English, and business tools for OTP,
+loan-offer discussion, explicit interest, loan-officer selection, callback,
+and call disposition.
 
 Because the definition has no handoff graph, publication constructs
 `VoiceAgentDefinition(mapping)` before calling
@@ -46,6 +49,9 @@ example use the same shared MCP service; this example targets
 
 ## Prerequisites
 
+These prerequisites apply to the optional CLI below, not to default Portal
+Templates. The CLI retains its managed MCP URL/connection requirements.
+
 - Python 3.10 or later and Git.
 - Access to a Microsoft Foundry Project with a compatible realtime model.
 - Permission to create a Project connection and either host the included MCP
@@ -60,6 +66,12 @@ After that shared step, this README is the source of truth for this scenario's
 MCP connection, `.env`, SDK publication, readback, and runtime validation.
 
 ## Deploy the included MCP service
+
+Optional: deploy only if you want to host your own backend. Default Portal
+Templates already have a public no-auth MCP. Reuse an existing compatible
+customer-owned server/connection instead when available; neither option needs
+Dev Tunnel. Local MCP development is the separate option in the
+[MCP guide](../../docs/02_mcp_settings.md).
 
 From `../../shared_mcp`, run:
 
@@ -77,7 +89,7 @@ Project connection, never in `agent.json` or this sample directory. See
 
 ```bash
 cd /path/to/Cognitive-Speech-TTS/VoiceAgent/samples/example2_finance_with_OTP_and_Officer_Search
-cp .env.example .env
+[ -f .env ] || cp .env.example .env
 ```
 
 Set the Project endpoint, isolated Agent name, model, and

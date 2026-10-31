@@ -161,6 +161,7 @@ export function ChatPanel({ session, agent, cfg }) {
     activeHandoffNodeId,
     isConnected,
     sessionReady,
+    toolsLoading,
     messages,
     avatarActive,
     avatarStatus,
@@ -195,7 +196,7 @@ export function ChatPanel({ session, agent, cfg }) {
   };
 
   const onSend = () => {
-    if (!isConnected || !sessionReady || !text.trim()) return;
+    if (!isConnected || !sessionReady || toolsLoading || !text.trim()) return;
     sendText(text);
     setText("");
   };
@@ -308,12 +309,13 @@ export function ChatPanel({ session, agent, cfg }) {
         <input
           type="text"
           aria-label="Message your agent"
-          placeholder={isConnected ? "Message your agent…" : "Connect to start a conversation…"}
+          placeholder={!isConnected ? "Connect to start a conversation…" : toolsLoading ? "Loading tools…" : "Message your agent…"}
+          disabled={isConnected && toolsLoading}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) onSend(); }}
         />
-        <button className="primary" disabled={!isConnected || !sessionReady || !text.trim()} onClick={onSend}>Send<Icon name="arrow" /></button>
+        <button className="primary" disabled={!isConnected || !sessionReady || toolsLoading || !text.trim()} onClick={onSend}>Send<Icon name="arrow" /></button>
       </div>
     </main>
   );

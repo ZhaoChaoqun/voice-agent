@@ -4,12 +4,15 @@
 // pass-through that injects ONLY the bearer token. Ported from common.py (build_voice_definition /
 // build_voice_config / create_agent + generate_agent payloads).
 
-// audio.output.voice object: OpenAI realtime voices are single lowercase words (e.g. "alloy"); Azure
-// voices use locale-prefixed, hyphenated names (e.g. "en-US-AvaNeural") -> azure-standard.
+import { PIPELINE_COMPONENTS } from "../../../static/handoff/handoff-core.mjs";
+import { buildInputTranscription } from "../../../static/handoff/transcription-languages.mjs";
+
 export const DEFAULT_VOICE_INSTRUCTIONS =
   "You are a helpful voice assistant. Respond naturally and concisely.";
 
 export function buildVoiceConfig(voice) {
+  const known = PIPELINE_COMPONENTS.voice.find((item) => item.id === voice);
+  if (known) return { type: known.type, name: voice };
   return voice && !voice.includes("-")
     ? { type: "openai", name: voice }
     : { type: "azure-standard", name: voice };
@@ -67,6 +70,7 @@ export function buildVoiceDefinition({
   store,
   clientReferenceEc,
   inputTranscriptionModel,
+  inputTranscriptionLanguage,
   subagents,
   avatar,
   handoff,
@@ -84,7 +88,7 @@ export function buildVoiceDefinition({
       input: {
         format: { type: "audio/pcm", rate: 24000 },
         turn_detection: { type: "server_vad", threshold: 0.5, prefix_padding_ms: 300, silence_duration_ms: 500 },
-        transcription: { model: inputTranscriptionModel || "azure-speech" },
+        transcription: buildInputTranscription(inputTranscriptionModel || "azure-speech", inputTranscriptionLanguage),
       },
       output: {
         format: { type: "audio/pcm", rate: 24000 },
@@ -144,6 +148,7 @@ export function buildCreateAgentBody({
   store,
   clientReferenceEc,
   inputTranscriptionModel,
+  inputTranscriptionLanguage,
   subagents,
   avatar,
   handoff,
@@ -164,6 +169,7 @@ export function buildCreateAgentBody({
       store,
       clientReferenceEc,
       inputTranscriptionModel,
+      inputTranscriptionLanguage,
       avatar,
       greeting,
     });
@@ -179,6 +185,7 @@ export function buildCreateAgentBody({
       store,
       clientReferenceEc,
       inputTranscriptionModel,
+      inputTranscriptionLanguage,
       subagents,
       avatar,
       handoff,
@@ -201,6 +208,7 @@ export function buildHostedAgentVoiceBody({
   store,
   clientReferenceEc,
   inputTranscriptionModel,
+  inputTranscriptionLanguage,
   avatar,
   greeting,
 }) {
@@ -230,7 +238,7 @@ export function buildHostedAgentVoiceBody({
           prefix_padding_ms: 300,
           silence_duration_ms: 500,
         },
-        transcription: { model: inputTranscriptionModel || "azure-speech" },
+        transcription: buildInputTranscription(inputTranscriptionModel || "azure-speech", inputTranscriptionLanguage),
       },
       output: {
         format: { type: "audio/pcm", rate: 24000 },

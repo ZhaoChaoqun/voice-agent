@@ -1,0 +1,12 @@
+{
+  "transfer_targets": [
+    {
+      "name": "human_support",
+      "description": "A human support representative for callers requesting assistance.",
+      "destination": {
+        "type": "phone_number",
+        "value": "+14255550100"
+      }
+    }
+  ]
+}

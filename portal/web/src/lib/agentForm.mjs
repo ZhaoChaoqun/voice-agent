@@ -4,9 +4,6 @@
 
 import {
   defaultTranscriptionFor,
-  defaultVoiceFor,
-  isCascaded,
-  isVoiceCompatible,
   modelGroups,
 } from "../config.js";
 import { DEFAULT_AVATAR_PRESET_ID, buildAvatarDefinition } from "./avatar.mjs";
@@ -26,12 +23,9 @@ export function createAgentDraft(cfg) {
     instructions: "",
     inferenceMode,
     model: cfg.defaultModel,
-    transcriptionModel: defaultTranscriptionFor(
-      cfg,
-      cfg.defaultModel,
-      inferenceMode === "hosted_agent",
-    ),
+    transcriptionModel: defaultTranscriptionFor(cfg),
     voice: inferenceMode === "hosted_agent" ? azureDefaultVoice(cfg) : cfg.defaultVoice,
+    transcriptionLanguage: "Auto",
     targetAgentName: "",
     targetAgentVersion: "",
     clientReferenceEc: true,
@@ -51,44 +45,13 @@ export function createAgentDraft(cfg) {
 
 export function updateAgentDraft(cfg, draft, field, value) {
   const next = { ...draft, [field]: value };
-  if (field === "model") {
-    const azureOnly = draft.avatarEnabled || isCascaded(cfg, value);
-    next.voice = isVoiceCompatible(cfg, value, draft.voice, azureOnly)
-      ? draft.voice
-      : defaultVoiceFor(cfg, value);
-    next.transcriptionModel = defaultTranscriptionFor(
-      cfg,
-      value,
-      false,
-      draft.transcriptionModel,
-    );
-  }
   if (field === "inferenceMode") {
     if (value === "hosted_agent") {
-      next.voice = azureDefaultVoice(cfg);
-      next.transcriptionModel = defaultTranscriptionFor(
-        cfg,
-        next.model,
-        true,
-        draft.transcriptionModel,
-      );
       if (next.greeting.toolChoice === "required") {
         next.greeting = { ...next.greeting, toolChoice: "auto" };
       }
     } else {
       next.model = modelGroups(cfg, value === "deployment")[0]?.items[0] || "";
-      next.voice = isVoiceCompatible(
-        cfg,
-        next.model,
-        draft.voice,
-        draft.avatarEnabled || isCascaded(cfg, next.model),
-      ) ? draft.voice : defaultVoiceFor(cfg, next.model);
-      next.transcriptionModel = defaultTranscriptionFor(
-        cfg,
-        next.model,
-        false,
-        draft.transcriptionModel,
-      );
     }
   }
   if (field === "avatarEnabled" && value) {
@@ -108,6 +71,7 @@ export function draftCreateOptions(draft, tools, subagents, structuredInputs) {
     inferenceMode: draft.inferenceMode,
     model: draft.model,
     inputTranscriptionModel: draft.transcriptionModel,
+    inputTranscriptionLanguage: draft.transcriptionLanguage,
     voice: draft.voice,
     store: draft.store,
     clientReferenceEc: draft.clientReferenceEc,

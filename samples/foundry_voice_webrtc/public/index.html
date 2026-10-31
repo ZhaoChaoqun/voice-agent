@@ -52,7 +52,7 @@
           <summary>Agent &amp; audio settings</summary>
         <div class="transport-control"><h2>Saved Agent</h2><p id="weather-tool-hint" hidden>General web search, including weather, is included through Foundry Toolbox.</p>
           <label for="agent-model-choice">Change model</label><select id="agent-model-choice" disabled><option value="gpt-realtime-2.1">gpt-realtime-2.1</option><option value="gpt-realtime-2.1-mini">gpt-realtime-2.1-mini</option><option value="azure-realtime">azure-realtime</option><option value="azure-realtime-flash-2026-10-14">azure-realtime-flash-2026-10-14</option><option value="gpt-5.4">gpt-5.4</option><option value="gpt-live-1">gpt-live-1</option></select>
-          <p id="live-model-hint" hidden>GPT Live uses WebSocket audio: saved-Agent WebRTC is not supported by this project. Other models still support WebRTC. GPT Live is full duplex, with built-in transcription and a Responses backend using web search for any topic, not just weather. Independent transcription, text-only replies, and retained-after-interruption history do not apply. Your original realtime configuration is restored when switching back.</p>
+          <p id="live-model-hint" hidden>GPT Live requires a separate saved Agent because Azure does not allow changing an Agent's protocol across versions. Selecting it creates or reuses this demo's GPT Live companion; switching back selects the original realtime Agent. Neither Agent is deleted. This page uses WebSocket audio and the saved Agent voice for GPT Live; per-call voice overrides are unavailable on this endpoint. GPT Live has built-in transcription and a Responses backend using web search. Independent transcription, text-only replies, and retained-after-interruption history do not apply.</p>
           <label for="agent-transcription-choice">Transcription model</label>
           <select id="agent-transcription-choice" disabled>
             <option value="" disabled>Choose a transcription model</option>
@@ -70,8 +70,8 @@
             <option value="gpt-4o-transcribe-diarize">gpt-4o-transcribe-diarize</option>
             <option value="whisper-1">whisper-1</option>
           </select>
-          <p>Save model or transcription changes as a new version without deleting previous versions. New Agents default to mai-transcribe-2. Azure Realtime uses native Ava; switching back uses Tyler HD if the saved voice is native. Model availability depends on your project.</p>
-          <div class="agent-actions"><button id="save-model" disabled>Save new version</button><button id="show-settings" disabled>Show Agent settings</button></div>
+          <p>Realtime model or transcription changes create a new version without deleting previous versions. GPT Live switches to a separate saved Agent. New Agents default to mai-transcribe-2. Azure Realtime uses native Ava; switching back uses Tyler HD if the saved voice is native. Model availability depends on your project.</p>
+          <div class="agent-actions"><button id="save-model" disabled>Apply model</button><button id="show-settings" disabled>Show Agent settings</button></div>
         </div>
         <div class="transport-control"><label for="transport">Connection</label><select id="transport"><option value="websocket">WebSocket — audio over HTTPS</option><option value="webrtc">WebRTC — direct audio</option></select><p>WebSocket avoids STUN/TURN. Both modes need server access to Azure.</p></div>
         <div class="transport-control">
@@ -104,32 +104,9 @@
             <option value="jorge">jorge</option>
           </select>
           <select id="live-voice" hidden disabled>
-            <option value="">Saved Agent voice</option>
-            <option value="marin" selected>marin</option>
-            <option value="alloy">alloy</option>
-            <option value="ash">ash</option>
-            <option value="ballad">ballad</option>
-            <option value="beacon">beacon</option>
-            <option value="bossa">bossa</option>
-            <option value="cedar">cedar</option>
-            <option value="cinder">cinder</option>
-            <option value="coral">coral</option>
-            <option value="delta">delta</option>
-            <option value="echo">echo</option>
-            <option value="gleam">gleam</option>
-            <option value="meridian">meridian</option>
-            <option value="quartz">quartz</option>
-            <option value="ripple">ripple</option>
-            <option value="sage">sage</option>
-            <option value="shida">shida</option>
-            <option value="shimmer">shimmer</option>
-            <option value="stone">stone</option>
-            <option value="tempo">tempo</option>
-            <option value="verse">verse</option>
-            <option value="vesper">vesper</option>
-            <option value="willow">willow</option>
+            <option value="" selected>Saved Agent voice (configured in Foundry)</option>
           </select>
-          <p>Availability depends on the project and voice catalog. Unsupported selections fail without substituting a voice. A voice preview for a different model applies after you save that model.</p>
+          <p>Availability depends on the project and voice catalog. Unsupported selections fail without substituting a voice. GPT Live uses the voice stored in its saved Agent; edit that voice in Foundry. A voice preview for a different model applies after you save that model.</p>
         </div>
         <div class="transport-control audio-processing"><h2>Audio processing</h2><p>The browser requests microphone noise suppression and echo cancellation with mono input. Support depends on your browser and device.</p><p>Azure denoising is configured separately in the saved Agent. Use <strong>Show Agent settings</strong> above to inspect <code>audio.input.noise_reduction</code>. The bundled example uses headset noise suppression; an existing Agent may differ.</p></div>
         <details class="transport-control">

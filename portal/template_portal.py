@@ -21,15 +21,15 @@ from urllib.parse import quote, urlparse
 import requests
 from aiohttp import web
 from azure.ai.projects import AIProjectClient
+from azure.core.exceptions import HttpResponseError
 from dotenv import dotenv_values
 
-from voice_policy import VOICE_POLICY_KEY
 
 try:
-    from .common import AgentsConfig, FOUNDRY_FEATURES
+    from .common import AgentsConfig, FOUNDRY_FEATURES, regional_model_publish_fallback
     from .guide_render import render_page
 except ImportError:
-    from common import AgentsConfig, FOUNDRY_FEATURES
+    from common import AgentsConfig, FOUNDRY_FEATURES, regional_model_publish_fallback
     from guide_render import render_page
 
 
@@ -159,12 +159,30 @@ class McpProbeError(RuntimeError):
         self.http_status = http_status
 
 
-def validate_mcp_probe_url(url: str) -> None:
+def validate_mcp_url(url: str) -> None:
     parsed = urlparse(url)
     if parsed.scheme.lower() != "https" or not parsed.hostname:
         raise McpProbeError("MCP probes require an absolute HTTPS URL")
     if parsed.username or parsed.password or parsed.fragment:
         raise McpProbeError("MCP probe URLs cannot contain credentials or fragments")
+    try:
+        parsed.port
+    except ValueError as error:
+        raise McpProbeError("MCP server port is invalid") from error
+    hostname = parsed.hostname.lower().rstrip(".")
+    if hostname == "localhost" or hostname.endswith(".localhost"):
+        raise McpProbeError("MCP URLs cannot target localhost")
+    try:
+        address = ipaddress.ip_address(hostname)
+    except ValueError:
+        return
+    if not address.is_global:
+        raise McpProbeError("MCP URLs cannot target private, loopback, link-local, or reserved addresses")
+
+
+def validate_mcp_probe_url(url: str) -> None:
+    validate_mcp_url(url)
+    parsed = urlparse(url)
     try:
         addresses = {
             ipaddress.ip_address(record[4][0])
@@ -757,6 +775,7 @@ class TemplateSource:
     mcp_config_path: Path | None
     mcp_token_file: Path | None
     lock_runtime: bool
+    target_locale: str = ""
 
 
 class TemplateCatalog:
@@ -811,6 +830,14 @@ class TemplateCatalog:
                 lock_runtime = entry.get("lock_runtime", False)
                 if not isinstance(lock_runtime, bool):
                     raise ValueError("lock_runtime must be a boolean")
+                target_locale = entry.get("target_locale", "")
+                if not isinstance(target_locale, str) or (
+                    target_locale and not re.fullmatch(
+                        r"[a-z]{2,3}(?:-[A-Z][a-z]{3})?-(?:[A-Z]{2}|[0-9]{3})",
+                        target_locale,
+                    )
+                ):
+                    raise ValueError("target_locale must be a locale such as hi-IN or en-US")
                 folder_value = str(entry.get("folder") or "").strip()
                 if not folder_value:
                     raise ValueError("folder is required")
@@ -895,6 +922,7 @@ class TemplateCatalog:
                     mcp_config_path=mcp_config_path,
                     mcp_token_file=mcp_token_file,
                     lock_runtime=lock_runtime,
+                    target_locale=target_locale,
                 )
                 self._validate_source(source)
             except (OSError, ValueError, RuntimeError, json.JSONDecodeError) as error:
@@ -976,6 +1004,7 @@ class TemplateCatalog:
             "id": source.id,
             "name": source.name or str(document.get("name") or source.id),
             "category": source.category,
+            "target_locale": source.target_locale,
             "summary": source.summary or str(document.get("description") or "Voice Agent template."),
             "accent": source.accent,
             "accent_color": source.accent,
@@ -1060,6 +1089,7 @@ class TemplateCatalog:
                 {
                     "title": "Voice Agent",
                     "items": [
+                        {"label": "Target locale", "value": source.target_locale or "Not specified"},
                         {"label": "Model", "value": definition.get("model") or "—"},
                         {"label": "Voice", "value": voice_name(definition) or "—"},
                         {
@@ -1257,11 +1287,18 @@ def publish_agent(
         credential=cfg.credential(),
         allow_preview=True,
     ) as client:
-        created = client.agents.create_version(
-            name,
-            body,
-            headers=preview_headers,
-        )
+        try:
+            created = client.agents.create_version(name, body, headers=preview_headers)
+        except HttpResponseError as error:
+            retry_definition = regional_model_publish_fallback(
+                definition, error.status_code, str(error),
+            )
+            if retry_definition is None:
+                raise
+            definition = retry_definition
+            created = client.agents.create_version(
+                name, {**body, "definition": definition}, headers=preview_headers,
+            )
         client.agents.enable(name, headers=preview_headers)
         version = str(getattr(created, "version", "") or "")
         readback = client.agents.get_version(name, version, headers=preview_headers)
@@ -1348,15 +1385,40 @@ def try_it_turns(readme: Path) -> list[str]:
     return [turn.replace("mock_tool_call_", "") for turn in turns]
 
 
+def try_it_note(readme: Path) -> str:
+    """The paragraph between the "Try these turns" heading and its first bullet, if the README has one.
+
+    A Template whose tools serve live data uses it to replace the default test-data notice.
+    """
+    try:
+        lines = readme.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return ""
+    note: list[str] = []
+    inside = False
+    for line in lines:
+        if line.strip() == TRY_TURNS_HEADING:
+            inside = True
+            continue
+        if not inside:
+            continue
+        if line.startswith(("## ", "- ")):
+            break
+        if line.strip():
+            note.append(line.strip())
+    return " ".join(note)
+
+
 async def template_try_it(request: web.Request) -> web.Response:
     """Sample turns and test data for a Template's mock tools, for the conversation page."""
     source = _catalog(request).source(request.match_info["template_id"])
     if source is None:
         raise web.HTTPNotFound(text="Unknown template.")
-    turns = try_it_turns(source.path.parent / "README.md")
+    readme = source.path.parent / "README.md"
+    turns = try_it_turns(readme)
     if not turns:
         raise web.HTTPNotFound(text="This template has no sample turns.")
-    return web.json_response({"id": source.id, "name": source.name, "turns": turns})
+    return web.json_response({"id": source.id, "name": source.name, "turns": turns, "note": try_it_note(readme)})
 
 
 async def logic_apps_mcp_guide(_: web.Request) -> web.Response:
@@ -1676,7 +1738,7 @@ async def ensure_template_mcp_connection(
     if not list(iter_mcp_tools(definition)):
         return ""
     if source.connection_mode == "public":
-        validate_mcp_probe_url(source.mcp_server_url)
+        validate_mcp_url(source.mcp_server_url)
         return ""
     if (
         not source.mcp_server_url
@@ -1949,15 +2011,6 @@ async def publish_template(request: web.Request) -> web.Response:
             mcp_connection_id=connection_name,
             mcp_public=source.connection_mode == "public",
         )
-        voice_selection = await asyncio.to_thread(
-            request.app[VOICE_POLICY_KEY].resolve, cfg, {
-                "definition": definition,
-                "mode": "automatic" if body.get("language") else "fallback",
-                "language": str(body.get("language") or ""),
-                "region": str(body.get("region") or ""),
-            },
-        )
-        definition = voice_selection["definition"]
         result = await asyncio.to_thread(
             publish_agent,
             cfg,
@@ -1980,7 +2033,6 @@ async def publish_template(request: web.Request) -> web.Response:
         "source_agent_name": str(document.get("name") or template_id),
         "source_template_version": version,
         "mcp_connection_name": connection_name,
-        "voice_selection": {key: value for key, value in voice_selection.items() if key != "definition"},
     }, status=201)
 
 

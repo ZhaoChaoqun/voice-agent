@@ -322,6 +322,8 @@ test('GPT Live selection previews only its voices and omits independent transcri
   ui.element('agent-model-choice').value = 'gpt-live-1';
   ui.element('agent-model-choice').onchange();
   assert.equal(ui.element('live-voice').hidden, false);
+  assert.equal(ui.element('live-voice').disabled, true);
+  assert.equal(ui.element('live-voice').value, '');
   assert.equal(ui.element('native-voice').hidden, true);
   assert.equal(ui.element('voice').hidden, true);
   assert.equal(ui.element('agent-transcription-choice').disabled, true);
@@ -338,6 +340,87 @@ test('GPT Live selection previews only its voices and omits independent transcri
   assert.equal(ui.element('live-voice').hidden, true);
   assert.equal(ui.element('voice').hidden, false);
   assert.equal(ui.element('agent-transcription-choice').disabled, false);
+});
+
+test('switching saved Agents routes preparation, settings, audio and previous-call downloads independently', async () => {
+  const requests = [];
+  let socketUrl;
+  class Socket {
+    static OPEN = 1;
+    constructor(url) { socketUrl = url; this.readyState = 1; }
+    close() {}
+  }
+  const realtime = {agent:'demo-agent', exists:true, model:'gpt-realtime-2.1', version:'3',
+    transcriptionModel:'whisper-1', personalizationRequired:true};
+  const live = {agent:'demo-agent-live', exists:true, model:'live-deployment',
+    modelChoice:'gpt-live-1', version:'1', personalizationRequired:false, switchedAgent:true};
+  const ui = await setup('websocket', {
+    WebSocket:Socket, location:{protocol:'https:',host:'example.test'},
+    URL:{createObjectURL:()=>'blob:recording', revokeObjectURL(){}},
+    fetch:async (url, options = {})=>{
+      requests.push([url, options.body ? JSON.parse(options.body) : null]);
+      if (url.startsWith('/api/conversation/download'))
+        return {ok:true, headers:{get:()=>'application/zip'}, blob:async()=>new Blob(['archive'])};
+      const body = url === '/api/config' ? {configured:true, agent:'demo-agent', agentRecreateAllowed:true} :
+        url === '/api/agent/model' || url.startsWith('/api/agent/prepare') ? live :
+        url.startsWith('/api/agent/model?') ? {...realtime, switchedAgent:true} :
+        url.startsWith('/api/agent/settings') ? {yaml:'name: demo-agent-live', version:'1'} : realtime;
+      return {ok:true, json:async()=>body};
+    },
+  });
+  ui.stop();
+  assert.equal(ui.element('personalize').disabled, true);
+  ui.element('agent-model-choice').value = 'gpt-live-1';
+  await ui.element('save-model').onclick();
+  assert.equal(ui.element('agent').textContent, 'demo-agent-live');
+  assert.match(ui.element('agent-preparation').textContent, /Both Agents/);
+  assert.equal(ui.element('personalize').disabled, false);
+  assert.equal(ui.element('recreate-agent').disabled, true);
+  await ui.element('show-settings').onclick();
+  await ui.prepareAgent();
+  ui.reconnect();
+  ui.session.live = true;
+  ui.session.agent = 'demo-agent-live';
+  ui.openSocket(ui.session);
+  assert.match(socketUrl, /protocol=live.*agent=demo-agent-live/);
+  await ui.handleEvent(ui.session, {type:'bridge.conversation', agent:'demo-agent-live',
+    conversationId:'conv_live', downloadToken:'signed-live-token'});
+  ui.stop();
+  ui.element('agent-model-choice').value = 'gpt-realtime-2.1';
+  ui.element('agent-model-choice').onchange();
+  assert.equal(ui.element('agent-transcription-choice').value, 'whisper-1');
+  await ui.element('save-model').onclick();
+  assert.equal(ui.element('agent').textContent, 'demo-agent');
+  assert.equal(ui.element('personalize').disabled, true);
+  assert.equal(ui.element('recreate-agent').disabled, false);
+  await ui.element('download-conversation').onclick();
+  assert.deepEqual(requests.slice(2), [
+    ['/api/agent/model', {model:'gpt-live-1', version:'3'}],
+    ['/api/agent/settings?agent=demo-agent-live', null],
+    ['/api/agent/prepare?agent=demo-agent-live', null],
+    ['/api/agent/model?agent=demo-agent-live', {model:'gpt-realtime-2.1', version:'1'}],
+    ['/api/conversation/download?agent=demo-agent-live', {downloadToken:'signed-live-token'}],
+  ]);
+});
+
+test('switching back from Live sends a transcription change only when explicitly selected', async () => {
+  const writes = [];
+  const ui = await setup('websocket', {
+    fetch:async (url, options = {})=>{
+      if (options.body) writes.push(JSON.parse(options.body));
+      return {ok:true, json:async()=>url === '/api/config' ? {configured:true, agent:'demo-agent'} :
+        options.method === 'POST' ? {exists:true, agent:'demo-agent', model:'gpt-realtime-2.1',
+          version:'5', transcriptionModel:'gpt-4o-transcribe'} :
+        {exists:true, agent:'demo-agent-live', modelChoice:'gpt-live-1', version:'2'}};
+    },
+  });
+  ui.stop();
+  ui.element('agent-model-choice').value = 'gpt-realtime-2.1';
+  ui.element('agent-model-choice').onchange();
+  ui.element('agent-transcription-choice').value = 'gpt-4o-transcribe';
+  ui.element('agent-transcription-choice').onchange();
+  await ui.element('save-model').onclick();
+  assert.deepEqual(writes, [{model:'gpt-realtime-2.1', version:'2', transcriptionModel:'gpt-4o-transcribe'}]);
 });
 
 for (const transport of ['websocket', 'webrtc']) {

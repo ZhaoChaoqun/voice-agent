@@ -34,7 +34,7 @@
           "type": "azure_deep_noise_suppression"
         },
         "transcription": {
-          "model": "whisper-1"
+          "model": "azure-speech"
         }
       },
       "output": {

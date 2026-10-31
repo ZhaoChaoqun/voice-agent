@@ -154,7 +154,7 @@ for (const status of ["cancelled", "failed"]) {
 test("native WebRTC does not duplicate item audio through the WebSocket PCM queue", async ({ page }) => {
   await observeItemPlayback(page);
   await mockWebRtcPeer(page);
-  const api = await mountStudio(page, {}, "/demo/?agent=realtime-agent&transport=webrtc");
+  const api = await mountStudio(page, {}, "/runtime/?agent=realtime-agent&transport=webrtc");
   await api.start();
   api.send({ type: "response.created", response: { id: "interleaved" } });
   api.send(itemAudioFrame("response.output_audio.delta", "first", 0, 1000));

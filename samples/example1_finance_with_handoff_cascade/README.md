@@ -67,12 +67,19 @@ of rupees.
 
 ## Configure and run
 
-Follow the [setup guide](../../docs/01_setup_subscription.md) and
+**Default Portal path:** start the [Portal](../../portal/README.md) and load
+**Example 1: Finance with Handoff - Cascade**. It uses the public no-auth MCP;
+no local MCP, Dev Tunnel, setup script, or local E2E is required.
+
+The commands below are the optional Finance CLI path, which retains its managed
+MCP URL/connection requirements. Dev Tunnel is needed only if you choose to
+host that MCP locally; an already deployed MCP needs no tunnel. Follow the
+[setup guide](../../docs/01_setup_subscription.md) and
 [MCP configuration guide](../../docs/02_mcp_settings.md), then:
 
 ```bash
 cd samples/example1_finance_with_handoff_cascade
-cp .env.example .env
+[ -f .env ] || cp .env.example .env
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 ```

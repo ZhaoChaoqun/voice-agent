@@ -1,3 +1,6 @@
+import { transcriptionLanguageError } from "./transcription-languages.mjs?v=20261028-settings-import";
+import { JSON_SCHEMA, load } from "./js-yaml.mjs?v=20261028-yaml-import";
+
 export const ENTRYPOINT_ID = "$entrypoint";
 
 export const MODEL_ESTIMATE_CATALOG = Object.freeze({
@@ -284,17 +287,7 @@ const TRANSCRIBERS = Object.freeze([
     latencySource: "Public hosted-API median",
   },
 ]);
-const CASCADED_TRANSCRIBER_IDS = Object.freeze(TRANSCRIBERS.slice(1, 5).map((item) => item.id));
-const AZURE_REALTIME_TRANSCRIBER_IDS = Object.freeze([
-  "native-realtime-audio",
-  ...CASCADED_TRANSCRIBER_IDS,
-  "gpt-4o-transcribe",
-  "gpt-4o-mini-transcribe",
-  "gpt-4o-transcribe-diarize",
-  "whisper-1",
-]);
-const GPT_REALTIME_TRANSCRIBER_IDS = Object.freeze(TRANSCRIBERS.map((item) => item.id));
-
+const METERED_TRANSCRIBER_IDS = Object.freeze(TRANSCRIBERS.slice(1, 5).map((item) => item.id));
 const OPENAI_VOICES = Object.freeze(
   ["alloy", "ash", "ballad", "coral", "echo", "sage", "shimmer", "verse", "marin", "cedar"]
     .map((id) => ({
@@ -320,6 +313,13 @@ const AZURE_REALTIME_VOICES = Object.freeze(
     })),
 );
 const AZURE_STANDARD_VOICES = Object.freeze([
+  ...["Emma", "Brian"].map((name) => ({
+    id: `en-US-${name}:DragonHDOmniLatestNeural`,
+    label: `${name} · Azure Dragon HD Omni`,
+    type: "azure-standard",
+    latencyMs: null,
+    latencySource: "No latency reference for this voice",
+  })),
   {
     id: "en-US-Ava:DragonHDLatestNeural",
     label: "Ava · Azure Dragon HD",
@@ -327,6 +327,16 @@ const AZURE_STANDARD_VOICES = Object.freeze([
     latencyMs: 307,
     latencySource: "Voice Live first-text-to-first-audio observation; public Dragon HD proxy is ~356 ms",
   },
+  ...[
+    "en-US-AvaNeural", "en-US-AndrewNeural", "en-US-EmmaNeural", "en-US-BrianNeural",
+    "en-US-JennyNeural", "en-US-GuyNeural", "en-US-AvaMultilingualNeural", "zh-CN-XiaoxiaoNeural",
+  ].map((id) => ({
+    id,
+    label: `${id} · Azure Speech`,
+    type: "azure-standard",
+    latencyMs: null,
+    latencySource: "No latency reference for this voice",
+  })),
   {
     id: "en-IN-Diya:DragonHDLatestNeural",
     label: "Diya · Azure Dragon HD",
@@ -335,6 +345,7 @@ const AZURE_STANDARD_VOICES = Object.freeze([
     latencySource: "Voice Live first-text-to-first-audio observation; public Dragon HD proxy is ~356 ms",
   },
 ]);
+const VOICES = Object.freeze([...OPENAI_VOICES, ...AZURE_REALTIME_VOICES, ...AZURE_STANDARD_VOICES]);
 
 function normalizePipelineModelId(model) {
   if (model === "gpt-realtime-2025-08-28") return "gpt-realtime";
@@ -349,18 +360,8 @@ function modelDefinition(model) {
   return PIPELINE_MODELS.find((item) => item.id === modelId) || null;
 }
 
-function supportedTranscriberIds(model) {
-  if (model.id === "azure-realtime") return AZURE_REALTIME_TRANSCRIBER_IDS;
-  return model.architecture === "realtime"
-    ? GPT_REALTIME_TRANSCRIBER_IDS
-    : CASCADED_TRANSCRIBER_IDS;
-}
-
-function supportedVoiceTypes(model) {
-  if (model.id === "azure-realtime") return ["azure-realtime-native"];
-  return model.architecture === "realtime"
-    ? ["openai", "azure-standard", "azure-custom", "azure-personal"]
-    : ["azure-standard", "azure-custom", "azure-personal"];
+function supportedVoiceTypes() {
+  return ["openai", "azure-realtime-native", "azure-standard", "azure-custom", "azure-personal"];
 }
 
 function defaultStt(model) {
@@ -375,17 +376,11 @@ function defaultVoice(model) {
     : "en-US-Ava:DragonHDLatestNeural";
 }
 
-function compatibleVoices(model) {
-  const allowedTypes = new Set(supportedVoiceTypes(model));
-  return [...OPENAI_VOICES, ...AZURE_REALTIME_VOICES, ...AZURE_STANDARD_VOICES]
-    .filter((voice) => allowedTypes.has(voice.type));
-}
-
-function configuredPipelineVoice(model, id, voiceType) {
-  const known = compatibleVoices(model).find((voice) => voice.id === id);
+function configuredPipelineVoice(id, voiceType) {
+  const known = VOICES.find((voice) => voice.id === id);
   if (known && (!voiceType || known.type === voiceType)) return known;
   const type = voiceType || (/^[a-z]{2,3}-[A-Z]{2}-.+Neural$/.test(id) ? "azure-standard" : "");
-  if (!id || !supportedVoiceTypes(model).includes(type)) return null;
+  if (!id || !supportedVoiceTypes().includes(type)) return null;
   return {
     id,
     label: id,
@@ -428,7 +423,7 @@ function componentCost(model, kind, { voiceType = "", customSpeech = false } = {
 
 function transcriptionUsesAllowance(transcription) {
   return transcription.id !== "native-realtime-audio"
-    && !CASCADED_TRANSCRIBER_IDS.includes(transcription.id);
+    && !METERED_TRANSCRIBER_IDS.includes(transcription.id);
 }
 
 function transcriptionCost(transcription, model, customSpeech) {
@@ -482,10 +477,9 @@ function estimatedHandoffLatency(model) {
 
 function buildPipeline({ model, stt, voice, voiceType = "", customSpeech = false }) {
   const transcription = TRANSCRIBERS.find((item) => item.id === stt);
-  const selectedVoice = configuredPipelineVoice(model, voice, voiceType);
+  const selectedVoice = configuredPipelineVoice(voice, voiceType);
   if (
     !transcription
-    || !supportedTranscriberIds(model).includes(transcription.id)
     || !selectedVoice
   ) return null;
   const handoffLatencyMs = estimatedHandoffLatency(model);
@@ -590,8 +584,33 @@ export const PIPELINE_PRESETS = Object.freeze(PRESET_DEFINITIONS.map((preset) =>
 export const PIPELINE_COMPONENTS = Object.freeze({
   stt: TRANSCRIBERS,
   model: PIPELINE_MODELS,
-  voice: Object.freeze([...OPENAI_VOICES, ...AZURE_REALTIME_VOICES, ...AZURE_STANDARD_VOICES]),
+  voice: VOICES,
 });
+
+export function voiceLocale(voice) {
+  if (typeof voice === "object" && voice.locale) return voice.locale;
+  const id = typeof voice === "string" ? voice : voice.id || voice.value || "";
+  return id.match(/^([a-z]{2,3}-(?:[A-Z][a-z]{3}-)?(?:[A-Z]{2}|\d{3}))-/)?.[1] || "";
+}
+
+export function groupVoicesByLocale(voices) {
+  const groups = new Map();
+  const names = new Intl.DisplayNames(["en"], { type: "language" });
+  for (const voice of voices) {
+    const locale = voiceLocale(voice);
+    if (!groups.has(locale)) {
+      groups.set(locale, {
+        locale,
+        label: locale ? `${locale} · ${voice.localeName || names.of(locale)}` : "No fixed locale",
+        items: [],
+      });
+    }
+    groups.get(locale).items.push(voice);
+  }
+  return [...groups.values()].sort((left, right) => (
+    left.locale && right.locale ? left.locale.localeCompare(right.locale) : left.locale ? -1 : right.locale ? 1 : 0
+  ));
+}
 
 export function estimatePipelineComponent(kind, id) {
   const known = PIPELINE_COMPONENTS[kind].find((component) => component.id === id);
@@ -647,6 +666,27 @@ export function estimatePipeline({
 
 export function pipelineComponentOptions(kind, selection = {}) {
   const currentModel = modelDefinition(normalizePipelineModelId(selection.model));
+  const voices = selection.voices || PIPELINE_COMPONENTS.voice;
+  if (kind === "stt") {
+    return TRANSCRIBERS.filter((transcriber) => transcriber.id !== "native-realtime-audio")
+      .map((transcriber) => {
+        const pipeline = currentModel ? buildPipeline({
+          model: currentModel,
+          stt: transcriber.id,
+          customSpeech: selection.customSpeech,
+          voice: PIPELINE_COMPONENTS.voice.some((item) => item.id === selection.voice)
+            ? selection.voice
+            : defaultVoice(currentModel),
+        }) : null;
+        return {
+          ...(pipeline?.stt || estimatePipelineComponent("stt", transcriber.id)),
+          ...transcriber,
+          costSource: pipeline?.stt.costSource || transcriber.costSource,
+          compatible: true,
+          incompatibility: "",
+        };
+      });
+  }
   if (kind === "model") {
     return PIPELINE_MODELS.map((model) => {
       const pipeline = buildPipeline({
@@ -657,55 +697,23 @@ export function pipelineComponentOptions(kind, selection = {}) {
       return pipeline.model;
     });
   }
-  if (!currentModel) return [];
-  if (kind === "stt") {
-    const selectedModels = (selection.models?.length ? selection.models : [selection.model])
-      .map((model) => modelDefinition(normalizePipelineModelId(model)))
-      .filter(Boolean);
-    return TRANSCRIBERS.map((transcriber) => {
-      const unsupported = selectedModels.filter(
-        (model) => !supportedTranscriberIds(model).includes(transcriber.id),
-      );
-      const pipeline = unsupported.length
-        ? null
-        : buildPipeline({
-          model: currentModel,
-          stt: transcriber.id,
-          customSpeech: selection.customSpeech,
-          voice: compatibleVoices(currentModel).some((item) => item.id === selection.voice)
-            ? selection.voice
-            : defaultVoice(currentModel),
-        });
-      return {
-        ...(pipeline?.stt || estimatePipelineComponent("stt", transcriber.id)),
-        ...transcriber,
-        costSource: pipeline?.stt.costSource || transcriber.costSource,
-        compatible: unsupported.length === 0,
-        incompatibility: unsupported.length
-          ? `Unavailable with ${unsupported.map((model) => model.label).join(", ")}.`
-          : "",
-      };
-    });
-  }
-  const compatibleIds = new Set(compatibleVoices(currentModel).map((voice) => voice.id));
-  return PIPELINE_COMPONENTS.voice.map((candidateVoice) => {
-    const compatible = compatibleIds.has(candidateVoice.id);
-    const pipeline = compatible
-      ? buildPipeline({
+  if (!currentModel) return kind === "voice"
+    ? voices.map((voice) => ({
+      ...estimatePipelineComponent("voice", voice.id), ...voice, compatible: true, incompatibility: "",
+    }))
+    : [];
+  return voices.map((candidateVoice) => {
+    const pipeline = buildPipeline({
         model: currentModel,
-        stt: supportedTranscriberIds(currentModel).includes(selection.stt)
-          ? selection.stt
-          : defaultStt(currentModel),
+        stt: selection.stt || defaultStt(currentModel),
         voice: candidateVoice.id,
-      })
-      : null;
+        voiceType: candidateVoice.type,
+      });
     return {
       ...(pipeline?.voice || estimatePipelineComponent("voice", candidateVoice.id)),
       ...candidateVoice,
-      compatible,
-      incompatibility: compatible
-        ? ""
-        : `${currentModel.label} does not support ${candidateVoice.type} voices.`,
+      compatible: true,
+      incompatibility: "",
     };
   });
 }
@@ -772,36 +780,6 @@ export function sortPipelineComponents(kind, components, sort = {}) {
     }
     return left.index - right.index;
   }).map(({ component }) => component);
-}
-
-export function pipelineCompatibility({
-  model = "",
-  stt = "",
-  voice = "",
-  voiceType = "",
-} = {}) {
-  const modelEntry = modelDefinition(normalizePipelineModelId(model));
-  if (!modelEntry) {
-    return {
-      knownModel: false,
-      sttCompatible: true,
-      voiceCompatible: true,
-      architecture: "unknown",
-    };
-  }
-  const selectedVoice = PIPELINE_COMPONENTS.voice.find((item) => item.id === voice);
-  const resolvedVoiceType = voiceType
-    || selectedVoice?.type
-    || (String(voice).includes("-") ? "azure-standard" : "");
-  return {
-    knownModel: true,
-    architecture: modelEntry.architecture,
-    model: modelEntry,
-    sttCompatible: !stt || supportedTranscriberIds(modelEntry).includes(stt),
-    voiceCompatible: !resolvedVoiceType || supportedVoiceTypes(modelEntry).includes(resolvedVoiceType),
-    supportedTranscriptionModels: [...supportedTranscriberIds(modelEntry)],
-    supportedVoiceTypes: [...supportedVoiceTypes(modelEntry)],
-  };
 }
 
 export const PIPELINE_METRICS_DISCLAIMER = `STT/TTS budget: ${PIPELINE_COST_USAGE.userAudioSeconds}s input + ${PIPELINE_COST_USAGE.agentAudioSeconds}s output audio. Temporary LLM estimate: previous model budget /${PIPELINE_LLM_ESTIMATE_DIVISOR}; workload revision pending approval. Actual charges may be higher; latency varies.`;
@@ -1128,25 +1106,75 @@ export function deterministicYaml(value) {
 export function createBlankDefinition() {
   return {
     kind: "voice",
+    model_type: "managed",
     model: "gpt-realtime",
-    instructions: "Describe how the entrypoint should greet and route the caller.",
+    instructions: "You are a friendly, helpful voice assistant. The greeting is already delivered; do not repeat it. Help the caller with their questions. Keep replies concise and conversational. When the caller says goodbye or asks to end the conversation, hand off to the end node.",
+    greeting: {
+      type: "template",
+      text: "Hello! How can I help you today?",
+    },
+    output_modalities: ["audio"],
+    store: false,
     tool_choice: "auto",
     tools: [],
     audio: {
       input: {
+        format: {
+          type: "audio/pcm",
+          rate: 24000,
+        },
+        turn_detection: {
+          type: "azure_semantic_vad",
+          profile: "normal",
+          auto_truncate: true,
+          interrupt_response: true,
+          silence_duration_ms: 400,
+        },
         transcription: {
-          model: "whisper-1",
+          model: "azure-speech",
+        },
+        echo_cancellation: {
+          type: "server_echo_cancellation",
+        },
+        noise_reduction: {
+          type: "azure_deep_noise_suppression",
         },
       },
       output: {
-        voice: "alloy",
+        format: {
+          type: "audio/pcm",
+          rate: 24000,
+        },
+        voice: {
+          type: "azure-standard",
+          name: "en-US-Emma:DragonHDOmniLatestNeural",
+        },
       },
     },
     handoff: {
-      max_transfers: 8,
-      max_attempts: 8,
-      nodes: [],
-      edges: [],
+      max_transfers: 16,
+      max_attempts: 16,
+      nodes: [
+        {
+          id: "end",
+          description: "Close politely and end the conversation.",
+          config: {
+            instructions: "Say one brief, friendly goodbye in the caller's language, then call end_conversation in the same response. Do not ask another question.",
+            tools: [{ type: "system", name: "end_conversation" }],
+            tool_choice: "auto",
+          },
+        },
+      ],
+      edges: [
+        {
+          id: "entrypoint_to_end",
+          source: ENTRYPOINT_ID,
+          target: "end",
+          description: "The caller says goodbye, asks to end the conversation, or confirms they need no further help.",
+          target_response: "auto",
+          cancel_on_interruption: true,
+        },
+      ],
     },
   };
 }
@@ -1254,6 +1282,17 @@ export function ensureEditableDefinition(value) {
   return definition;
 }
 
+export function publicationDefinition(value) {
+  const definition = deepClone(value);
+  if (
+    Array.isArray(definition.handoff?.nodes) && definition.handoff.nodes.length === 0
+    && Array.isArray(definition.handoff?.edges) && definition.handoff.edges.length === 0
+  ) {
+    delete definition.handoff;
+  }
+  return definition;
+}
+
 export function extractLatestAgent(resource) {
   const latest = resource?.versions?.latest || resource;
   if (!resource?.name || !isObject(latest?.definition)) {
@@ -1267,6 +1306,146 @@ export function extractLatestAgent(resource) {
     metadata: isObject(latest.metadata) ? deepClone(latest.metadata) : {},
     definition: ensureEditableDefinition(latest.definition),
   };
+}
+
+export function parseAgentJson(source) {
+  let document;
+  try {
+    document = JSON.parse(source.replace(/^\uFEFF/, ""));
+  } catch (error) {
+    throw new Error(`Invalid JSON: ${error.message}`);
+  }
+  return importedAgent(document);
+}
+
+export function parseAgentSource(source) {
+  let document;
+  try {
+    document = load(source.replace(/^\uFEFF/, ""), { schema: JSON_SCHEMA, maxAliases: 0 });
+  } catch (error) {
+    throw new Error(`Invalid JSON or YAML: ${error.message}`);
+  }
+  return importedAgent(document);
+}
+
+function importedAgent(document) {
+  if (!isObject(document)) throw new Error("Agent configuration must contain an object, not an array or scalar.");
+  const envelope = document.versions?.latest ?? document;
+  if (!isObject(envelope)) throw new Error("The imported Agent version must be an object.");
+  const raw = Object.hasOwn(envelope, "definition") ? envelope.definition : envelope;
+  if (!isObject(raw)) throw new Error("The imported definition must be an object.");
+  const problems = definitionStructureProblems(raw);
+  if (raw.sub_protocol && raw.sub_protocol !== "realtime") {
+    problems.push(problem("error", "This Editor supports realtime Voice Agents, not sub_protocol: live.",
+      "graph", "", "sub_protocol", "unsupported_protocol"));
+  }
+  if (raw.conversation_engine || raw.model_type === "hosted_agent") {
+    problems.push(problem("error", "Hosted-agent wrappers are not supported by the graph Editor. Import a model-backed Voice Agent.",
+      "graph", "", "conversation_engine", "unsupported_engine"));
+  } else if (typeof raw.model !== "string" || !raw.model.trim()) {
+    problems.push(problem("error", "A non-empty model is required.", "graph", "", "model", "model_required"));
+  }
+  if (raw.model_type !== undefined && !["managed", "self_deployed"].includes(raw.model_type)) {
+    problems.push(problem("error", "model_type must be managed or self_deployed.",
+      "graph", "", "model_type", "model_type"));
+  }
+  if (document.name !== undefined && (
+    typeof document.name !== "string" || !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,62}$/.test(document.name)
+  )) {
+    problems.push(problem("error", "Agent name must be 1-63 letters, digits, hyphens or underscores, starting with a letter or digit.",
+      "graph", "", "name", "agent_name"));
+  }
+  if (envelope.description !== undefined && typeof envelope.description !== "string") {
+    problems.push(problem("error", "description must be a string.", "graph", "", "description", "description_type"));
+  }
+  if (envelope.metadata !== undefined && (
+    !isObject(envelope.metadata) || Object.values(envelope.metadata).some((value) => typeof value !== "string")
+  )) {
+    problems.push(problem("error", "metadata must be an object with string values.", "graph", "", "metadata", "metadata_type"));
+  }
+  const definition = problems.length ? deepClone(raw) : ensureEditableDefinition(raw);
+  if (!problems.length) problems.push(...validateDefinition(definition));
+  return {
+    definition,
+    name: typeof document.name === "string" ? document.name : "",
+    description: typeof envelope.description === "string" ? envelope.description : "",
+    metadata: isObject(envelope.metadata) ? deepClone(envelope.metadata) : {},
+    problems,
+  };
+}
+
+function definitionStructureProblems(definition) {
+  const problems = [];
+  for (const path of [
+    "audio", "audio.input", "audio.output", "audio.input.format", "audio.output.format",
+    "audio.input.transcription", "audio.input.noise_reduction", "audio.input.echo_cancellation",
+    "audio.input.turn_detection", "audio.input.turn_detection.end_of_utterance_detection", "handoff",
+    "structured_inputs", "subagent_config", "avatar", "reasoning", "rai_config",
+  ]) {
+    const value = path.split(".").reduce((parent, key) => parent?.[key], definition);
+    if (value !== undefined && value !== null && !isObject(value)) {
+      problems.push(problem("error", `${path} must be an object or null.`, "graph", "", path, "object_type"));
+    }
+  }
+  for (const path of [
+    "instructions", "audio.input.transcription.model", "audio.input.transcription.prompt",
+    "audio.input.transcription.delay", "audio.output.voice_type", "audio.output.voice_locale",
+    "audio.input.turn_detection.type", "audio.input.noise_reduction.type",
+    "audio.input.format.type", "audio.output.format.type",
+  ]) {
+    const value = path.split(".").reduce((parent, key) => parent?.[key], definition);
+    if (value !== undefined && typeof value !== "string") {
+      problems.push(problem("error", `${path} must be a string.`, "graph", "", path, "string_type"));
+    }
+  }
+  if (definition.tools !== undefined && (
+    !Array.isArray(definition.tools) || definition.tools.some((item) => !isObject(item) || typeof item.type !== "string")
+  )) {
+    problems.push(problem("error", "tools must be an array of tool objects with a type.", "graph", "", "tools", "tools_type"));
+  }
+  for (const key of ["include", "output_modalities"]) {
+    if (definition[key] !== undefined && (
+      !Array.isArray(definition[key]) || definition[key].some((item) => typeof item !== "string")
+    )) {
+      problems.push(problem("error", `${key} must be an array of strings.`, "graph", "", key, "array_type"));
+    }
+  }
+  const customSpeech = definition.audio?.input?.transcription?.custom_speech;
+  if (customSpeech !== undefined && (
+    !isObject(customSpeech) || Object.values(customSpeech).some((item) => typeof item !== "string" || !item.trim())
+  )) {
+    problems.push(problem("error", "custom_speech must map locales to non-empty model identifiers.",
+      "graph", "", "audio.input.transcription.custom_speech", "custom_speech_type"));
+  }
+  const voice = definition.audio?.output?.voice;
+  if (voice !== undefined && typeof voice !== "string" && !isObject(voice)) {
+    problems.push(problem("error", "Output voice must be a voice name or a legacy voice object.",
+      "graph", "", "audio.output.voice", "voice_type"));
+  }
+  if (isObject(voice) && (
+    typeof (voice.name ?? voice.id) !== "string"
+    || (voice.type !== undefined && typeof voice.type !== "string")
+  )) {
+    problems.push(problem("error", "A legacy voice object requires a string name or id and a string type when supplied.",
+      "graph", "", "audio.output.voice", "legacy_voice_type"));
+  }
+  const graph = definition.handoff;
+  if (isObject(graph)) {
+    for (const key of ["nodes", "edges"]) {
+      if (!Array.isArray(graph[key]) || graph[key].some((item) => !isObject(item))) {
+        problems.push(problem("error", `handoff.${key} must be an array of objects.`,
+          "graph", "", `handoff.${key}`, "graph_array_type"));
+      }
+    }
+    for (const [index, node] of (Array.isArray(graph.nodes) ? graph.nodes : []).entries()) {
+      if (!isObject(node)) continue;
+      if (typeof node.id !== "string" || !/^[a-z][a-z0-9_-]{0,63}$/.test(node.id)) {
+        problems.push(problem("error", `handoff.nodes[${index}].id must start with a lowercase letter and contain only lowercase letters, digits, hyphens or underscores (up to 64 characters).`,
+          "graph", "", `handoff.nodes[${index}].id`, "node_id_format"));
+      }
+    }
+  }
+  return problems;
 }
 
 export function modelEstimate(model) {
@@ -1343,6 +1522,8 @@ export function validateDefinition(definition) {
   if (!isObject(definition)) {
     return [problem("error", "Definition must be an object.", "graph", "", "definition", "definition_type")];
   }
+  const shapeProblems = definitionStructureProblems(definition);
+  if (shapeProblems.length) return shapeProblems;
   if (definition.kind !== "voice") {
     problems.push(problem(
       "error", 'definition.kind must be "voice".', "graph", "", "kind", "definition_kind",
@@ -1364,53 +1545,48 @@ export function validateDefinition(definition) {
     ));
   }
   const rootStt = String(definition.audio?.input?.transcription?.model || "").trim();
-  const rootVoiceValue = definition.audio?.output?.voice;
-  const configuredVoiceId = (value) => (
-    typeof value === "string" ? value : String(value?.name || value?.id || "").trim()
+  const languageError = transcriptionLanguageError(
+    rootStt || "azure-speech", definition.audio?.input?.transcription?.language,
   );
-  const validateAudioCombination = (modelValue, voiceValue, voiceType, objectId) => {
-    const modelId = typeof modelValue === "string"
-      ? modelValue
-      : String(modelValue?.name || modelValue?.id || "").trim();
-    const voiceId = configuredVoiceId(voiceValue);
-    const compatibility = pipelineCompatibility({
-      model: modelId,
-      stt: rootStt,
-      voice: voiceId,
-      voiceType: String(voiceType || voiceValue?.type || "").trim(),
-    });
-    if (!compatibility.knownModel) return;
-    if (rootStt && !compatibility.sttCompatible) {
-      problems.push(problem(
-        "error",
-        `${modelId} does not support transcription model ${rootStt}. Supported choices: ${
-          compatibility.supportedTranscriptionModels.join(", ")
-        }.`,
-        "node",
-        objectId,
-        "audio.input.transcription.model",
-        "incompatible_transcription_model",
-      ));
-    }
-    if (voiceId && !compatibility.voiceCompatible) {
-      problems.push(problem(
-        "error",
-        `${modelId} does not support the selected output voice family. Supported voice types: ${
-          compatibility.supportedVoiceTypes.join(", ")
-        }.`,
-        "node",
-        objectId,
-        "voice",
-        "incompatible_voice",
-      ));
-    }
-  };
-  validateAudioCombination(
-    definition.model,
-    rootVoiceValue,
-    definition.audio?.output?.voice_type,
-    ENTRYPOINT_ID,
-  );
+  if (languageError) {
+    problems.push(problem(
+      "error", languageError, "node", ENTRYPOINT_ID,
+      "audio.input.transcription.language", "invalid_transcription_language",
+    ));
+  }
+  const transcription = definition.audio?.input?.transcription;
+  if (transcription?.phrase_list !== undefined && (
+    !Array.isArray(transcription.phrase_list)
+    || transcription.phrase_list.some((value) => typeof value !== "string" || !value.trim())
+  )) {
+    problems.push(problem("error", "Phrase list must be an array of non-empty strings.",
+      "node", ENTRYPOINT_ID, "audio.input.transcription.phrase_list", "phrase_list_type"));
+  }
+  const echo = definition.audio?.input?.echo_cancellation;
+  if (echo && (
+    echo.type !== "server_echo_cancellation"
+    || !["server", "client"].includes(echo.reference_source ?? "server")
+    || (echo.reference_source === "client" ? echo.channels !== 2 : (echo.channels ?? 1) !== 1)
+  )) {
+    problems.push(problem("error",
+      "Echo cancellation requires type server_echo_cancellation and either server/1 channel or client/2 channels.",
+      "node", ENTRYPOINT_ID, "audio.input.echo_cancellation", "echo_cancellation_config"));
+  }
+  if (echo?.reference_source === "client" && (
+    definition.audio?.input?.format?.type !== "audio/pcm" || definition.avatar
+  )) {
+    problems.push(problem("error", "Client-reference echo cancellation requires PCM input and no avatar in this Portal.",
+      "node", ENTRYPOINT_ID, "audio.input.echo_cancellation", "echo_cancellation_transport"));
+  }
+  if (definition.parallel_tool_calls !== undefined && typeof definition.parallel_tool_calls !== "boolean") {
+    problems.push(problem("error", "parallel_tool_calls must be true or false.",
+      "node", ENTRYPOINT_ID, "parallel_tool_calls", "parallel_tool_calls_type"));
+  }
+  if (definition.max_output_tokens !== undefined && definition.max_output_tokens !== "inf"
+    && (!Number.isInteger(definition.max_output_tokens) || definition.max_output_tokens < 1)) {
+    problems.push(problem("error", "max_output_tokens must be a positive integer or inf.",
+      "node", ENTRYPOINT_ID, "max_output_tokens", "max_output_tokens_type"));
+  }
   const greeting = definition.greeting;
   if (greeting !== undefined) {
     if (!isObject(greeting) || !["template", "llm_generated"].includes(greeting.type)) {
@@ -1549,12 +1725,6 @@ export function validateDefinition(definition) {
     if (node.config.tools !== undefined && !Array.isArray(node.config.tools)) {
       problems.push(problem("error", "Node tools must be an array.", "node", location, "tools", "node_tools_type"));
     }
-    validateAudioCombination(
-      node.config.model ?? definition.model,
-      node.config.voice ?? rootVoiceValue,
-      node.config.voice_type ?? definition.audio?.output?.voice_type,
-      location,
-    );
     validateInterimResponse(problems, node.config, location);
   }
 

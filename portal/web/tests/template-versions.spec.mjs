@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft. All rights reserved.
 import { test, expect } from "@playwright/test";
+import { openTemplatePicker } from "./template-picker-helpers.mjs";
 
 const templateId = "customer-support-example";
 const version = "backups/20261020/original";
 const instructions = "Browser regression: selected backup version.";
 
 test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem("voice-agent-playground-welcome-v1", "dismissed"));
   await page.route("**/*", (route) => {
     const url = new URL(route.request().url());
     return url.hostname === "127.0.0.1" ? route.continue() : route.abort();
@@ -21,6 +23,9 @@ async function installVersions(page) {
   ];
   catalog.templates.find((item) => item.id === templateId).versions = versions;
   await page.route("**/api/templates", (route) => route.fulfill({ json: catalog }));
+  await page.route(`**/api/templates/${templateId}/mcp/probe?*`, (route) => route.fulfill({
+    json: { ok: true, tools: ["mock_tool_call"] },
+  }));
   await page.route(`**/api/templates/${templateId}?*`, async (route) => {
     const selected = new URL(route.request().url()).searchParams.get("version") || ".";
     const result = structuredClone(detail);
@@ -42,7 +47,7 @@ for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 1000 });
     const detail = await installVersions(page);
     await page.goto("/editor/");
-    await page.getByRole("button", { name: "Load from templates", exact: true }).click();
+    await openTemplatePicker(page);
     const select = page.getByRole("combobox", { name: `Version for ${detail.name}`, exact: true });
     await expect(select).toHaveValue(".");
     await select.selectOption(version);
@@ -53,14 +58,14 @@ for (const width of [1440, 390]) {
     await page.locator(`[data-template-id="${templateId}"]`).click();
     await loaded;
     await expect(page.locator("#template-picker")).toBeHidden();
-    await page.locator("#export-action").click();
+    await page.locator("#view-agent-yaml").click();
     await expect(page.locator("#definition-output")).toContainText(instructions);
     await page.getByRole("button", { name: "Close definition drawer", exact: true }).click();
-    await page.getByRole("button", { name: "Load from templates", exact: true }).click();
+    await openTemplatePicker(page);
     await expect(select).toHaveValue(version);
     await select.selectOption(".");
     await page.locator(`[data-template-id="${templateId}"]`).click();
-    await page.locator("#export-action").click();
+    await page.locator("#view-agent-yaml").click();
     await expect(page.locator("#definition-output")).not.toContainText(instructions);
     expect(errors).toEqual([]);
   });
@@ -97,7 +102,7 @@ test("Template versions retain the source version when Editor publishes a workin
     await route.fulfill({ json: { configured: true } });
   });
   await page.goto("/editor/");
-  await page.getByRole("button", { name: "Load from templates", exact: true }).click();
+  await openTemplatePicker(page);
   await page.getByRole("combobox", { name: `Version for ${detail.name}`, exact: true }).selectOption(version);
   await page.locator(`[data-template-id="${templateId}"]`).click();
   await expect(page.locator("#template-picker")).toBeHidden();
@@ -117,7 +122,7 @@ test("Template versions match the real catalog and load discovered sample files"
   page.on("pageerror", (error) => errors.push(error.message));
   const catalog = await (await page.request.get("/api/templates")).json();
   await page.goto("/editor/");
-  await page.getByRole("button", { name: "Load from templates", exact: true }).click();
+  await openTemplatePicker(page);
   await expect(page.locator(".template-choice")).toHaveCount(catalog.templates.length);
   for (const template of catalog.templates) {
     const select = page.getByRole("combobox", { name: `Version for ${template.name}`, exact: true });
@@ -139,13 +144,12 @@ test("Template versions match the real catalog and load discovered sample files"
   }
   await page.locator(`[data-template-id="${template.id}"]`).click();
   await expect(page.locator("#template-picker")).toBeHidden();
-  await page.locator("#export-action").click();
+  await page.locator("#view-agent-yaml").click();
   await page.getByRole("tab", { name: "JSON", exact: true }).click();
   const exported = JSON.parse(await page.locator("#definition-output").innerText());
   expect(exported.instructions).toBe(detail.definition.instructions);
-  expect(exported.model).toBe(
-    template.id === "finance-example-cascade-luna" ? "gpt-5.6-luna" : "gpt-realtime",
-  );
-  expect(exported.audio.input.turn_detection.silence_duration_ms).toBe(400);
+  expect(exported.model).toBe(detail.definition.model);
+  expect(exported.audio.input.turn_detection).toEqual(detail.definition.audio.input.turn_detection);
+  expect(exported.handoff).toEqual(detail.definition.handoff);
   expect(errors).toEqual([]);
 });

@@ -578,7 +578,7 @@ class VoiceAgentSdkCommonTests(unittest.TestCase):
                 definition["audio"]["input"]["turn_detection"]["silence_duration_ms"],
             )
         self.assertEqual(
-            "whisper-1",
+            "azure-speech",
             realtime["audio"]["input"]["transcription"]["model"],
         )
         self.assertIsNone(

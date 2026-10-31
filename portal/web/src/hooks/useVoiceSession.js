@@ -79,6 +79,7 @@ import {
   normalizeStructuredInputJson,
 } from "../lib/structuredInput.mjs";
 import { debugModeRequested } from "../lib/debugMode.mjs";
+import { MCP_TOOL_LOADING_TIMEOUT_MS, pendingMcpToolListings, settleMcpToolListing } from "../lib/mcpToolLoading.mjs";
 
 let _seq = 0;
 const nextLocalId = () => `local-${Date.now()}-${_seq++}`;
@@ -101,6 +102,8 @@ export function useVoiceSession() {
   const [conversationId, setConversationId] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
+  // True while Voice Live is still listing the session's MCP tools; input is held until then.
+  const [toolsLoading, setToolsLoading] = useState(false);
   const [micMuted, setMicMuted] = useState(false);
   const [messages, setMessages] = useState([]);
   const [verbose, setVerbose] = useState(debugModeRequested);
@@ -175,6 +178,9 @@ export function useVoiceSession() {
   const runningFunctionCountRef = useRef(0);
   const verboseRef = useRef(false);
   const sessionReadyRef = useRef(false);
+  const pendingMcpListingsRef = useRef(0);
+  const toolsLoadingTimerRef = useRef(null);
+  const startMicWhenToolsReadyRef = useRef(false);
   const clientCloseRequestedRef = useRef(false);
   const sessionFailureRef = useRef("");
   verboseRef.current = verbose;
@@ -643,6 +649,27 @@ export function useVoiceSession() {
     }
   }, [logError]);
 
+  const clearToolsLoading = () => {
+    if (toolsLoadingTimerRef.current) clearTimeout(toolsLoadingTimerRef.current);
+    toolsLoadingTimerRef.current = null;
+    pendingMcpListingsRef.current = 0;
+    startMicWhenToolsReadyRef.current = false;
+    setToolsLoading(false);
+  };
+
+  // Release input once every MCP listing has settled (or the timeout passed), starting the mic if
+  // the initial session update deferred it.
+  const finishToolsLoading = () => {
+    const startMicNow = startMicWhenToolsReadyRef.current;
+    clearToolsLoading();
+    if (!sessionReadyRef.current) return;
+    if (startMicNow) {
+      startMic();
+    } else {
+      setStatus({ text: "ready - listening", kind: "ok" });
+    }
+  };
+
   const cleanupAvatar = useCallback(() => {
     const peer = avatarPeerRef.current;
     if (peer) {
@@ -908,7 +935,21 @@ export function useVoiceSession() {
         setRuntimeActiveNode(activeNode);
         if (activeNode) logStatus(`Active handoff node: ${activeNode}`);
         setSessionReady(true);
-        setStatus({ text: "ready - listening", kind: "ok" });
+        const pendingListings = isInitialSessionUpdate
+          ? pendingMcpToolListings((evt.session && evt.session.tools) || [])
+          : 0;
+        if (pendingListings > 0) {
+          pendingMcpListingsRef.current = pendingListings;
+          setToolsLoading(true);
+          setStatus({ text: "loading tools...", kind: "warn" });
+          logStatus("Loading tools\u2026 input starts when the MCP tools are available");
+          toolsLoadingTimerRef.current = setTimeout(() => {
+            logError(`MCP tools were not listed within ${MCP_TOOL_LOADING_TIMEOUT_MS / 1000} s; input is enabled anyway`);
+            finishToolsLoading();
+          }, MCP_TOOL_LOADING_TIMEOUT_MS);
+        } else if (pendingMcpListingsRef.current === 0) {
+          setStatus({ text: "ready - listening", kind: "ok" });
+        }
         if (clientReferenceEcRef.current) {
           const echoCancellation = evt.session?.audio?.input?.echo_cancellation
             || evt.session?.input_audio_echo_cancellation;
@@ -938,7 +979,13 @@ export function useVoiceSession() {
           logStatus(`Foundry Toolbox available \u2014 ${label}${allowed}`);
         }
         if (isInitialSessionUpdate && transportRef.current !== "webrtc") {
-          startMic(); // auto-start mic once (PCM-over-WS); WebRTC carries the mic on the peer instead
+          // Auto-start the mic once (PCM-over-WS); WebRTC carries the mic on the peer instead.
+          // With MCP tools, wait until they are listed so the first spoken turn can call them.
+          if (pendingListings > 0) {
+            startMicWhenToolsReadyRef.current = true;
+          } else {
+            startMic();
+          }
         }
         break;
       }
@@ -1267,7 +1314,9 @@ export function useVoiceSession() {
         if (finalize && turn === turnTrackerRef.current) {
           attachTurnMetrics();
           markTurn("agent", "");
-          setStatus({ text: "ready - listening", kind: "ok" });
+          setStatus(pendingMcpListingsRef.current > 0
+            ? { text: "loading tools...", kind: "warn" }
+            : { text: "ready - listening", kind: "ok" });
         } else if (turn === turnTrackerRef.current) {
           setStatus({
             text: pendingToolCallCount(turn) > 0 ? "running tool..." : "thinking...",
@@ -1292,10 +1341,18 @@ export function useVoiceSession() {
         const tools = (evt.tools || (evt.item && evt.item.tools) || []);
         const names = tools.map((x) => x && x.name).filter(Boolean);
         logStatus("MCP tools available" + (names.length ? `: ${names.join(", ")}` : ""));
+        if (pendingMcpListingsRef.current > 0) {
+          pendingMcpListingsRef.current = settleMcpToolListing(pendingMcpListingsRef.current);
+          if (pendingMcpListingsRef.current === 0) finishToolsLoading();
+        }
         break;
       }
       case "mcp_list_tools.failed":
         logError("mcp_list_tools.failed: " + JSON.stringify(evt.error || evt));
+        if (pendingMcpListingsRef.current > 0) {
+          pendingMcpListingsRef.current = settleMcpToolListing(pendingMcpListingsRef.current);
+          if (pendingMcpListingsRef.current === 0) finishToolsLoading();
+        }
         break;
       case "conversation.item.created":
       case "conversation.item.added":
@@ -1521,6 +1578,7 @@ export function useVoiceSession() {
     setConversationId(null);
     setSessionReady(false);
     sessionReadyRef.current = false;
+    clearToolsLoading();
     clientCloseRequestedRef.current = false;
     sessionFailureRef.current = "";
     setActiveHandoffNodeId(null);
@@ -1600,6 +1658,7 @@ export function useVoiceSession() {
       logStatus(`WebSocket closed (code ${e.code}${e.reason ? `, ${e.reason}` : ""})`);
       setSessionReady(false);
       sessionReadyRef.current = false;
+      clearToolsLoading();
       setSessionId(null);
       setActiveHandoffNodeId(null);
       activeHandoffNodeRef.current = null;
@@ -1675,7 +1734,7 @@ export function useVoiceSession() {
   const sendText = useCallback((text) => {
     const ws = wsRef.current;
     const trimmed = (text || "").trim();
-    if (!trimmed || !ws || ws.readyState !== WebSocket.OPEN) return;
+    if (!trimmed || !ws || ws.readyState !== WebSocket.OPEN || pendingMcpListingsRef.current > 0) return;
     lastAssistantSpeechEndAtRef.current = null;
     beginTurn(monotonicNow(), "text_input");
     markTurn("user", trimmed);
@@ -1716,7 +1775,7 @@ export function useVoiceSession() {
   }, [logStatus, recordFrame]);
 
   return {
-    status, sessionId, conversationId, activeHandoffNodeId, isConnected, sessionReady, micMuted, messages, verbose,
+    status, sessionId, conversationId, activeHandoffNodeId, isConnected, sessionReady, toolsLoading, micMuted, messages, verbose,
     handoffState, handoffTrail, takenEdgeIds, handoffRuntimeMetrics,
     events, clearEvents,
     avatarActive, avatarStatus, avatarStream,

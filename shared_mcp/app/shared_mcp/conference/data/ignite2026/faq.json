@@ -1,0 +1,734 @@
+{
+  "sample": false,
+  "notice": "Entries paraphrase official Microsoft Ignite pages: the FAQ (https://ignite.microsoft.com/en-US/get-help, captured 2026-10-29) and the event guide and interactive map (captured 2026-10-30).",
+  "official_source": "https://ignite.microsoft.com/en-US/get-help",
+  "captured": "2026-10-29",
+  "entries": [
+    {
+      "id": "when_where",
+      "topic": "When and where",
+      "keywords": [
+        "when",
+        "where",
+        "date",
+        "dates",
+        "location",
+        "moscone",
+        "venue",
+        "online",
+        "pre-day",
+        "preday",
+        "event"
+      ],
+      "answer": "Microsoft Ignite is at the Moscone Center in San Francisco, November 17 to 20, 2026, with an optional pre-day on November 16. The online event is November 17 to 19, 2026.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "register",
+      "topic": "How to attend and register",
+      "keywords": [
+        "attend",
+        "register",
+        "registration",
+        "sign",
+        "signup",
+        "join",
+        "ticket",
+        "tickets",
+        "guest",
+        "guests",
+        "friend",
+        "plus one",
+        "plus-one",
+        "bring someone",
+        "colleagues",
+        "individually",
+        "bundle",
+        "discount",
+        "group discount",
+        "team discount"
+      ],
+      "answer": "Register to attend in person or online at aka.ms/MSIgniteFY27RegNow. Attendees must register individually; there is no bundle pricing.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "cost",
+      "topic": "Pass prices",
+      "keywords": [
+        "cost",
+        "price",
+        "prices",
+        "pass",
+        "passes",
+        "fee",
+        "free",
+        "how much",
+        "conference pass",
+        "digital"
+      ],
+      "answer": "The Digital pass is free. The in-person Conference pass is 2,325 US dollars and includes the Moscone Center experiences, the full digital experience, and lunches, snacks, and beverages. An add-on Pre-day pass is 325 US dollars.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "in_person",
+      "topic": "What's included in person",
+      "keywords": [
+        "included",
+        "include",
+        "in-person",
+        "in person",
+        "conference pass",
+        "social",
+        "events",
+        "parties",
+        "party"
+      ],
+      "answer": "Conference-pass attendees in San Francisco get hundreds of sessions, demos, and labs, plus in-person connections at social events. Lunch, beverages, and snacks are included.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "online",
+      "topic": "Online experience",
+      "keywords": [
+        "online",
+        "digital",
+        "virtual",
+        "livestream",
+        "stream",
+        "remote",
+        "watch"
+      ],
+      "answer": "Online attendees get the keynotes, other livestreamed sessions, and other online experiences. Online sessions open from their session details page; the video player becomes active ten minutes before the start.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "recordings",
+      "topic": "Recordings and on demand",
+      "keywords": [
+        "recording",
+        "recordings",
+        "recorded",
+        "on demand",
+        "on-demand",
+        "replay",
+        "later",
+        "video"
+      ],
+      "answer": "Most sessions are recorded and posted on the session details page, typically 24 to 48 hours after the session ends. Each session is marked Will Be Recorded or Will Not Be Recorded. Lightning Talks are not available on demand.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "session_types",
+      "topic": "Session types",
+      "keywords": [
+        "types",
+        "type",
+        "breakout",
+        "lab",
+        "labs",
+        "theater",
+        "table",
+        "lightning",
+        "innovation",
+        "keynote",
+        "formats"
+      ],
+      "answer": "Keynotes, breakout sessions, innovation sessions, hands-on labs, digital labs, theater sessions, table talks, and 15-minute lightning talks in mini theaters.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "schedule",
+      "topic": "Building a schedule in the event site",
+      "keywords": [
+        "schedule",
+        "reserve",
+        "seat",
+        "favorite",
+        "favorites",
+        "my event",
+        "add to schedule"
+      ],
+      "answer": "In the session catalog, use Add to schedule or Reserve a seat, or favorite sessions. My event shows your schedule, favorites, and notifications. Favorites stay available up to 90 days after the event.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "hotel",
+      "topic": "Hotels",
+      "keywords": [
+        "hotel",
+        "hotels",
+        "room",
+        "accommodation",
+        "stay",
+        "lodging",
+        "cut-off",
+        "cutoff",
+        "book"
+      ],
+      "answer": "Log in to your registration to request a room at your preferred hotel. Hotel reservations through the registration page must be booked by 3:00 PM Pacific on Friday, October 16, 2026.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "accessibility",
+      "topic": "Accessibility",
+      "keywords": [
+        "accessibility",
+        "accessible",
+        "wheelchair",
+        "disability",
+        "asl",
+        "sign",
+        "captions",
+        "captioning",
+        "hearing",
+        "lactation",
+        "quiet",
+        "prayer",
+        "multi-faith",
+        "dietary",
+        "audio description"
+      ],
+      "answer": "On site there is an Accessibility and Accommodations Desk for accessibility and dietary needs, a lactation room, a quiet room, and a multi-faith space. Keynotes and breakouts have ASL interpretation and AI-powered open captions; assistive listening devices and audio description receivers are available for keynotes. Online, keynotes and breakouts have ASL, and live and on-demand videos have English captions with AI translation into dozens of languages.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "accommodations",
+      "topic": "Requesting accommodations",
+      "keywords": [
+        "accommodation",
+        "accommodations",
+        "request",
+        "special",
+        "needs",
+        "support"
+      ],
+      "answer": "Before the event, request accommodations during registration or email accommodations@microsoft.com. During the event, visit the on-site Accessibility and Accommodations Desk.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "health",
+      "topic": "Health and safety",
+      "keywords": [
+        "health",
+        "safety",
+        "sick",
+        "mask",
+        "masks",
+        "covid",
+        "ill"
+      ],
+      "answer": "If you are not feeling well before or during the event, please stay home. Masks are optional and available at information desks.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "digital_pass",
+      "topic": "Digital Pass and ID check",
+      "keywords": [
+        "digital pass",
+        "facial",
+        "face",
+        "selfie",
+        "biometric",
+        "id",
+        "identification",
+        "check-in",
+        "checkin",
+        "badge",
+        "passport"
+      ],
+      "answer": "Digital Pass is optional facial authentication that speeds up badge pickup and venue access; opt in from your registration. Everyone must show a valid government-issued ID at initial on-site check-in, even with Digital Pass.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "mobile_app",
+      "topic": "Mobile app",
+      "keywords": [
+        "app",
+        "mobile",
+        "phone",
+        "ios",
+        "android",
+        "download",
+        "notifications",
+        "push"
+      ],
+      "answer": "Use the Microsoft Events mobile app for iOS and Android. Push notifications go only to in-person attendees who opt in through the app; manage them in the app's event profile. App help: emas@microsoft.com.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "transfer_cancel",
+      "topic": "Transfers and cancellations",
+      "keywords": [
+        "transfer",
+        "cancel",
+        "cancellation",
+        "refund",
+        "change",
+        "colleague",
+        "substitute"
+      ],
+      "answer": "Registrations can be transferred by the original registrant until 5:00 PM Pacific on Friday, November 13, 2026, through the support team. Cancellations were due by Friday, October 16, 2026, 11:59 PM Pacific, with a refund minus a 200 dollar fee. You can view or change your registration on the registration website.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "ai_assistant",
+      "topic": "Official AI event assistant",
+      "keywords": [
+        "assistant",
+        "ai assistant",
+        "chatbot",
+        "trip report"
+      ],
+      "answer": "The event website has an AI event assistant that can recommend sessions, build a schedule, locate activities, and summarize sessions.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "help",
+      "topic": "Contact and help",
+      "keywords": [
+        "help",
+        "contact",
+        "email",
+        "support",
+        "problem",
+        "question"
+      ],
+      "answer": "For problems not covered by the FAQ, email ignite@microsoft.regsvc.com. For sponsorship, email sponsor@microsoft.com.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "badge_pickup",
+      "topic": "Badge pickup locations and hours",
+      "keywords": [
+        "badge",
+        "badge pickup",
+        "pick up my badge",
+        "pickup",
+        "registration desk",
+        "check in",
+        "lanyard",
+        "water bottle"
+      ],
+      "answer": "Bring a government-issued photo ID to pick up your badge and water bottle. Moscone West Lobby: Monday, November 16, 11 AM to 8:30 PM; Tuesday 6:30 AM to 7:30 PM; Wednesday 8 AM to 5:15 PM; Thursday 8:30 AM to 6 PM; Friday 8:30 AM to 12:30 PM. Marriott Marquis, Level B2, Golden Gate Ballroom: Monday 11 AM to 8:30 PM; Tuesday 6:30 AM to 6 PM; Wednesday 8 AM to 5:15 PM; Thursday 8:30 AM to 6 PM. Parc 55: Monday 11 AM to 8:30 PM; Tuesday 6:30 AM to 6 PM. Chase Center: Tuesday 6:30 AM to noon; Wednesday 5 PM to 10 PM. Wear your badge at all Microsoft Ignite activities.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/event-guide"
+    },
+    {
+      "id": "hotel_shuttles",
+      "topic": "Hotel shuttles and transportation help",
+      "keywords": [
+        "shuttle",
+        "shuttles",
+        "bus",
+        "hotel shuttle",
+        "transportation",
+        "ride",
+        "getting there",
+        "accessible transportation"
+      ],
+      "answer": "Complimentary shuttles run between Moscone Center and select hotels that are not within walking distance, November 17 to 19, with extra service to Chase Center on November 17 for the keynote and November 18 for the Celebration. For help during shuttle hours, find the transportation staff outside Moscone West on 4th Street. For accessible transportation, call 206-852-7695 at least 45 minutes before you want to be picked up; that line is open November 16 to 20.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/event-guide"
+    },
+    {
+      "id": "shuttle_schedule",
+      "topic": "Daily shuttle schedule",
+      "keywords": [
+        "shuttle schedule",
+        "shuttle times",
+        "shuttle hours",
+        "when do shuttles",
+        "shuttle",
+        "bus schedule",
+        "run",
+        "runs",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "today",
+        "tomorrow",
+        "morning",
+        "evening"
+      ],
+      "answer": "Monday, November 16: no general shuttle service; accessible shuttles 12:30 to 5:30 PM by phone. Tuesday, November 17: 6:30 to 9:15 AM from all official hotels to Chase Center; noon to 1:30 PM from Chase Center to Moscone Center; 3:30 to 6:30 PM from Moscone West to red and blue route hotels. Wednesday, November 18: 7:30 to 9:30 AM from select hotels to Moscone West; 4 to 5:30 PM from Moscone West to red and blue route hotels; 6:15 to 7:30 PM from all official hotels to Chase Center; return shuttles from Chase Center after the Celebration between about 8 and 9:30 PM; check on site for exact times. Thursday, November 19: 8 to 10 AM from red and blue route hotels to Moscone West; 4:30 to 6:30 PM back to those hotels. Friday, November 20: no general shuttle service; accessible shuttles 8:30 AM to 12:45 PM by phone at 206-852-7695.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/event-guide"
+    },
+    {
+      "id": "shuttle_routes",
+      "topic": "Shuttle routes and boarding locations",
+      "keywords": [
+        "shuttle route",
+        "red route",
+        "blue route",
+        "boarding",
+        "pickup location",
+        "my hotel",
+        "which shuttle",
+        "fisherman's wharf",
+        "kabuki"
+      ],
+      "answer": "There are two hotel shuttle routes. Red route: board at Marriott Fisherman's Wharf, curbside on North Point Street; guests of Hotel Zephyr, Hotel Riu Plaza, Courtyard, Hotel Caza, Hyatt Centric, Holiday Inn, and Hotel Zoe at Fisherman's Wharf walk to the Marriott Fisherman's Wharf. Blue route: board at Hotel Kabuki, curbside on Post Street, where Kimpton Hotel Enso guests also board, or at Holiday Inn Golden Gateway, curbside on Van Ness Avenue.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/event-guide"
+    },
+    {
+      "id": "celebration",
+      "topic": "Microsoft Ignite Celebration",
+      "keywords": [
+        "celebration",
+        "party",
+        "concert",
+        "gwen stefani",
+        "chase center",
+        "evening event",
+        "amd"
+      ],
+      "answer": "The Microsoft Ignite Celebration presented with AMD is on Wednesday, November 18, from 7 to 9 PM at Chase Center, with snacks, cocktails, and a live performance by Gwen Stefani. Shuttles run every 15 minutes from designated hotels to Chase Center from 6:15 to 7:30 PM, and return shuttles run after the Celebration between about 8 and 9:30 PM; check on site for exact times.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/event-guide"
+    },
+    {
+      "id": "parking",
+      "topic": "Parking",
+      "keywords": [
+        "parking",
+        "park",
+        "car",
+        "drive",
+        "driving",
+        "garage"
+      ],
+      "answer": "Moscone Center has no on-site parking, but several public garages are nearby; event shuttles, accessible transportation, or public transit are recommended. At Chase Center, shuttles and public transit are strongly encouraged; if you drive, the recommended garage is at 99 Warriors Way. Parking rates vary.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/event-guide"
+    },
+    {
+      "id": "security_bags",
+      "topic": "Security screening, ID, and bags",
+      "keywords": [
+        "security",
+        "screening",
+        "bag",
+        "bags",
+        "backpack",
+        "luggage",
+        "suitcase",
+        "prohibited",
+        "magnetometer",
+        "id check"
+      ],
+      "answer": "Every entrance requires identity verification with Digital Pass or a government-issued photo ID, plus walk-through and bag screening. Wear your badge visibly at all times. Backpacks and small bags are allowed, but oversized bags and luggage are not; leave luggage at your hotel. There is no event luggage storage; third-party storage services in San Francisco are your own arrangement.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/event-guide"
+    },
+    {
+      "id": "lunch",
+      "topic": "Lunch and preordered meals",
+      "keywords": [
+        "lunch",
+        "food",
+        "meal",
+        "meals",
+        "eat",
+        "dietary",
+        "vegan",
+        "vegetarian",
+        "gluten",
+        "halal",
+        "kosher",
+        "allergy",
+        "menu"
+      ],
+      "answer": "Lunch is served at the Moscone North Lobby (boxed lunches), the Marriott Marquis Level B2 Golden Gate Ballroom (build-a-bowl buffet), and the Metreon Dining Terrace with Joyride Pizza. Menus include vegetarian, vegan, and options avoiding gluten, dairy, or nuts, and are subject to change. Meals preordered at registration before October 16, including halal or kosher, are picked up daily at mealtimes at a marked spot in the Metreon Dining Terrace near the AMC elevators.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/event-guide"
+    },
+    {
+      "id": "accessibility_onsite",
+      "topic": "On-site accessibility services",
+      "keywords": [
+        "accessibility desk",
+        "wheelchair",
+        "scooter",
+        "mobility",
+        "disability",
+        "caption",
+        "captions",
+        "sign language",
+        "asl",
+        "accessible seating",
+        "accessible shuttle"
+      ],
+      "answer": "Accessibility assistance desks are in the Moscone West and Moscone South lobbies. An accessible shuttle runs November 17 to 20 during shuttle times and on November 16 from 12:30 to 5:30 PM; call 206-852-7695, ideally 45 minutes ahead. Mobility equipment can be rented from Scootaround at your own expense. The keynote has open English captions, American Sign Language interpretation, and accessible seating.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/event-guide"
+    },
+    {
+      "id": "charging",
+      "topic": "Charging and lounges",
+      "keywords": [
+        "charge",
+        "charging",
+        "charger",
+        "battery",
+        "power",
+        "lounge",
+        "rest",
+        "sit down"
+      ],
+      "answer": "Chill and charge lounges with seating and device charging are in Moscone South, Level 2, and the Moscone North lobby.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/event-guide"
+    },
+    {
+      "id": "coffee",
+      "topic": "Coffee",
+      "keywords": [
+        "coffee",
+        "cafe",
+        "café",
+        "espresso",
+        "tea",
+        "drink"
+      ],
+      "answer": "Hub Cafés serve coffee throughout Hub hours.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/event-guide"
+    },
+    {
+      "id": "maps",
+      "topic": "Venue maps and directions",
+      "keywords": [
+        "map",
+        "maps",
+        "directions",
+        "how do i get",
+        "where is",
+        "find my way",
+        "navigate",
+        "restroom",
+        "bathroom",
+        "toilet",
+        "booth"
+      ],
+      "answer": "For maps, directions, restrooms, booths, and other places in the venue, use the official interactive map at wayfinding.event.microsoft.com/ignite or the Microsoft Events mobile app, and follow event signage and staff.",
+      "source": "official",
+      "url": "https://wayfinding.event.microsoft.com/ignite"
+    },
+    {
+      "id": "who_should_attend",
+      "topic": "Who should attend",
+      "keywords": [
+        "who should attend",
+        "who is it for",
+        "audience",
+        "who attends",
+        "right for me",
+        "should i go"
+      ],
+      "answer": "Microsoft Ignite is for a range of professionals, including IT practitioners, IT and business executives, and Microsoft partners.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "why_attend",
+      "topic": "What you will experience",
+      "keywords": [
+        "why attend",
+        "why should i attend",
+        "worth it",
+        "what will i experience",
+        "benefits",
+        "what will i get"
+      ],
+      "answer": "Microsoft Ignite is designed to help you grow your skills, build connections, and discover emerging technologies in the era of AI. In person, you can get questions answered by the engineers behind the products, compare approaches with peers, and work through real scenarios in small-group labs.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/home"
+    },
+    {
+      "id": "convince_manager",
+      "topic": "Convincing your manager",
+      "keywords": [
+        "manager",
+        "boss",
+        "convince",
+        "approval",
+        "justify",
+        "justification"
+      ],
+      "answer": "The official site offers a Convince your manager email template that outlines what Microsoft Ignite offers and the benefits for you and your organization.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "ai_tour",
+      "topic": "Microsoft AI Tour and Ignite",
+      "keywords": [
+        "ai tour",
+        "tour",
+        "both events"
+      ],
+      "answer": "Yes, the events complement each other. The Microsoft AI Tour is a one-day experience centered on AI solutions, while Microsoft Ignite is a broader three-and-a-half-day event with hundreds of sessions, hands-on labs, live demos, and the latest innovations across Microsoft technologies.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "profile_directory",
+      "topic": "Profile and attendee directory",
+      "keywords": [
+        "profile",
+        "attendee directory",
+        "directory",
+        "networking",
+        "network",
+        "connect with attendees",
+        "public profile",
+        "linkedin",
+        "github"
+      ],
+      "answer": "Sign in with the account you used to register and open My event or your name at the top right to complete your profile. In-person attendees can turn on Make your event profile public on the contact preferences tab to appear in the attendee directory and find attendees with similar interests. You can add GitHub, Bluesky, LinkedIn, or X links.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "invite_others",
+      "topic": "Inviting others to online sessions",
+      "keywords": [
+        "invite",
+        "share a session",
+        "session link",
+        "send a link",
+        "share link",
+        "share my schedule"
+      ],
+      "answer": "To invite someone to an online session, ask them to register for the free online experience, ideally early because activation can take a few minutes. You can also share your schedule so colleagues can find sessions, and make your profile shareable in your contact preferences. Sessions marked In-person Only are available only to in-person attendees during the event.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "digital_pass_details",
+      "topic": "Digital Pass facial authentication details",
+      "keywords": [
+        "facial authentication",
+        "facial recognition",
+        "face recognition",
+        "opt in",
+        "opt out",
+        "optional",
+        "privacy",
+        "enable digital pass",
+        "how does digital pass work",
+        "digital pass"
+      ],
+      "answer": "Digital Pass is optional. If you opt in, you upload a selfie during registration, which creates a secure, encrypted biometric template; on site, a live image at registration or checkpoints is compared with it to verify that you are the same person. It is not used to identify unknown individuals. If you don't opt in, you use the standard check-in and badge access. To sign up or read the usage agreement and more FAQs, return to your registration and select Enable Digital Pass.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "app_sign_in",
+      "topic": "Signing in to the mobile app with a work account",
+      "keywords": [
+        "sign in",
+        "signin",
+        "log in",
+        "login",
+        "can't sign in",
+        "managed device",
+        "intune",
+        "work account",
+        "corporate",
+        "google play"
+      ],
+      "answer": "If your organization manages your phone, it may need to add the Microsoft Events Android app through Intune using Managed Google Play; instructions are at aka.ms/events/Intune. Microsoft employees on Intune-managed Android devices install the app from their Android work profile. You can also pin a shortcut to the event website from your approved browser. For app help, email emas@microsoft.com.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "push_notifications",
+      "topic": "Push notifications",
+      "keywords": [
+        "notification",
+        "notifications",
+        "push",
+        "alerts",
+        "unsubscribe",
+        "turn off notifications",
+        "stop notifications",
+        "message center"
+      ],
+      "answer": "Push notifications share event updates and session reminders. They go only to in-person attendees who opt in when they first sign in to the Microsoft Events app; they also appear in the app's message center. Manage opt-ins in the app profile or device settings and subscriptions in the app's event profile, on every device you use. To stop them, unsubscribe in the event profile on each device. If you can't find these settings, your registration type may not be eligible.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "sponsors",
+      "topic": "Sponsorship",
+      "keywords": [
+        "sponsor",
+        "sponsors",
+        "sponsorship",
+        "exhibit",
+        "exhibitor",
+        "booth for my company"
+      ],
+      "answer": "The sponsor program is open to Microsoft partners and offers several packages at a range of price points, integrated into the event's audience journey. Contact sponsor@microsoft.com to learn more.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "advantage_hotels",
+      "topic": "Advantage pass hotels",
+      "keywords": [
+        "advantage pass",
+        "advantage",
+        "hotel block",
+        "which hotels"
+      ],
+      "answer": "The Advantage pass gives access to a dedicated hotel block at the Canopy by Hilton San Francisco SoMa, Hyatt Regency San Francisco Downtown SoMa, Palace Hotel, and San Francisco Marriott Marquis, while rooms last.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    },
+    {
+      "id": "change_registration",
+      "topic": "Viewing or changing your registration",
+      "keywords": [
+        "change my registration",
+        "edit registration",
+        "update registration",
+        "confirmation email",
+        "upgrade",
+        "switch to in person",
+        "add a code",
+        "promo code",
+        "registered",
+        "instead",
+        "come in person",
+        "attend in person instead",
+        "switch"
+      ],
+      "answer": "Sign in to the Microsoft Ignite registration website with the credentials you registered with to edit or cancel your registration, view or print your confirmation email, or add a code. If you're registered for the digital experience and want to attend in person, contact the Microsoft support team.",
+      "source": "official",
+      "url": "https://ignite.microsoft.com/en-US/get-help"
+    }
+  ]
+}

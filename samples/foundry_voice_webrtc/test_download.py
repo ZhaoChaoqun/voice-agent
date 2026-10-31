@@ -97,6 +97,24 @@ class DownloadTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(response.status, 409)
                 self.assertEqual(await response.json(), {"error": "Not ready"})
 
+    async def test_downloads_remain_bound_to_original_or_companion_regardless_of_current_selection(self):
+        cfg = Settings("https://example.services.ai.azure.com/api/projects/demo", "agent")
+        app = create_app(cfg, AsyncMock())
+        writing = AsyncMock(side_effect=lambda client, cfg, headers, conversation, output: output.write(b"archive"))
+        async with TestClient(TestServer(app)) as client:
+            origin = {"Origin": str(client.make_url("")).rstrip("/")}
+            for agent in (cfg.agent, cfg.live_companion().agent):
+                token = conversation_download_token(app[DOWNLOAD_SECRET], agent, "conv_saved")
+                with patch("server.write_conversation_archive", writing):
+                    response = await client.post(f"/api/conversation/download?agent={agent}",
+                        headers=origin, json={"downloadToken": token})
+                    self.assertEqual(response.status, 200, await response.text())
+                    self.assertEqual(writing.call_args.args[1].agent, agent)
+                other = cfg.live_companion().agent if agent == cfg.agent else cfg.agent
+                response = await client.post(f"/api/conversation/download?agent={other}",
+                    headers=origin, json={"downloadToken": token})
+                self.assertEqual(response.status, 403)
+
     async def test_upstream_announces_the_conversation_once_for_both_transports(self):
         for transport in ("websocket", "webrtc"):
             session = {"id": "session_test", "model": "gpt-realtime-2.1",

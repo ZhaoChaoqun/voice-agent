@@ -1,0 +1,48 @@
+{
+  "format_note": "Portal configuration checklist, not a REST request or import payload. Replace model names with available project deployments when needed.",
+  "agent": {
+    "name": "Airline-Agent",
+    "version": "1",
+    "model": "gpt-realtime-2.1",
+    "voice": "Marin",
+    "session_start_greeting": "None",
+    "toolbox": {
+      "name": "airline-refund-python",
+      "version": "1",
+      "tool": "Code interpreter",
+      "upload": "airline_lookup_default.py"
+    }
+  },
+  "evaluation": {
+    "name": "Cancel_order",
+    "scope": "Full conversations",
+    "frequency": "One time",
+    "agent_instruction_override": null
+  },
+  "simulation": {
+    "dataset_name": "flight_info_retrieval4",
+    "dataset_version": "1",
+    "upload": "scenarios.jsonl",
+    "model": "gpt-5.6-luna",
+    "voice_model": {
+      "type": "azure-standard",
+      "name": "en-US-Ava:DragonHDLatestNeural",
+      "display_name": "Ava Dragon HD Latest"
+    },
+    "conversation_repetitions": 1,
+    "max_num_turns": 10,
+    "enable_conversation_dataset_generation": false
+  },
+  "evaluator": {
+    "name": "flight_info_retrieval",
+    "display_name": "flight info retrieval",
+    "observed_catalog_version": "4",
+    "judge_model": "gpt-5.6-luna",
+    "rubric_generation_model": "gpt-5-mini",
+    "pass_score_threshold": 0.5,
+    "data_mapping": {
+      "messages": "{{item.messages}}",
+      "tool_definitions": "{{sample.tool_definitions}}"
+    }
+  }
+}

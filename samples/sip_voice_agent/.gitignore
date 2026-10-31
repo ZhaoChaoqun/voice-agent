@@ -12,3 +12,4 @@ htmlcov/
 *.log
 *.wav
 *.pcm
+transfer_targets.local.json

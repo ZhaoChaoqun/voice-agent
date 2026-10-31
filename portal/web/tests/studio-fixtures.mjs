@@ -44,6 +44,20 @@ export const CONFIG = {
   ],
 };
 
+export function voiceCatalogFixture(config = CONFIG) {
+  return {
+    voices: [
+      ...config.azureVoices.map((id) => ({
+        id, label: id, type: "azure-standard", locale: id.split("-").slice(0, 2).join("-"),
+      })),
+      ...config.openaiVoices.map((id) => ({
+        id, label: id, type: "openai", locale: "",
+      })),
+    ],
+    notice: "Synthetic voice catalog for browser regression tests.",
+  };
+}
+
 export function resource(name, definition, extra = {}) {
   return {
     name,
@@ -87,7 +101,7 @@ export async function mockWebRtcPeer(page) {
   });
 }
 
-export async function mountStudio(page, configPatch = {}, path = "/demo/", options = {}) {
+export async function mountStudio(page, configPatch = {}, path = "/runtime/", options = {}) {
   const api = {
     creates: [], generates: [], versions: [], sockets: [], messages: [], errors: [],
     projectSelections: [], agentListQueries: [], agentReads: [],
@@ -155,6 +169,12 @@ export async function mountStudio(page, configPatch = {}, path = "/demo/", optio
         }, 500);
       }
       return json({ ...CONFIG, ...configPatch });
+    }
+    if (url.pathname === "/api/voices") {
+      if (options.voiceCatalogError) return json({
+        error: options.voiceCatalogError, request_id: "voice-fixture-request",
+      }, 403);
+      return json(voiceCatalogFixture({ ...CONFIG, ...configPatch }));
     }
     if (url.pathname === "/api/projects") return json({
       current_endpoint: CONFIG.host,
@@ -297,7 +317,7 @@ export async function mountStudio(page, configPatch = {}, path = "/demo/", optio
   };
   await page.goto(path);
   if (options.configError) return api;
-  await expect(page.getByRole("heading", { name: "Agent Creation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Voice agent runtime" })).toBeVisible();
   return api;
 }
 

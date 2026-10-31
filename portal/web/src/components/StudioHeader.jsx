@@ -75,11 +75,11 @@ export function StudioHeader({ cfg, disabled, debugMode = false }) {
     <header className="studio-header">
       <div className="studio-brand">
         <span className="brand-mark"><Icon name="wave" /></span>
-        <div><h1>Voice agent <span>studio</span></h1><p>Configure. Connect. Converse.</p></div>
+        <div><h1>Voice agent <span>runtime</span></h1><p>Connect. Converse. Inspect.</p></div>
       </div>
       <nav className="portal-page-nav" aria-label="Portal pages">
         <a href="/editor/">Editor</a>
-        <span aria-current="page">AgentRuntime</span>
+        <span aria-current="page">Runtime</span>
       </nav>
       <div className="studio-backend">
         <label htmlFor="studio-backend">Foundry project</label>
@@ -134,7 +134,7 @@ export function StudioHeader({ cfg, disabled, debugMode = false }) {
       <div className="portal-notice info-note" role="status">
         {cfg.notice}
         <span className="portal-nav">
-          <a href="/demo/">AgentRuntime</a>
+          <a href="/runtime/">Runtime</a>
           {debugMode ? <>
             <a href="/webrtc">WebRTC</a>
             <a href="/static/demo/sessions.html">Local session logs</a>

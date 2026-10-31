@@ -1,63 +1,44 @@
 // Copyright (c) Microsoft. All rights reserved.
 // All service, socket, and WebRTC boundaries below are synthetic/local only.
 import { test, expect } from "@playwright/test";
-import { CONFIG, mockWebRtcPeer, mountStudio, resource, selectSessionAgent } from "./studio-fixtures.mjs";
+import { CONFIG, mockWebRtcPeer, mountStudio, resource, selectSessionAgent, voiceCatalogFixture } from "./studio-fixtures.mjs";
 
-async function generate(page, { store = false, draft = false } = {}) {
-  const api = await mountStudio(page, { defaultStore: false });
-  await page.getByRole("button", { name: "Generate", exact: true }).click();
-  await page.getByLabel("Generated agent name").fill("generated-privacy-agent");
-  await page.getByRole("checkbox", { name: /^Save generated conversations/ }).setChecked(store);
-  if (draft) {
-    await page.getByText("Generation options", { exact: true }).click();
-    await page.getByRole("checkbox", { name: /^Create as a draft/ }).check();
-  }
-  await page.getByRole("button", { name: "Generate agent", exact: true }).click();
-  await expect(page.getByLabel("Session agent", { exact: true })).toHaveValue("generated-privacy-agent");
-  await expect.poll(() => api.generates.length).toBe(1);
-  // Storage is a supported session override, not a new generation API field.
-  expect(api.generates[0]).not.toHaveProperty("store");
-  expect(api.generates[0].draft).toBe(draft);
-  expect(api.versions).toEqual([]);
-  return api;
+for (const store of [false, true]) {
+  test(`Runtime preserves published conversation storage ${store ? "on" : "off"} without an override`, async ({ page }) => {
+    const api = await mountStudio(page, {}, "/runtime/?agent=storage-agent", {
+      extraAgents: [resource("storage-agent", {
+        kind: "voice", model: "gpt-realtime", store,
+        audio: { output: { voice: "en-US-AvaNeural", voice_type: "azure-standard" } },
+      })],
+    });
+    await expect(page.locator(".agent-configuration-preview")).toContainText(`Storage: ${store ? "On" : "Off"}`);
+    await page.getByText("Agent configuration", { exact: true }).click();
+    await expect(page.locator(".agent-facts > div").filter({ hasText: "Conversation storage" }).locator("dd"))
+      .toHaveText(store ? "Save transcript & audio" : "Do not save");
+    await expect(page.getByRole("combobox", { name: "Conversation storage override", exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: "Connect & start session" }).click();
+    await expect.poll(() => api.sockets.length).toBe(1);
+    expect(new URL(api.sockets[0].url()).searchParams.has("store")).toBe(false);
+    expect(api.versions).toEqual([]);
+    await page.getByRole("button", { name: "Stop session" }).click();
+  });
 }
 
-test("generated storage defaults off even when the returned definition stores conversations", async ({ page }) => {
-  const api = await generate(page);
-  await page.locator(".session-settings > summary").click();
-  await expect(page.getByRole("combobox", { name: "Conversation storage override", exact: true })).toHaveValue("false");
-  await page.getByRole("button", { name: "Connect & start session" }).click();
-  await expect.poll(() => api.sockets.length).toBe(1);
-  expect(new URL(api.sockets[0].url()).searchParams.get("store")).toBe("false");
-  await page.getByRole("button", { name: "Stop session" }).click();
-});
-
-test("generated storage opt-in and draft creation remain available without rewriting versions", async ({ page }) => {
-  const api = await generate(page, { store: true, draft: true });
-  await page.getByRole("button", { name: "Connect & start session" }).click();
-  await expect.poll(() => api.sockets.length).toBe(1);
-  expect(new URL(api.sockets[0].url()).searchParams.get("store")).toBe("true");
-  expect(api.versions).toEqual([]);
-  await page.getByRole("button", { name: "Stop session" }).click();
-});
-
-test("generated preference survives refresh and selection while existing-agent overrides remain editable", async ({ page }) => {
-  await generate(page);
+test("Runtime storage display follows the selected published Agent after refresh", async ({ page }) => {
+  const api = await mountStudio(page, {}, "/runtime/", {
+    extraAgents: [resource("storage-off-agent", {
+      kind: "voice", model: "gpt-realtime", store: false,
+      audio: { output: { voice: "en-US-AvaNeural" } },
+    })],
+  });
   await page.getByRole("button", { name: "Refresh agents", exact: true }).click();
   await expect(page.getByRole("button", { name: "Refresh agents", exact: true })).toBeEnabled();
   await selectSessionAgent(page, "realtime-agent");
-  await page.locator(".session-settings > summary").click();
-  const storage = page.getByRole("combobox", { name: "Conversation storage override", exact: true });
-  await expect(storage).toHaveValue("");
-  await selectSessionAgent(page, "generated-privacy-agent");
-  if (await page.locator(".session-settings").getAttribute("open") === null) {
-    await page.locator(".session-settings > summary").click();
-  }
-  await expect(storage).toHaveValue("false");
-  await storage.selectOption("true");
-  await expect(storage).toHaveValue("true");
-  await storage.selectOption("");
-  await expect(storage).toHaveValue("");
+  await expect(page.locator(".agent-configuration-preview")).toContainText("Storage: On");
+  await selectSessionAgent(page, "storage-off-agent");
+  await expect(page.locator(".agent-configuration-preview")).toContainText("Storage: Off");
+  expect(api.sockets).toEqual([]);
+  expect(api.versions).toEqual([]);
 });
 
 const agentName = "shared-privacy-agent";
@@ -76,6 +57,7 @@ async function reviewFixture(page, { capturedId = null, failList = false } = {})
       status, contentType: "application/json", body: JSON.stringify(data),
     });
     if (url.pathname === "/config") return json({ ...CONFIG, defaultStore: false });
+    if (url.pathname === "/api/voices") return json(voiceCatalogFixture());
     if (url.pathname === "/agents") return json({ data: [resource(agentName, {
       kind: "voice", model: "gpt-realtime", store: true,
       audio: { output: { voice: "en-US-AvaNeural", voice_type: "azure-standard" } },

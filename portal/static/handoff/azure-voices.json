@@ -1,0 +1,6826 @@
+{
+  "schema_version": 1,
+  "source": "https://southeastasia.tts.speech.microsoft.com/cognitiveservices/voices/list",
+  "region": "southeastasia",
+  "fetched_at": "2026-10-27T06:35:59+00:00",
+  "voices": [
+    {
+      "id": "af-ZA-AdriNeural",
+      "type": "azure-standard",
+      "locale": "af-ZA",
+      "label": "Adri",
+      "localeName": "Afrikaans (South Africa)"
+    },
+    {
+      "id": "af-ZA-WillemNeural",
+      "type": "azure-standard",
+      "locale": "af-ZA",
+      "label": "Willem",
+      "localeName": "Afrikaans (South Africa)"
+    },
+    {
+      "id": "am-ET-AmehaNeural",
+      "type": "azure-standard",
+      "locale": "am-ET",
+      "label": "Ameha",
+      "localeName": "Amharic (Ethiopia)"
+    },
+    {
+      "id": "am-ET-MekdesNeural",
+      "type": "azure-standard",
+      "locale": "am-ET",
+      "label": "Mekdes",
+      "localeName": "Amharic (Ethiopia)"
+    },
+    {
+      "id": "ar-AE-FatimaNeural",
+      "type": "azure-standard",
+      "locale": "ar-AE",
+      "label": "Fatima",
+      "localeName": "Arabic (United Arab Emirates)"
+    },
+    {
+      "id": "ar-AE-HamdanNeural",
+      "type": "azure-standard",
+      "locale": "ar-AE",
+      "label": "Hamdan",
+      "localeName": "Arabic (United Arab Emirates)"
+    },
+    {
+      "id": "ar-AE-Rashid:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "ar-AE",
+      "label": "Rashid Dragon HD Latest",
+      "localeName": "Arabic (United Arab Emirates)"
+    },
+    {
+      "id": "ar-BH-AliNeural",
+      "type": "azure-standard",
+      "locale": "ar-BH",
+      "label": "Ali",
+      "localeName": "Arabic (Bahrain)"
+    },
+    {
+      "id": "ar-BH-LailaNeural",
+      "type": "azure-standard",
+      "locale": "ar-BH",
+      "label": "Laila",
+      "localeName": "Arabic (Bahrain)"
+    },
+    {
+      "id": "ar-DZ-AminaNeural",
+      "type": "azure-standard",
+      "locale": "ar-DZ",
+      "label": "Amina",
+      "localeName": "Arabic (Algeria)"
+    },
+    {
+      "id": "ar-DZ-IsmaelNeural",
+      "type": "azure-standard",
+      "locale": "ar-DZ",
+      "label": "Ismael",
+      "localeName": "Arabic (Algeria)"
+    },
+    {
+      "id": "ar-EG-SalmaNeural",
+      "type": "azure-standard",
+      "locale": "ar-EG",
+      "label": "Salma",
+      "localeName": "Arabic (Egypt)"
+    },
+    {
+      "id": "ar-EG-ShakirNeural",
+      "type": "azure-standard",
+      "locale": "ar-EG",
+      "label": "Shakir",
+      "localeName": "Arabic (Egypt)"
+    },
+    {
+      "id": "ar-IQ-BasselNeural",
+      "type": "azure-standard",
+      "locale": "ar-IQ",
+      "label": "Bassel",
+      "localeName": "Arabic (Iraq)"
+    },
+    {
+      "id": "ar-IQ-RanaNeural",
+      "type": "azure-standard",
+      "locale": "ar-IQ",
+      "label": "Rana",
+      "localeName": "Arabic (Iraq)"
+    },
+    {
+      "id": "ar-JO-SanaNeural",
+      "type": "azure-standard",
+      "locale": "ar-JO",
+      "label": "Sana",
+      "localeName": "Arabic (Jordan)"
+    },
+    {
+      "id": "ar-JO-TaimNeural",
+      "type": "azure-standard",
+      "locale": "ar-JO",
+      "label": "Taim",
+      "localeName": "Arabic (Jordan)"
+    },
+    {
+      "id": "ar-KW-FahedNeural",
+      "type": "azure-standard",
+      "locale": "ar-KW",
+      "label": "Fahed",
+      "localeName": "Arabic (Kuwait)"
+    },
+    {
+      "id": "ar-KW-NouraNeural",
+      "type": "azure-standard",
+      "locale": "ar-KW",
+      "label": "Noura",
+      "localeName": "Arabic (Kuwait)"
+    },
+    {
+      "id": "ar-LB-LaylaNeural",
+      "type": "azure-standard",
+      "locale": "ar-LB",
+      "label": "Layla",
+      "localeName": "Arabic (Lebanon)"
+    },
+    {
+      "id": "ar-LB-RamiNeural",
+      "type": "azure-standard",
+      "locale": "ar-LB",
+      "label": "Rami",
+      "localeName": "Arabic (Lebanon)"
+    },
+    {
+      "id": "ar-LY-ImanNeural",
+      "type": "azure-standard",
+      "locale": "ar-LY",
+      "label": "Iman",
+      "localeName": "Arabic (Libya)"
+    },
+    {
+      "id": "ar-LY-OmarNeural",
+      "type": "azure-standard",
+      "locale": "ar-LY",
+      "label": "Omar",
+      "localeName": "Arabic (Libya)"
+    },
+    {
+      "id": "ar-MA-JamalNeural",
+      "type": "azure-standard",
+      "locale": "ar-MA",
+      "label": "Jamal",
+      "localeName": "Arabic (Morocco)"
+    },
+    {
+      "id": "ar-MA-MounaNeural",
+      "type": "azure-standard",
+      "locale": "ar-MA",
+      "label": "Mouna",
+      "localeName": "Arabic (Morocco)"
+    },
+    {
+      "id": "ar-OM-AbdullahNeural",
+      "type": "azure-standard",
+      "locale": "ar-OM",
+      "label": "Abdullah",
+      "localeName": "Arabic (Oman)"
+    },
+    {
+      "id": "ar-OM-AyshaNeural",
+      "type": "azure-standard",
+      "locale": "ar-OM",
+      "label": "Aysha",
+      "localeName": "Arabic (Oman)"
+    },
+    {
+      "id": "ar-QA-AmalNeural",
+      "type": "azure-standard",
+      "locale": "ar-QA",
+      "label": "Amal",
+      "localeName": "Arabic (Qatar)"
+    },
+    {
+      "id": "ar-QA-MoazNeural",
+      "type": "azure-standard",
+      "locale": "ar-QA",
+      "label": "Moaz",
+      "localeName": "Arabic (Qatar)"
+    },
+    {
+      "id": "ar-SA-HamedNeural",
+      "type": "azure-standard",
+      "locale": "ar-SA",
+      "label": "Hamed",
+      "localeName": "Arabic (Saudi Arabia)"
+    },
+    {
+      "id": "ar-SA-ZariyahNeural",
+      "type": "azure-standard",
+      "locale": "ar-SA",
+      "label": "Zariyah",
+      "localeName": "Arabic (Saudi Arabia)"
+    },
+    {
+      "id": "ar-SY-AmanyNeural",
+      "type": "azure-standard",
+      "locale": "ar-SY",
+      "label": "Amany",
+      "localeName": "Arabic (Syria)"
+    },
+    {
+      "id": "ar-SY-LaithNeural",
+      "type": "azure-standard",
+      "locale": "ar-SY",
+      "label": "Laith",
+      "localeName": "Arabic (Syria)"
+    },
+    {
+      "id": "ar-TN-HediNeural",
+      "type": "azure-standard",
+      "locale": "ar-TN",
+      "label": "Hedi",
+      "localeName": "Arabic (Tunisia)"
+    },
+    {
+      "id": "ar-TN-ReemNeural",
+      "type": "azure-standard",
+      "locale": "ar-TN",
+      "label": "Reem",
+      "localeName": "Arabic (Tunisia)"
+    },
+    {
+      "id": "ar-YE-MaryamNeural",
+      "type": "azure-standard",
+      "locale": "ar-YE",
+      "label": "Maryam",
+      "localeName": "Arabic (Yemen)"
+    },
+    {
+      "id": "ar-YE-SalehNeural",
+      "type": "azure-standard",
+      "locale": "ar-YE",
+      "label": "Saleh",
+      "localeName": "Arabic (Yemen)"
+    },
+    {
+      "id": "as-IN-PriyomNeural",
+      "type": "azure-standard",
+      "locale": "as-IN",
+      "label": "Priyom",
+      "localeName": "Assamese (India)"
+    },
+    {
+      "id": "as-IN-YashicaNeural",
+      "type": "azure-standard",
+      "locale": "as-IN",
+      "label": "Yashica",
+      "localeName": "Assamese (India)"
+    },
+    {
+      "id": "az-AZ-BabekNeural",
+      "type": "azure-standard",
+      "locale": "az-AZ",
+      "label": "Babek",
+      "localeName": "Azerbaijani (Latin, Azerbaijan)"
+    },
+    {
+      "id": "az-AZ-BanuNeural",
+      "type": "azure-standard",
+      "locale": "az-AZ",
+      "label": "Banu",
+      "localeName": "Azerbaijani (Latin, Azerbaijan)"
+    },
+    {
+      "id": "bg-BG-BorislavNeural",
+      "type": "azure-standard",
+      "locale": "bg-BG",
+      "label": "Borislav",
+      "localeName": "Bulgarian (Bulgaria)"
+    },
+    {
+      "id": "bg-BG-KalinaNeural",
+      "type": "azure-standard",
+      "locale": "bg-BG",
+      "label": "Kalina",
+      "localeName": "Bulgarian (Bulgaria)"
+    },
+    {
+      "id": "bn-BD-NabanitaNeural",
+      "type": "azure-standard",
+      "locale": "bn-BD",
+      "label": "Nabanita",
+      "localeName": "Bangla (Bangladesh)"
+    },
+    {
+      "id": "bn-BD-PradeepNeural",
+      "type": "azure-standard",
+      "locale": "bn-BD",
+      "label": "Pradeep",
+      "localeName": "Bangla (Bangladesh)"
+    },
+    {
+      "id": "bn-IN-BashkarNeural",
+      "type": "azure-standard",
+      "locale": "bn-IN",
+      "label": "Bashkar",
+      "localeName": "Bengali (India)"
+    },
+    {
+      "id": "bn-IN-TanishaaNeural",
+      "type": "azure-standard",
+      "locale": "bn-IN",
+      "label": "Tanishaa",
+      "localeName": "Bengali (India)"
+    },
+    {
+      "id": "bs-BA-GoranNeural",
+      "type": "azure-standard",
+      "locale": "bs-BA",
+      "label": "Goran",
+      "localeName": "Bosnian (Bosnia and Herzegovina)"
+    },
+    {
+      "id": "bs-BA-VesnaNeural",
+      "type": "azure-standard",
+      "locale": "bs-BA",
+      "label": "Vesna",
+      "localeName": "Bosnian (Bosnia and Herzegovina)"
+    },
+    {
+      "id": "ca-ES-AlbaNeural",
+      "type": "azure-standard",
+      "locale": "ca-ES",
+      "label": "Alba",
+      "localeName": "Catalan"
+    },
+    {
+      "id": "ca-ES-EnricNeural",
+      "type": "azure-standard",
+      "locale": "ca-ES",
+      "label": "Enric",
+      "localeName": "Catalan"
+    },
+    {
+      "id": "ca-ES-JoanaNeural",
+      "type": "azure-standard",
+      "locale": "ca-ES",
+      "label": "Joana",
+      "localeName": "Catalan"
+    },
+    {
+      "id": "cs-CZ-AntoninNeural",
+      "type": "azure-standard",
+      "locale": "cs-CZ",
+      "label": "Antonin",
+      "localeName": "Czech (Czechia)"
+    },
+    {
+      "id": "cs-CZ-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "cs-CZ",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Czech (Czechia)"
+    },
+    {
+      "id": "cs-CZ-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "cs-CZ",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Czech (Czechia)"
+    },
+    {
+      "id": "cs-CZ-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "cs-CZ",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Czech (Czechia)"
+    },
+    {
+      "id": "cs-CZ-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "cs-CZ",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Czech (Czechia)"
+    },
+    {
+      "id": "cs-CZ-VlastaNeural",
+      "type": "azure-standard",
+      "locale": "cs-CZ",
+      "label": "Vlasta",
+      "localeName": "Czech (Czechia)"
+    },
+    {
+      "id": "cy-GB-AledNeural",
+      "type": "azure-standard",
+      "locale": "cy-GB",
+      "label": "Aled",
+      "localeName": "Welsh (United Kingdom)"
+    },
+    {
+      "id": "cy-GB-NiaNeural",
+      "type": "azure-standard",
+      "locale": "cy-GB",
+      "label": "Nia",
+      "localeName": "Welsh (United Kingdom)"
+    },
+    {
+      "id": "da-DK-ChristelNeural",
+      "type": "azure-standard",
+      "locale": "da-DK",
+      "label": "Christel",
+      "localeName": "Danish (Denmark)"
+    },
+    {
+      "id": "da-DK-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "da-DK",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Danish (Denmark)"
+    },
+    {
+      "id": "da-DK-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "da-DK",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Danish (Denmark)"
+    },
+    {
+      "id": "da-DK-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "da-DK",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Danish (Denmark)"
+    },
+    {
+      "id": "da-DK-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "da-DK",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Danish (Denmark)"
+    },
+    {
+      "id": "da-DK-JeppeNeural",
+      "type": "azure-standard",
+      "locale": "da-DK",
+      "label": "Jeppe",
+      "localeName": "Danish (Denmark)"
+    },
+    {
+      "id": "de-AT-IngridNeural",
+      "type": "azure-standard",
+      "locale": "de-AT",
+      "label": "Ingrid",
+      "localeName": "German (Austria)"
+    },
+    {
+      "id": "de-AT-JonasNeural",
+      "type": "azure-standard",
+      "locale": "de-AT",
+      "label": "Jonas",
+      "localeName": "German (Austria)"
+    },
+    {
+      "id": "de-CH-JanNeural",
+      "type": "azure-standard",
+      "locale": "de-CH",
+      "label": "Jan",
+      "localeName": "German (Switzerland)"
+    },
+    {
+      "id": "de-CH-LeniNeural",
+      "type": "azure-standard",
+      "locale": "de-CH",
+      "label": "Leni",
+      "localeName": "German (Switzerland)"
+    },
+    {
+      "id": "de-DE-AmalaNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Amala",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-BerndNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Bernd",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-ChristophNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Christoph",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-ConradNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Conrad",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-ElkeNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Elke",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Florian:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Florian Dragon HD Latest",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-FlorianMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Florian Multilingual",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-GiselaNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Gisela",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-KasperNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Kasper",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-KatjaNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Katja",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-KillianNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Killian",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-KlarissaNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Klarissa",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Klaus:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Klaus MAI-Voice-2",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Klaus:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Klaus MAI-Voice-2-Flash",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Klaus:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Klaus MAI-Voice-2.1",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Klaus:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Klaus MAI-Voice-2.1-Flash",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-KlausNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Klaus",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-LouisaNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Louisa",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-MajaNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Maja",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Mia:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Mia MAI-Voice-2",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Mia:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Mia MAI-Voice-2-Flash",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Mia:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Mia MAI-Voice-2.1",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Mia:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Mia MAI-Voice-2.1-Flash",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-RalfNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Ralf",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Seraphina:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Seraphina Dragon HD Latest",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-Seraphina:DragonLatestNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Seraphina Dragon Latest",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-SeraphinaMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Seraphina Multilingual",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "de-DE-TanjaNeural",
+      "type": "azure-standard",
+      "locale": "de-DE",
+      "label": "Tanja",
+      "localeName": "German (Germany)"
+    },
+    {
+      "id": "el-GR-Athina:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "el-GR",
+      "label": "Athina Dragon HD Latest",
+      "localeName": "Greek (Greece)"
+    },
+    {
+      "id": "el-GR-AthinaNeural",
+      "type": "azure-standard",
+      "locale": "el-GR",
+      "label": "Athina",
+      "localeName": "Greek (Greece)"
+    },
+    {
+      "id": "el-GR-NestorasNeural",
+      "type": "azure-standard",
+      "locale": "el-GR",
+      "label": "Nestoras",
+      "localeName": "Greek (Greece)"
+    },
+    {
+      "id": "en-AU-AnnetteNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Annette",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-CarlyNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Carly",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-DarrenNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Darren",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-DuncanNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Duncan",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-ElsieNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Elsie",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-FreyaNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Freya",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-Isla:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Isla MAI-Voice-2",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-Isla:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Isla MAI-Voice-2-Flash",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-Isla:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Isla MAI-Voice-2.1",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-Isla:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Isla MAI-Voice-2.1-Flash",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-JoanneNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Joanne",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-KenNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Ken",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-KimNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Kim",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-NatashaNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Natasha",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-NeilNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Neil",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-TimNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Tim",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-TinaNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Tina",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-WilliamMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "William Multilingual",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-AU-WilliamNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "William",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-CA-ClaraNeural",
+      "type": "azure-standard",
+      "locale": "en-CA",
+      "label": "Clara",
+      "localeName": "English (Canada)"
+    },
+    {
+      "id": "en-CA-LiamNeural",
+      "type": "azure-standard",
+      "locale": "en-CA",
+      "label": "Liam",
+      "localeName": "English (Canada)"
+    },
+    {
+      "id": "en-GB-AbbiNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Abbi",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-Ada:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Ada Dragon HD Latest",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-AdaMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Ada Multilingual",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-AlfieNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Alfie",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-BellaNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Bella",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-ElliotNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Elliot",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-Emily:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Emily MAI-Voice-2.1",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-Emily:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Emily MAI-Voice-2.1-Flash",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-EthanNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Ethan",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-Harry:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Harry MAI-Voice-2.1",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-Harry:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Harry MAI-Voice-2.1-Flash",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-HollieNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Hollie",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-LibbyNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Libby",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-MaisieNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Maisie",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-MiaNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Mia",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-NoahNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Noah",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-OliverNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Oliver",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-OliviaNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Olivia",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-Ollie:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Ollie Dragon HD Latest",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-OllieMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Ollie Multilingual",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-Ryan:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Ryan Dragon HD Latest",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-RyanNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Ryan",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-Sonia:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Sonia Dragon HD Latest",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-SoniaNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Sonia",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-GB-ThomasNeural",
+      "type": "azure-standard",
+      "locale": "en-GB",
+      "label": "Thomas",
+      "localeName": "English (United Kingdom)"
+    },
+    {
+      "id": "en-HK-SamNeural",
+      "type": "azure-standard",
+      "locale": "en-HK",
+      "label": "Sam",
+      "localeName": "English (Hong Kong SAR)"
+    },
+    {
+      "id": "en-HK-YanNeural",
+      "type": "azure-standard",
+      "locale": "en-HK",
+      "label": "Yan",
+      "localeName": "English (Hong Kong SAR)"
+    },
+    {
+      "id": "en-IE-ConnorNeural",
+      "type": "azure-standard",
+      "locale": "en-IE",
+      "label": "Connor",
+      "localeName": "English (Ireland)"
+    },
+    {
+      "id": "en-IE-EmilyNeural",
+      "type": "azure-standard",
+      "locale": "en-IE",
+      "label": "Emily",
+      "localeName": "English (Ireland)"
+    },
+    {
+      "id": "en-IN-AaravNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Aarav",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-Aarti:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Aarti Dragon HD Latest",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-AartiIndicNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Aarti Indic",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-AartiNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Aarti",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-AashiNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Aashi",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-AnanyaNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Ananya",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-Arjun:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Arjun Dragon HD Latest",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-ArjunIndicNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Arjun Indic",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-ArjunNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Arjun",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-Dhruv:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Dhruv MAI-Voice-2.1",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-Dhruv:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Dhruv MAI-Voice-2.1-Flash",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-Diya:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Diya Dragon HD Latest",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-KavyaNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Kavya",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-KunalNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Kunal",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-Lavanya:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Lavanya Dragon HD Latest",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-Meera:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Meera Dragon HD Latest",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-Neerja:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Neerja Dragon HD Latest",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-NeerjaIndicNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Neerja Indic",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-NeerjaNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Neerja",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-PrabhatIndicNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Prabhat Indic",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-PrabhatNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Prabhat",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-Priya:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Priya MAI-Voice-2.1",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-Priya:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Priya MAI-Voice-2.1-Flash",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-IN-RehaanNeural",
+      "type": "azure-standard",
+      "locale": "en-IN",
+      "label": "Rehaan",
+      "localeName": "English (India)"
+    },
+    {
+      "id": "en-KE-AsiliaNeural",
+      "type": "azure-standard",
+      "locale": "en-KE",
+      "label": "Asilia",
+      "localeName": "English (Kenya)"
+    },
+    {
+      "id": "en-KE-ChilembaNeural",
+      "type": "azure-standard",
+      "locale": "en-KE",
+      "label": "Chilemba",
+      "localeName": "English (Kenya)"
+    },
+    {
+      "id": "en-Multitalker:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "English Multitalker Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-NG-AbeoNeural",
+      "type": "azure-standard",
+      "locale": "en-NG",
+      "label": "Abeo",
+      "localeName": "English (Nigeria)"
+    },
+    {
+      "id": "en-NG-EzinneNeural",
+      "type": "azure-standard",
+      "locale": "en-NG",
+      "label": "Ezinne",
+      "localeName": "English (Nigeria)"
+    },
+    {
+      "id": "en-NZ-MitchellNeural",
+      "type": "azure-standard",
+      "locale": "en-NZ",
+      "label": "Mitchell",
+      "localeName": "English (New Zealand)"
+    },
+    {
+      "id": "en-NZ-MollyNeural",
+      "type": "azure-standard",
+      "locale": "en-NZ",
+      "label": "Molly",
+      "localeName": "English (New Zealand)"
+    },
+    {
+      "id": "en-PH-JamesNeural",
+      "type": "azure-standard",
+      "locale": "en-PH",
+      "label": "James",
+      "localeName": "English (Philippines)"
+    },
+    {
+      "id": "en-PH-RosaNeural",
+      "type": "azure-standard",
+      "locale": "en-PH",
+      "label": "Rosa",
+      "localeName": "English (Philippines)"
+    },
+    {
+      "id": "en-SG-LunaNeural",
+      "type": "azure-standard",
+      "locale": "en-SG",
+      "label": "Luna",
+      "localeName": "English (Singapore)"
+    },
+    {
+      "id": "en-SG-WayneNeural",
+      "type": "azure-standard",
+      "locale": "en-SG",
+      "label": "Wayne",
+      "localeName": "English (Singapore)"
+    },
+    {
+      "id": "en-TZ-ElimuNeural",
+      "type": "azure-standard",
+      "locale": "en-TZ",
+      "label": "Elimu",
+      "localeName": "English (Tanzania)"
+    },
+    {
+      "id": "en-TZ-ImaniNeural",
+      "type": "azure-standard",
+      "locale": "en-TZ",
+      "label": "Imani",
+      "localeName": "English (Tanzania)"
+    },
+    {
+      "id": "en-US-AIGenerate1Neural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "AIGenerate1",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-AIGenerate2Neural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "AIGenerate2",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Adam:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Adam Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-AdamMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Adam Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Alloy:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Alloy Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-AlloyTurboMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Alloy Turbo Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-AmandaMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Amanda Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-AmberNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Amber",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-AnaNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Ana",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Andrew-Preview:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Andrew Preview Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Andrew:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Andrew Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Andrew:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Andrew Dragon HD Omni Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Andrew:DragonLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Andrew Dragon Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-AndrewMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Andrew Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-AndrewNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Andrew",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Aria:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Aria Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-AriaNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Aria",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-AshTurboMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Ash Turbo Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-AshleyNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Ashley",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Ava-Preview:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Ava Preview Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Ava:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Ava Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Ava:DragonLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Ava Dragon Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-AvaMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Ava Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-AvaNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Ava",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-BlueNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Blue",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-BrandonMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Brandon Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-BrandonNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Brandon",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Bree:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Bree Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Brian:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Brian Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Brian:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Brian Dragon HD Omni Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-BrianMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Brian Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-BrianNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Brian",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Caleb:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Caleb Dragon HD Omni Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-ChristopherMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Christopher Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-ChristopherNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Christopher",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Colin:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Colin Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-CoraMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Cora Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-CoraNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Cora",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Dana:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Dana Dragon HD Omni Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Davis:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Davis Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-DavisMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Davis Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-DavisNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Davis",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-DerekMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Derek Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-DustinMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Dustin Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-EchoTurboMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Echo Turbo Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-ElizabethNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Elizabeth",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Emma:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Emma Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-EmmaMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Emma Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-EmmaNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Emma",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-EricNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Eric",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Ethan:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Ethan MAI-Voice-2",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Ethan:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Ethan MAI-Voice-2-Flash",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Ethan:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Ethan MAI-Voice-2.1",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Ethan:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Ethan MAI-Voice-2.1-Flash",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Evelyn:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Evelyn Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-EvelynMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Evelyn Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-FableTurboMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Fable Turbo Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Grant:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Grant MAI-Voice-2",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Grant:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Grant MAI-Voice-2-Flash",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-GuyNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Guy",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Harper:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Harper MAI-Voice-2",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Harper:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Harper MAI-Voice-2-Flash",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Iris:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Iris MAI-Voice-2",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Iris:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Iris MAI-Voice-2-Flash",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Iris:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Iris MAI-Voice-2.1",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Iris:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Iris MAI-Voice-2.1-Flash",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-JacobNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Jacob",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Jane:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Jane Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-JaneNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Jane",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-JasonNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Jason",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Jasper:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Jasper MAI-Voice-2",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Jasper:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Jasper MAI-Voice-2-Flash",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Jasper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Jasper MAI-Voice-2.1",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Jasper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Jasper MAI-Voice-2.1-Flash",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Jenny:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Jenny Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-JennyMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Jenny Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-JennyNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Jenny",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Jimmie:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Jimmie Dragon HD Flash Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Jimmie:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Jimmie Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Juno:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Juno Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-KaiNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Kai",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Lewis:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Lewis Dragon HD Omni Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-LewisMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Lewis Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-LolaMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Lola Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-LunaNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Luna",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-MichelleNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Michelle",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Mila:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Mila Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-MonicaNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Monica",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-NancyMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Nancy Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-NancyNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Nancy",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Nova:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Nova Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-NovaTurboMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Nova Turbo Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Olivia:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Olivia MAI-Voice-2",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Olivia:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Olivia MAI-Voice-2-Flash",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Olivia:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Olivia MAI-Voice-2.1",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Olivia:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Olivia MAI-Voice-2.1-Flash",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-OnyxTurboMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Onyx Turbo Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Paige:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Paige Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Phoebe:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Phoebe Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Phoebe:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Phoebe Dragon HD Omni Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-PhoebeMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Phoebe Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-RogerNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Roger",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-RyanMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Ryan Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Sage:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Sage MAI-Voice-2.1",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Sage:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Sage MAI-Voice-2.1-Flash",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-SamuelMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Samuel Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-SaraNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Sara",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Serena-Preview:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Serena Preview Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Serena:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Serena Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-SerenaMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Serena Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-ShimmerTurboMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Shimmer Turbo Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Steffan:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Steffan Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-SteffanMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Steffan Multilingual",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-SteffanNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Steffan",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Tessa:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Tessa Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Tiana:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Tiana Dragon HD Flash Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Tiana:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Tiana Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-TonyNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Tony",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Tyler:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Tyler Dragon HD Flash Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Tyler:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Tyler Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-US-Vance:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Vance Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-ZA-LeahNeural",
+      "type": "azure-standard",
+      "locale": "en-ZA",
+      "label": "Leah",
+      "localeName": "English (South Africa)"
+    },
+    {
+      "id": "en-ZA-LukeNeural",
+      "type": "azure-standard",
+      "locale": "en-ZA",
+      "label": "Luke",
+      "localeName": "English (South Africa)"
+    },
+    {
+      "id": "en-au-cyanspark:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Cyanspark Dragon HD Omni Latest",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-au-siennatopaz:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-AU",
+      "label": "Siennatopaz Dragon HD Omni Latest",
+      "localeName": "English (Australia)"
+    },
+    {
+      "id": "en-us-ava:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Ava Dragon HD Omni Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-us-blushzephyr:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Blushzephyr Dragon HD Omni Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-us-emma:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Emma Dragon HD Omni Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-us-goldenspark:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Goldenspark Dragon HD Omni Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "en-us-jelly:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Jelly Dragon HD Omni Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "es-AR-ElenaNeural",
+      "type": "azure-standard",
+      "locale": "es-AR",
+      "label": "Elena",
+      "localeName": "Spanish (Argentina)"
+    },
+    {
+      "id": "es-AR-TomasNeural",
+      "type": "azure-standard",
+      "locale": "es-AR",
+      "label": "Tomas",
+      "localeName": "Spanish (Argentina)"
+    },
+    {
+      "id": "es-BO-MarceloNeural",
+      "type": "azure-standard",
+      "locale": "es-BO",
+      "label": "Marcelo",
+      "localeName": "Spanish (Bolivia)"
+    },
+    {
+      "id": "es-BO-SofiaNeural",
+      "type": "azure-standard",
+      "locale": "es-BO",
+      "label": "Sofia",
+      "localeName": "Spanish (Bolivia)"
+    },
+    {
+      "id": "es-CL-CatalinaNeural",
+      "type": "azure-standard",
+      "locale": "es-CL",
+      "label": "Catalina",
+      "localeName": "Spanish (Chile)"
+    },
+    {
+      "id": "es-CL-LorenzoNeural",
+      "type": "azure-standard",
+      "locale": "es-CL",
+      "label": "Lorenzo",
+      "localeName": "Spanish (Chile)"
+    },
+    {
+      "id": "es-CO-GonzaloNeural",
+      "type": "azure-standard",
+      "locale": "es-CO",
+      "label": "Gonzalo",
+      "localeName": "Spanish (Colombia)"
+    },
+    {
+      "id": "es-CO-SalomeNeural",
+      "type": "azure-standard",
+      "locale": "es-CO",
+      "label": "Salome",
+      "localeName": "Spanish (Colombia)"
+    },
+    {
+      "id": "es-CR-JuanNeural",
+      "type": "azure-standard",
+      "locale": "es-CR",
+      "label": "Juan",
+      "localeName": "Spanish (Costa Rica)"
+    },
+    {
+      "id": "es-CR-MariaNeural",
+      "type": "azure-standard",
+      "locale": "es-CR",
+      "label": "Maria",
+      "localeName": "Spanish (Costa Rica)"
+    },
+    {
+      "id": "es-CU-BelkysNeural",
+      "type": "azure-standard",
+      "locale": "es-CU",
+      "label": "Belkys",
+      "localeName": "Spanish (Cuba)"
+    },
+    {
+      "id": "es-CU-ManuelNeural",
+      "type": "azure-standard",
+      "locale": "es-CU",
+      "label": "Manuel",
+      "localeName": "Spanish (Cuba)"
+    },
+    {
+      "id": "es-DO-EmilioNeural",
+      "type": "azure-standard",
+      "locale": "es-DO",
+      "label": "Emilio",
+      "localeName": "Spanish (Dominican Republic)"
+    },
+    {
+      "id": "es-DO-RamonaNeural",
+      "type": "azure-standard",
+      "locale": "es-DO",
+      "label": "Ramona",
+      "localeName": "Spanish (Dominican Republic)"
+    },
+    {
+      "id": "es-EC-AndreaNeural",
+      "type": "azure-standard",
+      "locale": "es-EC",
+      "label": "Andrea",
+      "localeName": "Spanish (Ecuador)"
+    },
+    {
+      "id": "es-EC-LuisNeural",
+      "type": "azure-standard",
+      "locale": "es-EC",
+      "label": "Luis",
+      "localeName": "Spanish (Ecuador)"
+    },
+    {
+      "id": "es-ES-AbrilNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Abril",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-AlvaroNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Alvaro",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-ArabellaMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Arabella Multilingual",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-ArnauNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Arnau",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-DarioNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Dario",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-EliasNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Elias",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-ElviraNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Elvira",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-EstrellaNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Estrella",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-IreneNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Irene",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-IsidoraMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Isidora Multilingual",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-LaiaNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Laia",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-LiaNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Lia",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-Marta:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Marta MAI-Voice-2",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-Marta:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Marta MAI-Voice-2-Flash",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-Marta:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Marta MAI-Voice-2.1",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-Marta:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Marta MAI-Voice-2.1-Flash",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-NilNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Nil",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-SaulNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Saul",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-TeoNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Teo",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-TrianaNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Triana",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-Tristan:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Tristan Dragon HD Latest",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-TristanMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Tristan Multilingual",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-VeraNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Vera",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-Ximena:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Ximena Dragon HD Latest",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-XimenaMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Ximena Multilingual",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-ES-XimenaNeural",
+      "type": "azure-standard",
+      "locale": "es-ES",
+      "label": "Ximena",
+      "localeName": "Spanish (Spain)"
+    },
+    {
+      "id": "es-GQ-JavierNeural",
+      "type": "azure-standard",
+      "locale": "es-GQ",
+      "label": "Javier",
+      "localeName": "Spanish (Equatorial Guinea)"
+    },
+    {
+      "id": "es-GQ-TeresaNeural",
+      "type": "azure-standard",
+      "locale": "es-GQ",
+      "label": "Teresa",
+      "localeName": "Spanish (Equatorial Guinea)"
+    },
+    {
+      "id": "es-GT-AndresNeural",
+      "type": "azure-standard",
+      "locale": "es-GT",
+      "label": "Andres",
+      "localeName": "Spanish (Guatemala)"
+    },
+    {
+      "id": "es-GT-MartaNeural",
+      "type": "azure-standard",
+      "locale": "es-GT",
+      "label": "Marta",
+      "localeName": "Spanish (Guatemala)"
+    },
+    {
+      "id": "es-HN-CarlosNeural",
+      "type": "azure-standard",
+      "locale": "es-HN",
+      "label": "Carlos",
+      "localeName": "Spanish (Honduras)"
+    },
+    {
+      "id": "es-HN-KarlaNeural",
+      "type": "azure-standard",
+      "locale": "es-HN",
+      "label": "Karla",
+      "localeName": "Spanish (Honduras)"
+    },
+    {
+      "id": "es-MX-Alejo:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Alejo MAI-Voice-2",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-Alejo:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Alejo MAI-Voice-2-Flash",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-Alejo:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Alejo MAI-Voice-2.1",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-Alejo:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Alejo MAI-Voice-2.1-Flash",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-BeatrizNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Beatriz",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-CandelaNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Candela",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-CarlotaNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Carlota",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-CecilioNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Cecilio",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-Dalia:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Dalia Dragon HD Latest",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-DaliaMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Dalia Multilingual",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-DaliaNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Dalia",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-GerardoNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Gerardo",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-Jorge:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Jorge Dragon HD Latest",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-JorgeMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Jorge Multilingual",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-JorgeNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Jorge",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-LarissaNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Larissa",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-LibertoNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Liberto",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-LucianoNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Luciano",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-MarinaNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Marina",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-NuriaNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Nuria",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-PelayoNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Pelayo",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-RenataNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Renata",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-Valeria:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Valeria MAI-Voice-2",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-Valeria:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Valeria MAI-Voice-2-Flash",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-Valeria:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Valeria MAI-Voice-2.1",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-Valeria:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Valeria MAI-Voice-2.1-Flash",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-MX-YagoNeural",
+      "type": "azure-standard",
+      "locale": "es-MX",
+      "label": "Yago",
+      "localeName": "Spanish (Mexico)"
+    },
+    {
+      "id": "es-NI-FedericoNeural",
+      "type": "azure-standard",
+      "locale": "es-NI",
+      "label": "Federico",
+      "localeName": "Spanish (Nicaragua)"
+    },
+    {
+      "id": "es-NI-YolandaNeural",
+      "type": "azure-standard",
+      "locale": "es-NI",
+      "label": "Yolanda",
+      "localeName": "Spanish (Nicaragua)"
+    },
+    {
+      "id": "es-PA-MargaritaNeural",
+      "type": "azure-standard",
+      "locale": "es-PA",
+      "label": "Margarita",
+      "localeName": "Spanish (Panama)"
+    },
+    {
+      "id": "es-PA-RobertoNeural",
+      "type": "azure-standard",
+      "locale": "es-PA",
+      "label": "Roberto",
+      "localeName": "Spanish (Panama)"
+    },
+    {
+      "id": "es-PE-AlexNeural",
+      "type": "azure-standard",
+      "locale": "es-PE",
+      "label": "Alex",
+      "localeName": "Spanish (Peru)"
+    },
+    {
+      "id": "es-PE-CamilaNeural",
+      "type": "azure-standard",
+      "locale": "es-PE",
+      "label": "Camila",
+      "localeName": "Spanish (Peru)"
+    },
+    {
+      "id": "es-PR-KarinaNeural",
+      "type": "azure-standard",
+      "locale": "es-PR",
+      "label": "Karina",
+      "localeName": "Spanish (Puerto Rico)"
+    },
+    {
+      "id": "es-PR-VictorNeural",
+      "type": "azure-standard",
+      "locale": "es-PR",
+      "label": "Victor",
+      "localeName": "Spanish (Puerto Rico)"
+    },
+    {
+      "id": "es-PY-MarioNeural",
+      "type": "azure-standard",
+      "locale": "es-PY",
+      "label": "Mario",
+      "localeName": "Spanish (Paraguay)"
+    },
+    {
+      "id": "es-PY-TaniaNeural",
+      "type": "azure-standard",
+      "locale": "es-PY",
+      "label": "Tania",
+      "localeName": "Spanish (Paraguay)"
+    },
+    {
+      "id": "es-SV-LorenaNeural",
+      "type": "azure-standard",
+      "locale": "es-SV",
+      "label": "Lorena",
+      "localeName": "Spanish (El Salvador)"
+    },
+    {
+      "id": "es-SV-RodrigoNeural",
+      "type": "azure-standard",
+      "locale": "es-SV",
+      "label": "Rodrigo",
+      "localeName": "Spanish (El Salvador)"
+    },
+    {
+      "id": "es-US-AlonsoNeural",
+      "type": "azure-standard",
+      "locale": "es-US",
+      "label": "Alonso",
+      "localeName": "Spanish (United States)"
+    },
+    {
+      "id": "es-US-PalomaNeural",
+      "type": "azure-standard",
+      "locale": "es-US",
+      "label": "Paloma",
+      "localeName": "Spanish (United States)"
+    },
+    {
+      "id": "es-UY-MateoNeural",
+      "type": "azure-standard",
+      "locale": "es-UY",
+      "label": "Mateo",
+      "localeName": "Spanish (Uruguay)"
+    },
+    {
+      "id": "es-UY-ValentinaNeural",
+      "type": "azure-standard",
+      "locale": "es-UY",
+      "label": "Valentina",
+      "localeName": "Spanish (Uruguay)"
+    },
+    {
+      "id": "es-VE-PaolaNeural",
+      "type": "azure-standard",
+      "locale": "es-VE",
+      "label": "Paola",
+      "localeName": "Spanish (Venezuela)"
+    },
+    {
+      "id": "es-VE-SebastianNeural",
+      "type": "azure-standard",
+      "locale": "es-VE",
+      "label": "Sebastian",
+      "localeName": "Spanish (Venezuela)"
+    },
+    {
+      "id": "et-EE-AnuNeural",
+      "type": "azure-standard",
+      "locale": "et-EE",
+      "label": "Anu",
+      "localeName": "Estonian (Estonia)"
+    },
+    {
+      "id": "et-EE-KertNeural",
+      "type": "azure-standard",
+      "locale": "et-EE",
+      "label": "Kert",
+      "localeName": "Estonian (Estonia)"
+    },
+    {
+      "id": "eu-ES-AinhoaNeural",
+      "type": "azure-standard",
+      "locale": "eu-ES",
+      "label": "Ainhoa",
+      "localeName": "Basque"
+    },
+    {
+      "id": "eu-ES-AnderNeural",
+      "type": "azure-standard",
+      "locale": "eu-ES",
+      "label": "Ander",
+      "localeName": "Basque"
+    },
+    {
+      "id": "fa-IR-DilaraNeural",
+      "type": "azure-standard",
+      "locale": "fa-IR",
+      "label": "Dilara",
+      "localeName": "Persian (Iran)"
+    },
+    {
+      "id": "fa-IR-FaridNeural",
+      "type": "azure-standard",
+      "locale": "fa-IR",
+      "label": "Farid",
+      "localeName": "Persian (Iran)"
+    },
+    {
+      "id": "fi-FI-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "fi-FI",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Finnish (Finland)"
+    },
+    {
+      "id": "fi-FI-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "fi-FI",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Finnish (Finland)"
+    },
+    {
+      "id": "fi-FI-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "fi-FI",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Finnish (Finland)"
+    },
+    {
+      "id": "fi-FI-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "fi-FI",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Finnish (Finland)"
+    },
+    {
+      "id": "fi-FI-HarriNeural",
+      "type": "azure-standard",
+      "locale": "fi-FI",
+      "label": "Harri",
+      "localeName": "Finnish (Finland)"
+    },
+    {
+      "id": "fi-FI-NooraNeural",
+      "type": "azure-standard",
+      "locale": "fi-FI",
+      "label": "Noora",
+      "localeName": "Finnish (Finland)"
+    },
+    {
+      "id": "fi-FI-SelmaNeural",
+      "type": "azure-standard",
+      "locale": "fi-FI",
+      "label": "Selma",
+      "localeName": "Finnish (Finland)"
+    },
+    {
+      "id": "fil-PH-Angelo:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "fil-PH",
+      "label": "Angelo Dragon HD Latest",
+      "localeName": "Filipino (Philippines)"
+    },
+    {
+      "id": "fil-PH-AngeloNeural",
+      "type": "azure-standard",
+      "locale": "fil-PH",
+      "label": "Angelo",
+      "localeName": "Filipino (Philippines)"
+    },
+    {
+      "id": "fil-PH-Blessica:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "fil-PH",
+      "label": "Blessica Dragon HD Latest",
+      "localeName": "Filipino (Philippines)"
+    },
+    {
+      "id": "fil-PH-BlessicaNeural",
+      "type": "azure-standard",
+      "locale": "fil-PH",
+      "label": "Blessica",
+      "localeName": "Filipino (Philippines)"
+    },
+    {
+      "id": "fil-PH-Mariela:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "fil-PH",
+      "label": "Mariela Dragon HD Latest",
+      "localeName": "Filipino (Philippines)"
+    },
+    {
+      "id": "fr-BE-CharlineNeural",
+      "type": "azure-standard",
+      "locale": "fr-BE",
+      "label": "Charline",
+      "localeName": "French (Belgium)"
+    },
+    {
+      "id": "fr-BE-GerardNeural",
+      "type": "azure-standard",
+      "locale": "fr-BE",
+      "label": "Gerard",
+      "localeName": "French (Belgium)"
+    },
+    {
+      "id": "fr-CA-AntoineNeural",
+      "type": "azure-standard",
+      "locale": "fr-CA",
+      "label": "Antoine",
+      "localeName": "French (Canada)"
+    },
+    {
+      "id": "fr-CA-JeanNeural",
+      "type": "azure-standard",
+      "locale": "fr-CA",
+      "label": "Jean",
+      "localeName": "French (Canada)"
+    },
+    {
+      "id": "fr-CA-Sylvie:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "fr-CA",
+      "label": "Sylvie Dragon HD Latest",
+      "localeName": "French (Canada)"
+    },
+    {
+      "id": "fr-CA-SylvieNeural",
+      "type": "azure-standard",
+      "locale": "fr-CA",
+      "label": "Sylvie",
+      "localeName": "French (Canada)"
+    },
+    {
+      "id": "fr-CA-Thierry:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "fr-CA",
+      "label": "Thierry Dragon HD Latest",
+      "localeName": "French (Canada)"
+    },
+    {
+      "id": "fr-CA-ThierryNeural",
+      "type": "azure-standard",
+      "locale": "fr-CA",
+      "label": "Thierry",
+      "localeName": "French (Canada)"
+    },
+    {
+      "id": "fr-CH-ArianeNeural",
+      "type": "azure-standard",
+      "locale": "fr-CH",
+      "label": "Ariane",
+      "localeName": "French (Switzerland)"
+    },
+    {
+      "id": "fr-CH-FabriceNeural",
+      "type": "azure-standard",
+      "locale": "fr-CH",
+      "label": "Fabrice",
+      "localeName": "French (Switzerland)"
+    },
+    {
+      "id": "fr-FR-AlainNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Alain",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-BrigitteNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Brigitte",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-CelesteNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Celeste",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-ClaudeNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Claude",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-CoralieNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Coralie",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Denise:DragonLatestNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Denise Dragon Latest",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-DeniseNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Denise",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-EloiseNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Eloise",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-HenriNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Henri",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-JacquelineNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Jacqueline",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-JeromeNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Jerome",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-JosephineNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Josephine",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-LucienMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Lucien Multilingual",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Marc:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Marc MAI-Voice-2",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Marc:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Marc MAI-Voice-2-Flash",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Marc:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Marc MAI-Voice-2.1",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Marc:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Marc MAI-Voice-2.1-Flash",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-MauriceNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Maurice",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Remy:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Remy Dragon HD Latest",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Remy:DragonLatestNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Remy Dragon Latest",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-RemyMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Remy Multilingual",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Soleil:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Soleil MAI-Voice-2",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Soleil:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Soleil MAI-Voice-2-Flash",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Soleil:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Soleil MAI-Voice-2.1",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Soleil:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Soleil MAI-Voice-2.1-Flash",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-Vivienne:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Vivienne Dragon HD Latest",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-VivienneMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Vivienne Multilingual",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-YvesNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Yves",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-FR-YvetteNeural",
+      "type": "azure-standard",
+      "locale": "fr-FR",
+      "label": "Yvette",
+      "localeName": "French (France)"
+    },
+    {
+      "id": "fr-Multitalker:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "French Multitalker Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "ga-IE-ColmNeural",
+      "type": "azure-standard",
+      "locale": "ga-IE",
+      "label": "Colm",
+      "localeName": "Irish (Ireland)"
+    },
+    {
+      "id": "ga-IE-OrlaNeural",
+      "type": "azure-standard",
+      "locale": "ga-IE",
+      "label": "Orla",
+      "localeName": "Irish (Ireland)"
+    },
+    {
+      "id": "gl-ES-RoiNeural",
+      "type": "azure-standard",
+      "locale": "gl-ES",
+      "label": "Roi",
+      "localeName": "Galician"
+    },
+    {
+      "id": "gl-ES-SabelaNeural",
+      "type": "azure-standard",
+      "locale": "gl-ES",
+      "label": "Sabela",
+      "localeName": "Galician"
+    },
+    {
+      "id": "gu-IN-DhwaniNeural",
+      "type": "azure-standard",
+      "locale": "gu-IN",
+      "label": "Dhwani",
+      "localeName": "Gujarati (India)"
+    },
+    {
+      "id": "gu-IN-NiranjanNeural",
+      "type": "azure-standard",
+      "locale": "gu-IN",
+      "label": "Niranjan",
+      "localeName": "Gujarati (India)"
+    },
+    {
+      "id": "he-IL-AvriNeural",
+      "type": "azure-standard",
+      "locale": "he-IL",
+      "label": "Avri",
+      "localeName": "Hebrew (Israel)"
+    },
+    {
+      "id": "he-IL-HilaNeural",
+      "type": "azure-standard",
+      "locale": "he-IL",
+      "label": "Hila",
+      "localeName": "Hebrew (Israel)"
+    },
+    {
+      "id": "hi-IN-AaravNeural",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Aarav",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-AartiNeural",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Aarti",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-AnanyaNeural",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Ananya",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Arjun:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Arjun MAI-Voice-2",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Arjun:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Arjun MAI-Voice-2-Flash",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Arjun:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Arjun MAI-Voice-2.1",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Arjun:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Arjun MAI-Voice-2.1-Flash",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-ArjunNeural",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Arjun",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Dhruv:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Dhruv MAI-Voice-2",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Dhruv:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Dhruv MAI-Voice-2-Flash",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Dhruv:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Dhruv MAI-Voice-2.1",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Dhruv:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Dhruv MAI-Voice-2.1-Flash",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Diya:DragonLatestNeural",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Diya Dragon Latest",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Kavya:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Kavya MAI-Voice-2",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Kavya:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Kavya MAI-Voice-2-Flash",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Kavya:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Kavya MAI-Voice-2.1",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Kavya:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Kavya MAI-Voice-2.1-Flash",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-KavyaNeural",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Kavya",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-KunalNeural",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Kunal",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-MadhurNeural",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Madhur",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Priya:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Priya MAI-Voice-2",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Priya:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Priya MAI-Voice-2-Flash",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Priya:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Priya MAI-Voice-2.1",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-Priya:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Priya MAI-Voice-2.1-Flash",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-RehaanNeural",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Rehaan",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hi-IN-SwaraNeural",
+      "type": "azure-standard",
+      "locale": "hi-IN",
+      "label": "Swara",
+      "localeName": "Hindi (India)"
+    },
+    {
+      "id": "hr-HR-GabrijelaNeural",
+      "type": "azure-standard",
+      "locale": "hr-HR",
+      "label": "Gabrijela",
+      "localeName": "Croatian (Croatia)"
+    },
+    {
+      "id": "hr-HR-SreckoNeural",
+      "type": "azure-standard",
+      "locale": "hr-HR",
+      "label": "Srecko",
+      "localeName": "Croatian (Croatia)"
+    },
+    {
+      "id": "hu-HU-Bence:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Bence MAI-Voice-2",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Bence:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Bence MAI-Voice-2-Flash",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Bence:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Bence MAI-Voice-2.1",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Bence:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Bence MAI-Voice-2.1-Flash",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Levente:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Levente MAI-Voice-2",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Levente:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Levente MAI-Voice-2-Flash",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Levente:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Levente MAI-Voice-2.1",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Levente:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Levente MAI-Voice-2.1-Flash",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Lilla:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Lilla MAI-Voice-2",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Lilla:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Lilla MAI-Voice-2-Flash",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Lilla:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Lilla MAI-Voice-2.1",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Lilla:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Lilla MAI-Voice-2.1-Flash",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-NoemiNeural",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Noemi",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Reka:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Reka MAI-Voice-2.1",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-Reka:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Reka MAI-Voice-2.1-Flash",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-R\u00e9ka:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "R\u00e9ka MAI-Voice-2",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-R\u00e9ka:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "R\u00e9ka MAI-Voice-2-Flash",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hu-HU-TamasNeural",
+      "type": "azure-standard",
+      "locale": "hu-HU",
+      "label": "Tamas",
+      "localeName": "Hungarian (Hungary)"
+    },
+    {
+      "id": "hy-AM-AnahitNeural",
+      "type": "azure-standard",
+      "locale": "hy-AM",
+      "label": "Anahit",
+      "localeName": "Armenian (Armenia)"
+    },
+    {
+      "id": "hy-AM-HaykNeural",
+      "type": "azure-standard",
+      "locale": "hy-AM",
+      "label": "Hayk",
+      "localeName": "Armenian (Armenia)"
+    },
+    {
+      "id": "id-ID-Ardi:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "id-ID",
+      "label": "Ardi Dragon HD Latest",
+      "localeName": "Indonesian (Indonesia)"
+    },
+    {
+      "id": "id-ID-ArdiNeural",
+      "type": "azure-standard",
+      "locale": "id-ID",
+      "label": "Ardi",
+      "localeName": "Indonesian (Indonesia)"
+    },
+    {
+      "id": "id-ID-Gadis:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "id-ID",
+      "label": "Gadis Dragon HD Latest",
+      "localeName": "Indonesian (Indonesia)"
+    },
+    {
+      "id": "id-ID-GadisNeural",
+      "type": "azure-standard",
+      "locale": "id-ID",
+      "label": "Gadis",
+      "localeName": "Indonesian (Indonesia)"
+    },
+    {
+      "id": "id-ID-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "id-ID",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Indonesian (Indonesia)"
+    },
+    {
+      "id": "id-ID-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "id-ID",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Indonesian (Indonesia)"
+    },
+    {
+      "id": "id-ID-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "id-ID",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Indonesian (Indonesia)"
+    },
+    {
+      "id": "id-ID-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "id-ID",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Indonesian (Indonesia)"
+    },
+    {
+      "id": "id-ID-Larasati:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "id-ID",
+      "label": "Larasati Dragon HD Latest",
+      "localeName": "Indonesian (Indonesia)"
+    },
+    {
+      "id": "is-IS-GudrunNeural",
+      "type": "azure-standard",
+      "locale": "is-IS",
+      "label": "Gudrun",
+      "localeName": "Icelandic (Iceland)"
+    },
+    {
+      "id": "is-IS-GunnarNeural",
+      "type": "azure-standard",
+      "locale": "is-IS",
+      "label": "Gunnar",
+      "localeName": "Icelandic (Iceland)"
+    },
+    {
+      "id": "it-IT-Alessio:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Alessio Dragon HD Latest",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Alessio:DragonLatestNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Alessio Dragon Latest",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-AlessioMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Alessio Multilingual",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-BenignoNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Benigno",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-CalimeroNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Calimero",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-CataldoNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Cataldo",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-DiegoNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Diego",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-ElsaNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Elsa",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-FabiolaNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Fabiola",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-FiammaNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Fiamma",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-GianniNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Gianni",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Giuseppe:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Giuseppe Dragon HD Latest",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-GiuseppeMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Giuseppe Multilingual",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-GiuseppeNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Giuseppe",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-ImeldaNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Imelda",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-IrmaNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Irma",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Isabella:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Isabella Dragon HD Latest",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Isabella:DragonLatestNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Isabella Dragon Latest",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-IsabellaMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Isabella Multilingual",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-IsabellaNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Isabella",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-LisandroNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Lisandro",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Luca:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Luca MAI-Voice-2",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Luca:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Luca MAI-Voice-2-Flash",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Luca:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Luca MAI-Voice-2.1",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Luca:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Luca MAI-Voice-2.1-Flash",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-MarcelloMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Marcello Multilingual",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-PalmiraNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Palmira",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-PierinaNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Pierina",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-RinaldoNeural",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Rinaldo",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Rosa:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Rosa MAI-Voice-2",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Rosa:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Rosa MAI-Voice-2-Flash",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Rosa:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Rosa MAI-Voice-2.1",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "it-IT-Rosa:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "it-IT",
+      "label": "Rosa MAI-Voice-2.1-Flash",
+      "localeName": "Italian (Italy)"
+    },
+    {
+      "id": "iu-Cans-CA-SiqiniqNeural",
+      "type": "azure-standard",
+      "locale": "iu-Cans-CA",
+      "label": "Siqiniq",
+      "localeName": "Inuktitut (Syllabics, Canada)"
+    },
+    {
+      "id": "iu-Cans-CA-TaqqiqNeural",
+      "type": "azure-standard",
+      "locale": "iu-Cans-CA",
+      "label": "Taqqiq",
+      "localeName": "Inuktitut (Syllabics, Canada)"
+    },
+    {
+      "id": "iu-Latn-CA-SiqiniqNeural",
+      "type": "azure-standard",
+      "locale": "iu-Latn-CA",
+      "label": "Siqiniq",
+      "localeName": "Inuktitut (Latin, Canada)"
+    },
+    {
+      "id": "iu-Latn-CA-TaqqiqNeural",
+      "type": "azure-standard",
+      "locale": "iu-Latn-CA",
+      "label": "Taqqiq",
+      "localeName": "Inuktitut (Latin, Canada)"
+    },
+    {
+      "id": "ja-JP-AoiNeural",
+      "type": "azure-standard",
+      "locale": "ja-JP",
+      "label": "Aoi",
+      "localeName": "Japanese (Japan)"
+    },
+    {
+      "id": "ja-JP-DaichiNeural",
+      "type": "azure-standard",
+      "locale": "ja-JP",
+      "label": "Daichi",
+      "localeName": "Japanese (Japan)"
+    },
+    {
+      "id": "ja-JP-KeitaNeural",
+      "type": "azure-standard",
+      "locale": "ja-JP",
+      "label": "Keita",
+      "localeName": "Japanese (Japan)"
+    },
+    {
+      "id": "ja-JP-Masaru:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "ja-JP",
+      "label": "Masaru Dragon HD Latest",
+      "localeName": "Japanese (Japan)"
+    },
+    {
+      "id": "ja-JP-MasaruMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "ja-JP",
+      "label": "Masaru Multilingual",
+      "localeName": "Japanese (Japan)"
+    },
+    {
+      "id": "ja-JP-MayuNeural",
+      "type": "azure-standard",
+      "locale": "ja-JP",
+      "label": "Mayu",
+      "localeName": "Japanese (Japan)"
+    },
+    {
+      "id": "ja-JP-Nanami:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "ja-JP",
+      "label": "Nanami Dragon HD Latest",
+      "localeName": "Japanese (Japan)"
+    },
+    {
+      "id": "ja-JP-NanamiNeural",
+      "type": "azure-standard",
+      "locale": "ja-JP",
+      "label": "Nanami",
+      "localeName": "Japanese (Japan)"
+    },
+    {
+      "id": "ja-JP-NaokiNeural",
+      "type": "azure-standard",
+      "locale": "ja-JP",
+      "label": "Naoki",
+      "localeName": "Japanese (Japan)"
+    },
+    {
+      "id": "ja-JP-ShioriNeural",
+      "type": "azure-standard",
+      "locale": "ja-JP",
+      "label": "Shiori",
+      "localeName": "Japanese (Japan)"
+    },
+    {
+      "id": "jv-ID-DimasNeural",
+      "type": "azure-standard",
+      "locale": "jv-ID",
+      "label": "Dimas",
+      "localeName": "Javanese (Latin, Indonesia)"
+    },
+    {
+      "id": "jv-ID-SitiNeural",
+      "type": "azure-standard",
+      "locale": "jv-ID",
+      "label": "Siti",
+      "localeName": "Javanese (Latin, Indonesia)"
+    },
+    {
+      "id": "ka-GE-EkaNeural",
+      "type": "azure-standard",
+      "locale": "ka-GE",
+      "label": "Eka",
+      "localeName": "Georgian (Georgia)"
+    },
+    {
+      "id": "ka-GE-GiorgiNeural",
+      "type": "azure-standard",
+      "locale": "ka-GE",
+      "label": "Giorgi",
+      "localeName": "Georgian (Georgia)"
+    },
+    {
+      "id": "kk-KZ-AigulNeural",
+      "type": "azure-standard",
+      "locale": "kk-KZ",
+      "label": "Aigul",
+      "localeName": "Kazakh (Kazakhstan)"
+    },
+    {
+      "id": "kk-KZ-DauletNeural",
+      "type": "azure-standard",
+      "locale": "kk-KZ",
+      "label": "Daulet",
+      "localeName": "Kazakh (Kazakhstan)"
+    },
+    {
+      "id": "km-KH-PisethNeural",
+      "type": "azure-standard",
+      "locale": "km-KH",
+      "label": "Piseth",
+      "localeName": "Khmer (Cambodia)"
+    },
+    {
+      "id": "km-KH-SreymomNeural",
+      "type": "azure-standard",
+      "locale": "km-KH",
+      "label": "Sreymom",
+      "localeName": "Khmer (Cambodia)"
+    },
+    {
+      "id": "kn-IN-GaganNeural",
+      "type": "azure-standard",
+      "locale": "kn-IN",
+      "label": "Gagan",
+      "localeName": "Kannada (India)"
+    },
+    {
+      "id": "kn-IN-SapnaNeural",
+      "type": "azure-standard",
+      "locale": "kn-IN",
+      "label": "Sapna",
+      "localeName": "Kannada (India)"
+    },
+    {
+      "id": "ko-KR-BongJinNeural",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "BongJin",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-GookMinNeural",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "GookMin",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-Haena:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Haena MAI-Voice-2",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-Haena:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Haena MAI-Voice-2-Flash",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-Haena:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Haena MAI-Voice-2.1",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-Haena:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Haena MAI-Voice-2.1-Flash",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-Hyunsu:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Hyunsu Dragon HD Latest",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-HyunsuMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Hyunsu Multilingual",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-HyunsuNeural",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Hyunsu",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-InJoonNeural",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "InJoon",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-JiMinNeural",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "JiMin",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-Junho:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Junho MAI-Voice-2",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-Junho:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Junho MAI-Voice-2-Flash",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-Junho:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Junho MAI-Voice-2.1",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-Junho:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Junho MAI-Voice-2.1-Flash",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-SeoHyeonNeural",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "SeoHyeon",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-SoonBokNeural",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "SoonBok",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-SunHi:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "SunHi Dragon HD Latest",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-SunHiNeural",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "Sun-Hi",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "ko-KR-YuJinNeural",
+      "type": "azure-standard",
+      "locale": "ko-KR",
+      "label": "YuJin",
+      "localeName": "Korean (Korea)"
+    },
+    {
+      "id": "lo-LA-ChanthavongNeural",
+      "type": "azure-standard",
+      "locale": "lo-LA",
+      "label": "Chanthavong",
+      "localeName": "Lao (Laos)"
+    },
+    {
+      "id": "lo-LA-KeomanyNeural",
+      "type": "azure-standard",
+      "locale": "lo-LA",
+      "label": "Keomany",
+      "localeName": "Lao (Laos)"
+    },
+    {
+      "id": "lt-LT-LeonasNeural",
+      "type": "azure-standard",
+      "locale": "lt-LT",
+      "label": "Leonas",
+      "localeName": "Lithuanian (Lithuania)"
+    },
+    {
+      "id": "lt-LT-OnaNeural",
+      "type": "azure-standard",
+      "locale": "lt-LT",
+      "label": "Ona",
+      "localeName": "Lithuanian (Lithuania)"
+    },
+    {
+      "id": "lv-LV-EveritaNeural",
+      "type": "azure-standard",
+      "locale": "lv-LV",
+      "label": "Everita",
+      "localeName": "Latvian (Latvia)"
+    },
+    {
+      "id": "lv-LV-NilsNeural",
+      "type": "azure-standard",
+      "locale": "lv-LV",
+      "label": "Nils",
+      "localeName": "Latvian (Latvia)"
+    },
+    {
+      "id": "mk-MK-AleksandarNeural",
+      "type": "azure-standard",
+      "locale": "mk-MK",
+      "label": "Aleksandar",
+      "localeName": "Macedonian (North Macedonia)"
+    },
+    {
+      "id": "mk-MK-MarijaNeural",
+      "type": "azure-standard",
+      "locale": "mk-MK",
+      "label": "Marija",
+      "localeName": "Macedonian (North Macedonia)"
+    },
+    {
+      "id": "ml-IN-MidhunNeural",
+      "type": "azure-standard",
+      "locale": "ml-IN",
+      "label": "Midhun",
+      "localeName": "Malayalam (India)"
+    },
+    {
+      "id": "ml-IN-SobhanaNeural",
+      "type": "azure-standard",
+      "locale": "ml-IN",
+      "label": "Sobhana",
+      "localeName": "Malayalam (India)"
+    },
+    {
+      "id": "mn-MN-BataaNeural",
+      "type": "azure-standard",
+      "locale": "mn-MN",
+      "label": "Bataa",
+      "localeName": "Mongolian (Mongolia)"
+    },
+    {
+      "id": "mn-MN-YesuiNeural",
+      "type": "azure-standard",
+      "locale": "mn-MN",
+      "label": "Yesui",
+      "localeName": "Mongolian (Mongolia)"
+    },
+    {
+      "id": "mr-IN-AarohiNeural",
+      "type": "azure-standard",
+      "locale": "mr-IN",
+      "label": "Aarohi",
+      "localeName": "Marathi (India)"
+    },
+    {
+      "id": "mr-IN-ManoharNeural",
+      "type": "azure-standard",
+      "locale": "mr-IN",
+      "label": "Manohar",
+      "localeName": "Marathi (India)"
+    },
+    {
+      "id": "ms-MY-Nadira:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "ms-MY",
+      "label": "Nadira Dragon HD Latest",
+      "localeName": "Malay (Malaysia)"
+    },
+    {
+      "id": "ms-MY-Osman:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "ms-MY",
+      "label": "Osman Dragon HD Latest",
+      "localeName": "Malay (Malaysia)"
+    },
+    {
+      "id": "ms-MY-OsmanNeural",
+      "type": "azure-standard",
+      "locale": "ms-MY",
+      "label": "Osman",
+      "localeName": "Malay (Malaysia)"
+    },
+    {
+      "id": "ms-MY-Yasmin:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "ms-MY",
+      "label": "Yasmin Dragon HD Latest",
+      "localeName": "Malay (Malaysia)"
+    },
+    {
+      "id": "ms-MY-YasminNeural",
+      "type": "azure-standard",
+      "locale": "ms-MY",
+      "label": "Yasmin",
+      "localeName": "Malay (Malaysia)"
+    },
+    {
+      "id": "mt-MT-GraceNeural",
+      "type": "azure-standard",
+      "locale": "mt-MT",
+      "label": "Grace",
+      "localeName": "Maltese (Malta)"
+    },
+    {
+      "id": "mt-MT-JosephNeural",
+      "type": "azure-standard",
+      "locale": "mt-MT",
+      "label": "Joseph",
+      "localeName": "Maltese (Malta)"
+    },
+    {
+      "id": "my-MM-NilarNeural",
+      "type": "azure-standard",
+      "locale": "my-MM",
+      "label": "Nilar",
+      "localeName": "Burmese (Myanmar)"
+    },
+    {
+      "id": "my-MM-ThihaNeural",
+      "type": "azure-standard",
+      "locale": "my-MM",
+      "label": "Thiha",
+      "localeName": "Burmese (Myanmar)"
+    },
+    {
+      "id": "nb-NO-FinnNeural",
+      "type": "azure-standard",
+      "locale": "nb-NO",
+      "label": "Finn",
+      "localeName": "Norwegian Bokm\u00e5l (Norway)"
+    },
+    {
+      "id": "nb-NO-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "nb-NO",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Norwegian Bokm\u00e5l (Norway)"
+    },
+    {
+      "id": "nb-NO-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "nb-NO",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Norwegian Bokm\u00e5l (Norway)"
+    },
+    {
+      "id": "nb-NO-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "nb-NO",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Norwegian Bokm\u00e5l (Norway)"
+    },
+    {
+      "id": "nb-NO-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "nb-NO",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Norwegian Bokm\u00e5l (Norway)"
+    },
+    {
+      "id": "nb-NO-IselinNeural",
+      "type": "azure-standard",
+      "locale": "nb-NO",
+      "label": "Iselin",
+      "localeName": "Norwegian Bokm\u00e5l (Norway)"
+    },
+    {
+      "id": "nb-NO-PernilleNeural",
+      "type": "azure-standard",
+      "locale": "nb-NO",
+      "label": "Pernille",
+      "localeName": "Norwegian Bokm\u00e5l (Norway)"
+    },
+    {
+      "id": "ne-NP-HemkalaNeural",
+      "type": "azure-standard",
+      "locale": "ne-NP",
+      "label": "Hemkala",
+      "localeName": "Nepali (Nepal)"
+    },
+    {
+      "id": "ne-NP-SagarNeural",
+      "type": "azure-standard",
+      "locale": "ne-NP",
+      "label": "Sagar",
+      "localeName": "Nepali (Nepal)"
+    },
+    {
+      "id": "nl-BE-ArnaudNeural",
+      "type": "azure-standard",
+      "locale": "nl-BE",
+      "label": "Arnaud",
+      "localeName": "Dutch (Belgium)"
+    },
+    {
+      "id": "nl-BE-DenaNeural",
+      "type": "azure-standard",
+      "locale": "nl-BE",
+      "label": "Dena",
+      "localeName": "Dutch (Belgium)"
+    },
+    {
+      "id": "nl-NL-ColetteNeural",
+      "type": "azure-standard",
+      "locale": "nl-NL",
+      "label": "Colette",
+      "localeName": "Dutch (Netherlands)"
+    },
+    {
+      "id": "nl-NL-FennaNeural",
+      "type": "azure-standard",
+      "locale": "nl-NL",
+      "label": "Fenna",
+      "localeName": "Dutch (Netherlands)"
+    },
+    {
+      "id": "nl-NL-Fleur:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "nl-NL",
+      "label": "Fleur MAI-Voice-2",
+      "localeName": "Dutch (Netherlands)"
+    },
+    {
+      "id": "nl-NL-Fleur:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "nl-NL",
+      "label": "Fleur MAI-Voice-2-Flash",
+      "localeName": "Dutch (Netherlands)"
+    },
+    {
+      "id": "nl-NL-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "nl-NL",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Dutch (Netherlands)"
+    },
+    {
+      "id": "nl-NL-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "nl-NL",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Dutch (Netherlands)"
+    },
+    {
+      "id": "nl-NL-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "nl-NL",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Dutch (Netherlands)"
+    },
+    {
+      "id": "nl-NL-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "nl-NL",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Dutch (Netherlands)"
+    },
+    {
+      "id": "nl-NL-MaartenNeural",
+      "type": "azure-standard",
+      "locale": "nl-NL",
+      "label": "Maarten",
+      "localeName": "Dutch (Netherlands)"
+    },
+    {
+      "id": "nl-NL-Sander:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "nl-NL",
+      "label": "Sander MAI-Voice-2",
+      "localeName": "Dutch (Netherlands)"
+    },
+    {
+      "id": "nl-NL-Sander:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "nl-NL",
+      "label": "Sander MAI-Voice-2-Flash",
+      "localeName": "Dutch (Netherlands)"
+    },
+    {
+      "id": "nl-NL-Sander:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "nl-NL",
+      "label": "Sander MAI-Voice-2.1",
+      "localeName": "Dutch (Netherlands)"
+    },
+    {
+      "id": "nl-NL-Sander:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "nl-NL",
+      "label": "Sander MAI-Voice-2.1-Flash",
+      "localeName": "Dutch (Netherlands)"
+    },
+    {
+      "id": "or-IN-SubhasiniNeural",
+      "type": "azure-standard",
+      "locale": "or-IN",
+      "label": "Subhasini",
+      "localeName": "Odia (India)"
+    },
+    {
+      "id": "or-IN-SukantNeural",
+      "type": "azure-standard",
+      "locale": "or-IN",
+      "label": "Sukant",
+      "localeName": "Odia (India)"
+    },
+    {
+      "id": "pa-IN-OjasNeural",
+      "type": "azure-standard",
+      "locale": "pa-IN",
+      "label": "Ojas",
+      "localeName": "Punjabi (India)"
+    },
+    {
+      "id": "pa-IN-VaaniNeural",
+      "type": "azure-standard",
+      "locale": "pa-IN",
+      "label": "Vaani",
+      "localeName": "Punjabi (India)"
+    },
+    {
+      "id": "pl-PL-AgnieszkaNeural",
+      "type": "azure-standard",
+      "locale": "pl-PL",
+      "label": "Agnieszka",
+      "localeName": "Polish (Poland)"
+    },
+    {
+      "id": "pl-PL-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "pl-PL",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Polish (Poland)"
+    },
+    {
+      "id": "pl-PL-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "pl-PL",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Polish (Poland)"
+    },
+    {
+      "id": "pl-PL-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "pl-PL",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Polish (Poland)"
+    },
+    {
+      "id": "pl-PL-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "pl-PL",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Polish (Poland)"
+    },
+    {
+      "id": "pl-PL-MarekNeural",
+      "type": "azure-standard",
+      "locale": "pl-PL",
+      "label": "Marek",
+      "localeName": "Polish (Poland)"
+    },
+    {
+      "id": "pl-PL-ZofiaNeural",
+      "type": "azure-standard",
+      "locale": "pl-PL",
+      "label": "Zofia",
+      "localeName": "Polish (Poland)"
+    },
+    {
+      "id": "ps-AF-GulNawazNeural",
+      "type": "azure-standard",
+      "locale": "ps-AF",
+      "label": "Gul Nawaz",
+      "localeName": "Pashto (Afghanistan)"
+    },
+    {
+      "id": "ps-AF-LatifaNeural",
+      "type": "azure-standard",
+      "locale": "ps-AF",
+      "label": "Latifa",
+      "localeName": "Pashto (Afghanistan)"
+    },
+    {
+      "id": "pt-BR-AntonioNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Antonio",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-BrendaNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Brenda",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Caio:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Caio MAI-Voice-2",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Caio:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Caio MAI-Voice-2-Flash",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Caio:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Caio MAI-Voice-2.1",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Caio:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Caio MAI-Voice-2.1-Flash",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-DonatoNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Donato",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-ElzaNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Elza",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-FabioNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Fabio",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Francisca:DragonLatestNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Francisca Dragon Latest",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-FranciscaNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Francisca",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-GiovannaNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Giovanna",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-HumbertoNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Humberto",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-JulioNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Julio",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-LeilaNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Leila",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-LeticiaNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Leticia",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Luana:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Luana MAI-Voice-2",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Luana:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Luana MAI-Voice-2-Flash",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Luana:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Luana MAI-Voice-2.1",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Luana:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Luana MAI-Voice-2.1-Flash",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Macerio:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Macerio Dragon HD Latest",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Macerio:DragonLatestNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Macerio Dragon Latest",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-MacerioMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Macerio Multilingual",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-ManuelaNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Manuela",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-NicolauNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Nicolau",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Pedro:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Pedro MAI-Voice-2",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Pedro:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Pedro MAI-Voice-2-Flash",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Pedro:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Pedro MAI-Voice-2.1",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Pedro:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Pedro MAI-Voice-2.1-Flash",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Rafael:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Rafael MAI-Voice-2",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Rafael:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Rafael MAI-Voice-2-Flash",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Rafael:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Rafael MAI-Voice-2.1",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Rafael:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Rafael MAI-Voice-2.1-Flash",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-Thalita:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Thalita Dragon HD Latest",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-ThalitaMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Thalita Multilingual",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-ThalitaNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Thalita",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-ValerioNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Valerio",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-BR-YaraNeural",
+      "type": "azure-standard",
+      "locale": "pt-BR",
+      "label": "Yara",
+      "localeName": "Portuguese (Brazil)"
+    },
+    {
+      "id": "pt-PT-DuarteNeural",
+      "type": "azure-standard",
+      "locale": "pt-PT",
+      "label": "Duarte",
+      "localeName": "Portuguese (Portugal)"
+    },
+    {
+      "id": "pt-PT-FernandaNeural",
+      "type": "azure-standard",
+      "locale": "pt-PT",
+      "label": "Fernanda",
+      "localeName": "Portuguese (Portugal)"
+    },
+    {
+      "id": "pt-PT-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "pt-PT",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Portuguese (Portugal)"
+    },
+    {
+      "id": "pt-PT-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "pt-PT",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Portuguese (Portugal)"
+    },
+    {
+      "id": "pt-PT-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "pt-PT",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Portuguese (Portugal)"
+    },
+    {
+      "id": "pt-PT-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "pt-PT",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Portuguese (Portugal)"
+    },
+    {
+      "id": "pt-PT-RaquelNeural",
+      "type": "azure-standard",
+      "locale": "pt-PT",
+      "label": "Raquel",
+      "localeName": "Portuguese (Portugal)"
+    },
+    {
+      "id": "pt-PT-Rui:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "pt-PT",
+      "label": "Rui MAI-Voice-2",
+      "localeName": "Portuguese (Portugal)"
+    },
+    {
+      "id": "pt-PT-Rui:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "pt-PT",
+      "label": "Rui MAI-Voice-2-Flash",
+      "localeName": "Portuguese (Portugal)"
+    },
+    {
+      "id": "pt-PT-Rui:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "pt-PT",
+      "label": "Rui MAI-Voice-2.1",
+      "localeName": "Portuguese (Portugal)"
+    },
+    {
+      "id": "pt-PT-Rui:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "pt-PT",
+      "label": "Rui MAI-Voice-2.1-Flash",
+      "localeName": "Portuguese (Portugal)"
+    },
+    {
+      "id": "ro-RO-AlinaNeural",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Alina",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Andrei:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Andrei MAI-Voice-2",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Andrei:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Andrei MAI-Voice-2-Flash",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Andrei:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Andrei MAI-Voice-2.1",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Andrei:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Andrei MAI-Voice-2.1-Flash",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Elena:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Elena MAI-Voice-2",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Elena:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Elena MAI-Voice-2-Flash",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Elena:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Elena MAI-Voice-2.1",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Elena:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Elena MAI-Voice-2.1-Flash",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-EmilNeural",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Emil",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Ioana:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Ioana MAI-Voice-2",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Ioana:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Ioana MAI-Voice-2-Flash",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Ioana:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Ioana MAI-Voice-2.1",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Ioana:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Ioana MAI-Voice-2.1-Flash",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Radu:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Radu MAI-Voice-2",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Radu:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Radu MAI-Voice-2-Flash",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Radu:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Radu MAI-Voice-2.1",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ro-RO-Radu:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "ro-RO",
+      "label": "Radu MAI-Voice-2.1-Flash",
+      "localeName": "Romanian (Romania)"
+    },
+    {
+      "id": "ru-RU-DariyaNeural",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Dariya",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "ru-RU-DmitryNeural",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Dmitry",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "ru-RU-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "ru-RU-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "ru-RU-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "ru-RU-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "ru-RU-Lev:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Lev MAI-Voice-2",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "ru-RU-Lev:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Lev MAI-Voice-2-Flash",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "ru-RU-Lev:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Lev MAI-Voice-2.1",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "ru-RU-Lev:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Lev MAI-Voice-2.1-Flash",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "ru-RU-Masha:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Masha MAI-Voice-2",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "ru-RU-Masha:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Masha MAI-Voice-2-Flash",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "ru-RU-Masha:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Masha MAI-Voice-2.1",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "ru-RU-Masha:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Masha MAI-Voice-2.1-Flash",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "ru-RU-SvetlanaNeural",
+      "type": "azure-standard",
+      "locale": "ru-RU",
+      "label": "Svetlana",
+      "localeName": "Russian (Russia)"
+    },
+    {
+      "id": "si-LK-SameeraNeural",
+      "type": "azure-standard",
+      "locale": "si-LK",
+      "label": "Sameera",
+      "localeName": "Sinhala (Sri Lanka)"
+    },
+    {
+      "id": "si-LK-ThiliniNeural",
+      "type": "azure-standard",
+      "locale": "si-LK",
+      "label": "Thilini",
+      "localeName": "Sinhala (Sri Lanka)"
+    },
+    {
+      "id": "sk-SK-LukasNeural",
+      "type": "azure-standard",
+      "locale": "sk-SK",
+      "label": "Lukas",
+      "localeName": "Slovak (Slovakia)"
+    },
+    {
+      "id": "sk-SK-ViktoriaNeural",
+      "type": "azure-standard",
+      "locale": "sk-SK",
+      "label": "Viktoria",
+      "localeName": "Slovak (Slovakia)"
+    },
+    {
+      "id": "sl-SI-PetraNeural",
+      "type": "azure-standard",
+      "locale": "sl-SI",
+      "label": "Petra",
+      "localeName": "Slovenian (Slovenia)"
+    },
+    {
+      "id": "sl-SI-RokNeural",
+      "type": "azure-standard",
+      "locale": "sl-SI",
+      "label": "Rok",
+      "localeName": "Slovenian (Slovenia)"
+    },
+    {
+      "id": "so-SO-MuuseNeural",
+      "type": "azure-standard",
+      "locale": "so-SO",
+      "label": "Muuse",
+      "localeName": "Somali (Somalia)"
+    },
+    {
+      "id": "so-SO-UbaxNeural",
+      "type": "azure-standard",
+      "locale": "so-SO",
+      "label": "Ubax",
+      "localeName": "Somali (Somalia)"
+    },
+    {
+      "id": "sq-AL-AnilaNeural",
+      "type": "azure-standard",
+      "locale": "sq-AL",
+      "label": "Anila",
+      "localeName": "Albanian (Albania)"
+    },
+    {
+      "id": "sq-AL-IlirNeural",
+      "type": "azure-standard",
+      "locale": "sq-AL",
+      "label": "Ilir",
+      "localeName": "Albanian (Albania)"
+    },
+    {
+      "id": "sr-Latn-RS-NicholasNeural",
+      "type": "azure-standard",
+      "locale": "sr-Latn-RS",
+      "label": "Nicholas (Latin)",
+      "localeName": "Serbian (Latin, Serbia)"
+    },
+    {
+      "id": "sr-Latn-RS-SophieNeural",
+      "type": "azure-standard",
+      "locale": "sr-Latn-RS",
+      "label": "Sophie (Latin)",
+      "localeName": "Serbian (Latin, Serbia)"
+    },
+    {
+      "id": "sr-RS-NicholasNeural",
+      "type": "azure-standard",
+      "locale": "sr-RS",
+      "label": "Nicholas",
+      "localeName": "Serbian (Cyrillic, Serbia)"
+    },
+    {
+      "id": "sr-RS-SophieNeural",
+      "type": "azure-standard",
+      "locale": "sr-RS",
+      "label": "Sophie",
+      "localeName": "Serbian (Cyrillic, Serbia)"
+    },
+    {
+      "id": "su-ID-JajangNeural",
+      "type": "azure-standard",
+      "locale": "su-ID",
+      "label": "Jajang",
+      "localeName": "Sundanese (Indonesia)"
+    },
+    {
+      "id": "su-ID-TutiNeural",
+      "type": "azure-standard",
+      "locale": "su-ID",
+      "label": "Tuti",
+      "localeName": "Sundanese (Indonesia)"
+    },
+    {
+      "id": "sv-SE-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "sv-SE",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Swedish (Sweden)"
+    },
+    {
+      "id": "sv-SE-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "sv-SE",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Swedish (Sweden)"
+    },
+    {
+      "id": "sv-SE-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "sv-SE",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Swedish (Sweden)"
+    },
+    {
+      "id": "sv-SE-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "sv-SE",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Swedish (Sweden)"
+    },
+    {
+      "id": "sv-SE-HilleviNeural",
+      "type": "azure-standard",
+      "locale": "sv-SE",
+      "label": "Hillevi",
+      "localeName": "Swedish (Sweden)"
+    },
+    {
+      "id": "sv-SE-MattiasNeural",
+      "type": "azure-standard",
+      "locale": "sv-SE",
+      "label": "Mattias",
+      "localeName": "Swedish (Sweden)"
+    },
+    {
+      "id": "sv-SE-SofieNeural",
+      "type": "azure-standard",
+      "locale": "sv-SE",
+      "label": "Sofie",
+      "localeName": "Swedish (Sweden)"
+    },
+    {
+      "id": "sw-KE-RafikiNeural",
+      "type": "azure-standard",
+      "locale": "sw-KE",
+      "label": "Rafiki",
+      "localeName": "Swahili (Kenya)"
+    },
+    {
+      "id": "sw-KE-ZuriNeural",
+      "type": "azure-standard",
+      "locale": "sw-KE",
+      "label": "Zuri",
+      "localeName": "Swahili (Kenya)"
+    },
+    {
+      "id": "sw-TZ-DaudiNeural",
+      "type": "azure-standard",
+      "locale": "sw-TZ",
+      "label": "Daudi",
+      "localeName": "Swahili (Tanzania)"
+    },
+    {
+      "id": "sw-TZ-RehemaNeural",
+      "type": "azure-standard",
+      "locale": "sw-TZ",
+      "label": "Rehema",
+      "localeName": "Swahili (Tanzania)"
+    },
+    {
+      "id": "ta-IN-PallaviNeural",
+      "type": "azure-standard",
+      "locale": "ta-IN",
+      "label": "Pallavi",
+      "localeName": "Tamil (India)"
+    },
+    {
+      "id": "ta-IN-ValluvarNeural",
+      "type": "azure-standard",
+      "locale": "ta-IN",
+      "label": "Valluvar",
+      "localeName": "Tamil (India)"
+    },
+    {
+      "id": "ta-LK-KumarNeural",
+      "type": "azure-standard",
+      "locale": "ta-LK",
+      "label": "Kumar",
+      "localeName": "Tamil (Sri Lanka)"
+    },
+    {
+      "id": "ta-LK-SaranyaNeural",
+      "type": "azure-standard",
+      "locale": "ta-LK",
+      "label": "Saranya",
+      "localeName": "Tamil (Sri Lanka)"
+    },
+    {
+      "id": "ta-MY-KaniNeural",
+      "type": "azure-standard",
+      "locale": "ta-MY",
+      "label": "Kani",
+      "localeName": "Tamil (Malaysia)"
+    },
+    {
+      "id": "ta-MY-SuryaNeural",
+      "type": "azure-standard",
+      "locale": "ta-MY",
+      "label": "Surya",
+      "localeName": "Tamil (Malaysia)"
+    },
+    {
+      "id": "ta-SG-AnbuNeural",
+      "type": "azure-standard",
+      "locale": "ta-SG",
+      "label": "Anbu",
+      "localeName": "Tamil (Singapore)"
+    },
+    {
+      "id": "ta-SG-VenbaNeural",
+      "type": "azure-standard",
+      "locale": "ta-SG",
+      "label": "Venba",
+      "localeName": "Tamil (Singapore)"
+    },
+    {
+      "id": "te-IN-MohanNeural",
+      "type": "azure-standard",
+      "locale": "te-IN",
+      "label": "Mohan",
+      "localeName": "Telugu (India)"
+    },
+    {
+      "id": "te-IN-ShrutiNeural",
+      "type": "azure-standard",
+      "locale": "te-IN",
+      "label": "Shruti",
+      "localeName": "Telugu (India)"
+    },
+    {
+      "id": "th-TH-AcharaNeural",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Achara",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "th-TH-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "th-TH-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "th-TH-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "th-TH-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "th-TH-Krit:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Krit MAI-Voice-2",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "th-TH-Krit:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Krit MAI-Voice-2-Flash",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "th-TH-Krit:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Krit MAI-Voice-2.1",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "th-TH-Krit:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Krit MAI-Voice-2.1-Flash",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "th-TH-Nattapong:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Nattapong MAI-Voice-2",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "th-TH-Nattapong:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Nattapong MAI-Voice-2-Flash",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "th-TH-Nattapong:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Nattapong MAI-Voice-2.1",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "th-TH-Nattapong:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Nattapong MAI-Voice-2.1-Flash",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "th-TH-NiwatNeural",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Niwat",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "th-TH-PremwadeeNeural",
+      "type": "azure-standard",
+      "locale": "th-TH",
+      "label": "Premwadee",
+      "localeName": "Thai (Thailand)"
+    },
+    {
+      "id": "tr-TR-AhmetNeural",
+      "type": "azure-standard",
+      "locale": "tr-TR",
+      "label": "Ahmet",
+      "localeName": "Turkish (T\u00fcrkiye)"
+    },
+    {
+      "id": "tr-TR-Aydin:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "tr-TR",
+      "label": "Aydin MAI-Voice-2.1",
+      "localeName": "Turkish (T\u00fcrkiye)"
+    },
+    {
+      "id": "tr-TR-Aydin:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "tr-TR",
+      "label": "Aydin MAI-Voice-2.1-Flash",
+      "localeName": "Turkish (T\u00fcrkiye)"
+    },
+    {
+      "id": "tr-TR-Ayd\u0131n:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "tr-TR",
+      "label": "Ayd\u0131n MAI-Voice-2",
+      "localeName": "Turkish (T\u00fcrkiye)"
+    },
+    {
+      "id": "tr-TR-Ayd\u0131n:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "tr-TR",
+      "label": "Ayd\u0131n MAI-Voice-2-Flash",
+      "localeName": "Turkish (T\u00fcrkiye)"
+    },
+    {
+      "id": "tr-TR-Elif:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "tr-TR",
+      "label": "Elif MAI-Voice-2",
+      "localeName": "Turkish (T\u00fcrkiye)"
+    },
+    {
+      "id": "tr-TR-Elif:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "tr-TR",
+      "label": "Elif MAI-Voice-2-Flash",
+      "localeName": "Turkish (T\u00fcrkiye)"
+    },
+    {
+      "id": "tr-TR-Elif:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "tr-TR",
+      "label": "Elif MAI-Voice-2.1",
+      "localeName": "Turkish (T\u00fcrkiye)"
+    },
+    {
+      "id": "tr-TR-Elif:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "tr-TR",
+      "label": "Elif MAI-Voice-2.1-Flash",
+      "localeName": "Turkish (T\u00fcrkiye)"
+    },
+    {
+      "id": "tr-TR-EmelNeural",
+      "type": "azure-standard",
+      "locale": "tr-TR",
+      "label": "Emel",
+      "localeName": "Turkish (T\u00fcrkiye)"
+    },
+    {
+      "id": "tr-TR-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "tr-TR",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Turkish (T\u00fcrkiye)"
+    },
+    {
+      "id": "tr-TR-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "tr-TR",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Turkish (T\u00fcrkiye)"
+    },
+    {
+      "id": "tr-TR-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "tr-TR",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Turkish (T\u00fcrkiye)"
+    },
+    {
+      "id": "tr-TR-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "tr-TR",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Turkish (T\u00fcrkiye)"
+    },
+    {
+      "id": "uk-UA-OstapNeural",
+      "type": "azure-standard",
+      "locale": "uk-UA",
+      "label": "Ostap",
+      "localeName": "Ukrainian (Ukraine)"
+    },
+    {
+      "id": "uk-UA-PolinaNeural",
+      "type": "azure-standard",
+      "locale": "uk-UA",
+      "label": "Polina",
+      "localeName": "Ukrainian (Ukraine)"
+    },
+    {
+      "id": "ur-IN-GulNeural",
+      "type": "azure-standard",
+      "locale": "ur-IN",
+      "label": "Gul",
+      "localeName": "Urdu (India)"
+    },
+    {
+      "id": "ur-IN-SalmanNeural",
+      "type": "azure-standard",
+      "locale": "ur-IN",
+      "label": "Salman",
+      "localeName": "Urdu (India)"
+    },
+    {
+      "id": "ur-PK-AsadNeural",
+      "type": "azure-standard",
+      "locale": "ur-PK",
+      "label": "Asad",
+      "localeName": "Urdu (Pakistan)"
+    },
+    {
+      "id": "ur-PK-UzmaNeural",
+      "type": "azure-standard",
+      "locale": "ur-PK",
+      "label": "Uzma",
+      "localeName": "Urdu (Pakistan)"
+    },
+    {
+      "id": "uz-UZ-MadinaNeural",
+      "type": "azure-standard",
+      "locale": "uz-UZ",
+      "label": "Madina",
+      "localeName": "Uzbek (Latin, Uzbekistan)"
+    },
+    {
+      "id": "uz-UZ-SardorNeural",
+      "type": "azure-standard",
+      "locale": "uz-UZ",
+      "label": "Sardor",
+      "localeName": "Uzbek (Latin, Uzbekistan)"
+    },
+    {
+      "id": "vi-VN-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "vi-VN",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Vietnamese (Vietnam)"
+    },
+    {
+      "id": "vi-VN-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "vi-VN",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Vietnamese (Vietnam)"
+    },
+    {
+      "id": "vi-VN-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "vi-VN",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Vietnamese (Vietnam)"
+    },
+    {
+      "id": "vi-VN-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "vi-VN",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Vietnamese (Vietnam)"
+    },
+    {
+      "id": "vi-VN-HoaiMyNeural",
+      "type": "azure-standard",
+      "locale": "vi-VN",
+      "label": "HoaiMy",
+      "localeName": "Vietnamese (Vietnam)"
+    },
+    {
+      "id": "vi-VN-NamMinhNeural",
+      "type": "azure-standard",
+      "locale": "vi-VN",
+      "label": "NamMinh",
+      "localeName": "Vietnamese (Vietnam)"
+    },
+    {
+      "id": "wuu-CN-XiaotongNeural",
+      "type": "azure-standard",
+      "locale": "wuu-CN",
+      "label": "Xiaotong",
+      "localeName": "Chinese (Wu, Simplified)"
+    },
+    {
+      "id": "wuu-CN-YunzheNeural",
+      "type": "azure-standard",
+      "locale": "wuu-CN",
+      "label": "Yunzhe",
+      "localeName": "Chinese (Wu, Simplified)"
+    },
+    {
+      "id": "yue-CN-XiaoMinNeural",
+      "type": "azure-standard",
+      "locale": "yue-CN",
+      "label": "XiaoMin",
+      "localeName": "Chinese (Cantonese, Simplified)"
+    },
+    {
+      "id": "yue-CN-YunSongNeural",
+      "type": "azure-standard",
+      "locale": "yue-CN",
+      "label": "YunSong",
+      "localeName": "Chinese (Cantonese, Simplified)"
+    },
+    {
+      "id": "zh-CN-Bo:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Bo MAI-Voice-2",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Bo:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Bo MAI-Voice-2-Flash",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Bo:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Bo MAI-Voice-2.1",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Bo:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Bo MAI-Voice-2.1-Flash",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Grant:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Grant MAI-Voice-2.1",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Grant:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Grant MAI-Voice-2.1-Flash",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Harper:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Harper MAI-Voice-2.1",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Harper:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Harper MAI-Voice-2.1-Flash",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Lan:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Lan MAI-Voice-2",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Lan:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Lan MAI-Voice-2-Flash",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Lan:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Lan MAI-Voice-2.1",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Lan:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Lan MAI-Voice-2.1-Flash",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Maroonallegro:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Maroonallegro Dragon HD Omni Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Mei:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Mei MAI-Voice-2",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Mei:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Mei MAI-Voice-2-Flash",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Mei:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Mei MAI-Voice-2.1",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Mei:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Mei MAI-Voice-2.1-Flash",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Wei:MAI-Voice-2",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Wei MAI-Voice-2",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Wei:MAI-Voice-2-Flash",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Wei MAI-Voice-2-Flash",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Wei:MAI-Voice-2.1",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Wei MAI-Voice-2.1",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Wei:MAI-Voice-2.1-Flash",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Wei MAI-Voice-2.1-Flash",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaochen:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaochen Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaochen:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaochen Dragon HD Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaochenMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaochen Multilingual",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaochenNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaochen",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaohan:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaohan Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaohanNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaohan",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaoke:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoke Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaomengNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaomeng",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaomo:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaomo Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaomoNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaomo",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaoqi:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoqi Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaoqi:DragonLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoqi Dragon Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaoqiuNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoqiu",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaorou:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaorou Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaorouNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaorou",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaoruiNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaorui",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaoshuang:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoshuang Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaoshuangMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoshuang Multilingual",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaoshuangNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoshuang",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaoxiao2:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoxiao2 Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaoxiao:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoxiao Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaoxiaoDialectsNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoxiao Dialects",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaoxiaoMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoxiao Multilingual",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaoxiaoNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoxiao",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaoyanNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoyan",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaoyi:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoyi Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaoyiNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoyi",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaoyou:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoyou Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaoyouMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoyou Multilingual",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaoyouNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoyou",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaoyu:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoyu Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaoyuMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoyu Multilingual",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Xiaoyue:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaoyue Dragon HD Omni Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-XiaozhenNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Xiaozhen",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Yunfan:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunfan Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Yunfan:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunfan Dragon HD Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Yunfan:DragonLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunfan Dragon Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-YunfanMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunfan Multilingual",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Yunfeng:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunfeng Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-YunfengNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunfeng",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Yunhan:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunhan Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-YunhaoNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunhao",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-YunjianNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunjian",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Yunjie:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunjie Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-YunjieNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunjie",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Yunqi:DragonHDOmniLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunqi Dragon HD Omni Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Yunxi:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunxi Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-YunxiNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunxi",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Yunxia:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunxia Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-YunxiaNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunxia",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Yunxiao:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunxiao Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-YunxiaoMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunxiao Multilingual",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-YunyangNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunyang",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Yunye:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunye Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-YunyeNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunye",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-Yunyi:DragonHDFlashLatestNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunyi Dragon HD Flash Latest",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-YunyiMultilingualNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunyi Multilingual",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-YunzeNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN",
+      "label": "Yunze",
+      "localeName": "Chinese (Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-guangxi-YunqiNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN-guangxi",
+      "label": "Yunqi",
+      "localeName": "Chinese (Guangxi Accent Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-henan-YundengNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN-henan",
+      "label": "Yundeng",
+      "localeName": "Chinese (Zhongyuan Mandarin Henan, Simplified)"
+    },
+    {
+      "id": "zh-CN-liaoning-XiaobeiNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN-liaoning",
+      "label": "Xiaobei",
+      "localeName": "Chinese (Northeastern Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-liaoning-YunbiaoNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN-liaoning",
+      "label": "Yunbiao",
+      "localeName": "Chinese (Northeastern Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-shaanxi-XiaoniNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN-shaanxi",
+      "label": "Xiaoni",
+      "localeName": "Chinese (Zhongyuan Mandarin Shaanxi, Simplified)"
+    },
+    {
+      "id": "zh-CN-shandong-YunxiangNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN-shandong",
+      "label": "Yunxiang",
+      "localeName": "Chinese (Jilu Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-CN-sichuan-YunxiNeural",
+      "type": "azure-standard",
+      "locale": "zh-CN-sichuan",
+      "label": "Yunxi",
+      "localeName": "Chinese (Southwestern Mandarin, Simplified)"
+    },
+    {
+      "id": "zh-HK-HiuGaaiNeural",
+      "type": "azure-standard",
+      "locale": "zh-HK",
+      "label": "HiuGaai",
+      "localeName": "Chinese (Cantonese, Traditional)"
+    },
+    {
+      "id": "zh-HK-HiuMaanNeural",
+      "type": "azure-standard",
+      "locale": "zh-HK",
+      "label": "HiuMaan",
+      "localeName": "Chinese (Cantonese, Traditional)"
+    },
+    {
+      "id": "zh-HK-WanLungNeural",
+      "type": "azure-standard",
+      "locale": "zh-HK",
+      "label": "WanLung",
+      "localeName": "Chinese (Cantonese, Traditional)"
+    },
+    {
+      "id": "zh-Multitalker:DragonHDLatestNeural",
+      "type": "azure-standard",
+      "locale": "en-US",
+      "label": "Chinese Multitalker Dragon HD Latest",
+      "localeName": "English (United States)"
+    },
+    {
+      "id": "zh-TW-HsiaoChenNeural",
+      "type": "azure-standard",
+      "locale": "zh-TW",
+      "label": "HsiaoChen",
+      "localeName": "Chinese (Taiwanese Mandarin, Traditional)"
+    },
+    {
+      "id": "zh-TW-HsiaoYuNeural",
+      "type": "azure-standard",
+      "locale": "zh-TW",
+      "label": "HsiaoYu",
+      "localeName": "Chinese (Taiwanese Mandarin, Traditional)"
+    },
+    {
+      "id": "zh-TW-YunJheNeural",
+      "type": "azure-standard",
+      "locale": "zh-TW",
+      "label": "YunJhe",
+      "localeName": "Chinese (Taiwanese Mandarin, Traditional)"
+    },
+    {
+      "id": "zu-ZA-ThandoNeural",
+      "type": "azure-standard",
+      "locale": "zu-ZA",
+      "label": "Thando",
+      "localeName": "Zulu (South Africa)"
+    },
+    {
+      "id": "zu-ZA-ThembaNeural",
+      "type": "azure-standard",
+      "locale": "zu-ZA",
+      "label": "Themba",
+      "localeName": "Zulu (South Africa)"
+    }
+  ]
+}

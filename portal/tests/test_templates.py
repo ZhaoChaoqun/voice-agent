@@ -8,11 +8,14 @@ import hashlib
 import json
 from dataclasses import replace
 from pathlib import Path
+import re
 import tempfile
+from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from aiohttp.test_utils import TestClient, TestServer
+from azure.core.exceptions import HttpResponseError
 
 import demo_server
 from voice_policy import VoicePolicy
@@ -77,6 +80,29 @@ SHARED_MCP_TEMPLATES = list(MCP_TEMPLATES)
 MOCK_TOOL_TEMPLATE_IDS = [template_id for template_id, *_ in MOCK_TOOL_TEMPLATES]
 MCP_TEMPLATES = [*SHARED_MCP_TEMPLATES, *MOCK_TOOL_TEMPLATE_IDS]
 EXPECTED_TEMPLATES = [*SHARED_MCP_TEMPLATES, *MOCK_TOOL_TEMPLATE_IDS]
+HINDI_TEMPLATE_IDS = [
+    "finance-example-realtime-hi-in",
+    "finance-example-cascade-hi-in",
+]
+EXPECTED_TEMPLATES.extend(HINDI_TEMPLATE_IDS)
+MCP_TEMPLATES.extend(HINDI_TEMPLATE_IDS)
+# Generic conference concierge with official Ignite 2026 data, on the conference MCP pack.
+CONFERENCE_TEMPLATE = "conference-concierge-example"
+CONFERENCE_TOOLS = [
+    "conference_get_event_info",
+    "conference_search_sessions",
+    "conference_get_session",
+    "conference_recommend_sessions",
+    "conference_similar_sessions",
+    "conference_sessions_starting_soon",
+    "conference_get_session_changes",
+    "conference_agenda_add",
+    "conference_agenda_remove",
+    "conference_agenda_list",
+    "conference_get_faq",
+]
+EXPECTED_TEMPLATES.append(CONFERENCE_TEMPLATE)
+MCP_TEMPLATES.append(CONFERENCE_TEMPLATE)
 END_CONVERSATION_TOOL = {"type": "system", "name": "end_conversation"}
 MCP_BASE_URL = (
     "https://voice-agent-noauth-mcp"
@@ -85,15 +111,105 @@ MCP_BASE_URL = (
 MCP_ROUTES = {
     "finance-example-realtime": "/mcp/finance-handoff",
     "finance-example-cascade-luna": "/mcp/finance-handoff",
+    **{template_id: "/mcp/finance-handoff" for template_id in HINDI_TEMPLATE_IDS},
     "finance-with-otp-and-officer-search": "/mcp/finance-otp-officer",
     "elevator-service-example": "/mcp/elevator-service",
     "frontdesk-receptionist-example": "/mcp/frontdesk",
     **{template_id: "/mcp/mock-tool-call" for template_id in MOCK_TOOL_TEMPLATE_IDS},
+    CONFERENCE_TEMPLATE: "/mcp/conference",
 }
 MOCK_TOOL_PREFIX = "mock_tool_call_"
 
 
 class TemplateCatalogTests(unittest.TestCase):
+    def test_catalog_declares_the_customer_locale_independently_of_prompt_language(self) -> None:
+        catalog = TemplateCatalog()
+        cards = catalog.cards()
+        self.assertEqual(
+            set(HINDI_TEMPLATE_IDS),
+            {card["id"] for card in cards if card["target_locale"] == "hi-IN"},
+        )
+        for card in cards:
+            with self.subTest(template_id=card["id"]):
+                expected = (
+                    "hi-IN" if card["id"] in HINDI_TEMPLATE_IDS
+                    else "en-IN" if card["id"] in ("finance-example-realtime", "finance-example-cascade-luna")
+                    else "en-US"
+                )
+                self.assertEqual(expected, card["target_locale"])
+                self.assertEqual(expected, catalog.detail(card["id"])["target_locale"])
+
+    def test_materialization_preserves_input_language_without_mutating_the_template(self) -> None:
+        document = {
+            "definition": {
+                "kind": "voice",
+                "audio": {"input": {"transcription": {
+                    "model": "azure-speech", "language": "en-IN,hi-IN", "prompt": "Contoso",
+                }}},
+            },
+        }
+        original = copy.deepcopy(document)
+        definition = materialize_template(
+            document, model="", voice="", mcp_server_url="", mcp_connection_id="",
+        )
+        self.assertEqual(
+            {"model": "azure-speech", "language": "en-IN,hi-IN", "prompt": "Contoso"},
+            definition["audio"]["input"]["transcription"],
+        )
+        self.assertEqual(original, document)
+
+    def test_finance_templates_use_azure_speech_and_preserve_input_configuration(self) -> None:
+        catalog = TemplateCatalog()
+        template_ids = [
+            "finance-example-realtime",
+            "finance-example-cascade-luna",
+            *HINDI_TEMPLATE_IDS,
+            "finance-with-otp-and-officer-search",
+        ]
+        for template_id in template_ids:
+            with self.subTest(template_id=template_id):
+                document = catalog.document(template_id)
+                self.assertIsNotNone(document)
+                original = copy.deepcopy(document)
+                audio_input = document["definition"]["audio"]["input"]
+                self.assertEqual("azure-speech", audio_input["transcription"]["model"])
+                self.assertEqual(
+                    "hi-IN" if template_id in HINDI_TEMPLATE_IDS else None,
+                    audio_input["transcription"].get("language"),
+                )
+                definition = materialize_template(
+                    document, model="", voice="",
+                    mcp_server_url=MCP_BASE_URL + MCP_ROUTES[template_id],
+                    mcp_connection_id="", mcp_public=True,
+                )
+                self.assertEqual(audio_input, definition["audio"]["input"])
+                self.assertEqual(document["definition"]["model"], definition["model"])
+                self.assertEqual(original, document)
+
+    def test_thirty_mock_tool_templates_preserve_authored_english_omni_voices(self) -> None:
+        catalog = TemplateCatalog()
+        voices = [
+            "en-US-Emma:DragonHDOmniLatestNeural",
+            "en-US-Brian:DragonHDOmniLatestNeural",
+        ]
+        self.assertEqual(30, len(MOCK_TOOL_TEMPLATES))
+        for template_id, *_rest in MOCK_TOOL_TEMPLATES:
+            with self.subTest(template_id=template_id):
+                document = catalog.document(template_id)
+                self.assertIsNotNone(document)
+                output = document["definition"]["audio"]["output"]
+                expected = output["voice"]
+                self.assertEqual("azure-standard", expected["type"])
+                self.assertIn(expected["name"], voices)
+                definition = materialize_template(
+                    document, model="", voice="",
+                    mcp_server_url=MCP_BASE_URL + MCP_ROUTES[template_id],
+                    mcp_connection_id="", mcp_public=True,
+                )
+                self.assertEqual(expected, definition["audio"]["output"]["voice"])
+                for node in definition["handoff"]["nodes"]:
+                    self.assertEqual(expected, node["config"].get("voice", expected))
+
     def test_tuned_handoff_examples_preserve_normal_400ms_vad(self) -> None:
         catalog = TemplateCatalog()
         expected = {
@@ -212,6 +328,55 @@ class TemplateCatalogTests(unittest.TestCase):
                     {"type": "azure-standard", "name": expected},
                     definition["audio"]["output"]["voice"],
                 )
+
+    def test_conference_concierge_binds_the_conference_pack(self) -> None:
+        catalog = TemplateCatalog()
+        card = next(card for card in catalog.cards() if card["id"] == CONFERENCE_TEMPLATE)
+        detail = catalog.detail(CONFERENCE_TEMPLATE)
+        source = catalog.source(CONFERENCE_TEMPLATE)
+        assert detail is not None and source is not None
+        self.assertTrue(detail["requires_mcp"])
+        self.assertTrue(detail["runtime_locked"])
+        # Single node on purpose: with a handoff graph Voice Live intermittently emitted the MCP tools as
+        # plain function calls (never executed) and the entrypoint sometimes spoke tool JSON aloud.
+        self.assertEqual(0, detail["edge_count"])
+        self.assertEqual("public", source.connection_mode)
+        self.assertFalse(card["mock_tools"])
+        agent = json.loads(
+            (ROOT.parent / "samples" / "example35_conference_concierge" / "agent.json").read_text(encoding="utf-8")
+        )
+        authored = agent["definition"]
+        self.assertEqual(CONFERENCE_TEMPLATE, agent["name"])
+        # Foundry rejects an Agent description longer than 512 characters at publication.
+        self.assertLessEqual(len(agent["description"]), 512)
+        self.assertEqual(("managed", "gpt-realtime", False), (authored["model_type"], authored["model"], authored["store"]))
+        self.assertEqual("en-US-Emma:DragonHDLatestNeural", authored["audio"]["output"]["voice"]["name"])
+        self.assertTrue(authored["audio"]["input"]["turn_detection"]["interrupt_response"])
+        self.assertEqual("llm_interim_response", authored["interim_response"]["type"])
+        self.assertNotIn("handoff", authored)
+        self.assertEqual("auto", authored["tool_choice"])
+        mcp_tools = list(template_portal.iter_mcp_tools(authored))
+        self.assertEqual(1, len(mcp_tools))
+        tool = mcp_tools[0]
+        self.assertEqual(("conference", "", "never"), (tool["server_label"], tool["server_url"], tool["require_approval"]))
+        self.assertEqual(CONFERENCE_TOOLS, tool["allowed_tools"])
+        for key in ("project_connection_id", "authorization", "headers"):
+            self.assertNotIn(key, tool)
+        self.assertIn(END_CONVERSATION_TOOL, authored["tools"])
+        instructions = authored["instructions"]
+        mentioned = set(re.findall(r"(?:conference|mock_tool_call)_[a-z_]+", instructions))
+        self.assertTrue(mentioned <= set(CONFERENCE_TOOLS), mentioned - set(CONFERENCE_TOOLS))
+        for text in ("language of that message", "no official data", "### Dev mode", "BRK244", "end_conversation"):
+            self.assertIn(text, instructions)
+        self.assertNotIn("sample data", instructions.lower())
+        server_url = MCP_BASE_URL + MCP_ROUTES[CONFERENCE_TEMPLATE]
+        definition = materialize_template(
+            catalog.document(CONFERENCE_TEMPLATE), model="", voice="",
+            mcp_server_url=server_url, mcp_connection_id="", mcp_public=True,
+        )
+        for tool in template_portal.iter_mcp_tools(definition):
+            self.assertEqual(server_url, tool["server_url"])
+        self.assertEqual(instructions, definition["instructions"])
 
     def test_tool_map_suggestion_and_per_system_rewrite(self) -> None:
         required = [
@@ -623,7 +788,7 @@ class TemplateCatalogTests(unittest.TestCase):
         self.assertIn("VoiceAgent/portal/templates.config.json", html)
         self.assertIn('id="mcp-token"', html)
         self.assertIn('type="password"', html)
-        self.assertIn(">AgentRuntime</a>", html)
+        self.assertIn(">Runtime</a>", html)
         self.assertNotIn('href="/templates/"', html)
         self.assertNotIn('classList.toggle("embedded"', app_js)
         self.assertNotIn(".embedded .local-template-header", styles)
@@ -645,15 +810,84 @@ class TemplateCatalogTests(unittest.TestCase):
         )
 
 
+class TemplatePublicationTests(unittest.TestCase):
+    def setUp(self):
+        self.definition = {
+            "kind": "voice", "model_type": "managed", "model": "gpt-realtime-regional",
+        }
+        self.error = HttpResponseError(
+            message="Model 'gpt-realtime-regional' is not supported in managed mode in this region.",
+            response=Mock(status_code=400, reason="Bad Request", headers={}),
+        )
+        self.client = Mock()
+        self.client.agents.create_version.return_value = SimpleNamespace(version="1")
+        self.client.agents.get_version.return_value = SimpleNamespace(definition=self.definition)
+        client_patch = patch("template_portal.AIProjectClient")
+        self.addCleanup(client_patch.stop)
+        client_patch.start().return_value.__enter__.return_value = self.client
+        self.cfg = Mock()
+
+    def publish(self):
+        return template_portal.publish_agent(
+            self.cfg, name="test", description="Keep description",
+            definition=self.definition, metadata={"source_template_id": "test"},
+        )
+
+    def test_regional_template_publication_retries_only_the_failed_create(self):
+        self.client.agents.create_version.side_effect = [
+            self.error, SimpleNamespace(version="1"),
+        ]
+        expected = {**self.definition, "model": "gpt-realtime"}
+        self.client.agents.get_version.return_value = SimpleNamespace(definition=expected)
+        with self.assertLogs("voice_agent_portal", level="WARNING"):
+            result = self.publish()
+        calls = self.client.agents.create_version.call_args_list
+        self.assertEqual(2, len(calls))
+        self.assertEqual(self.definition, calls[0].args[1]["definition"])
+        self.assertEqual(expected, calls[1].args[1]["definition"])
+        self.assertEqual(
+            {**calls[0].args[1], "definition": expected}, calls[1].args[1],
+        )
+        self.assertEqual("gpt-realtime-regional", self.definition["model"])
+        self.assertEqual(expected, result["definition"])
+        self.client.agents.enable.assert_called_once()
+        self.client.agents.get_version.assert_called_once()
+
+    def test_regional_template_publication_success_keeps_the_original_model(self):
+        self.assertEqual(self.definition, self.publish()["definition"])
+        self.client.agents.create_version.assert_called_once()
+        self.assertEqual(
+            self.definition, self.client.agents.create_version.call_args.args[1]["definition"],
+        )
+
+    def test_regional_template_publication_returns_the_retry_error(self):
+        second_error = HttpResponseError(message="The fallback model is also unavailable.")
+        self.client.agents.create_version.side_effect = [self.error, second_error]
+        with self.assertLogs("voice_agent_portal", level="WARNING"):
+            with self.assertRaises(HttpResponseError) as caught:
+                self.publish()
+        self.assertIs(second_error, caught.exception)
+        self.assertEqual(2, self.client.agents.create_version.call_count)
+        self.client.agents.enable.assert_not_called()
+
+    def test_regional_template_publication_does_not_retry_other_failures(self):
+        for operation, error in (
+            ("create_version", HttpResponseError(message="Invalid voice configuration.")),
+            ("enable", self.error),
+            ("get_version", self.error),
+        ):
+            with self.subTest(operation=operation):
+                self.client.reset_mock(side_effect=True)
+                self.client.agents.create_version.return_value = SimpleNamespace(version="1")
+                getattr(self.client.agents, operation).side_effect = error
+                with self.assertRaises(HttpResponseError) as caught:
+                    self.publish()
+                self.assertIs(error, caught.exception)
+                self.client.agents.create_version.assert_called_once()
+
+
 class TemplateRouteTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
-        self.voice_policy_patch = patch.object(
-            VoicePolicy, "resolve", side_effect=lambda cfg, body: {
-                "definition": body["definition"], "region": "westus2", "resolutions": [],
-            },
-        )
-        self.voice_policy_patch.start()
-        self.addCleanup(self.voice_policy_patch.stop)
         args = demo_server.parse_args([
             "--project-endpoint",
             ENDPOINT,
@@ -666,6 +900,31 @@ class TemplateRouteTests(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self) -> None:
         await self.client.close()
+
+    async def test_hindi_template_routes_preserve_the_explicit_locale(self) -> None:
+        expected_voice = {
+            "type": "azure-standard",
+            "name": "hi-IN-Diya:DragonLatestNeural",
+        }
+        voices = json.loads((ROOT / "static/handoff/azure-voices.json").read_text())["voices"]
+        self.assertTrue(any(
+            voice["id"] == expected_voice["name"] and voice["locale"] == "hi-IN"
+            for voice in voices
+        ))
+        for template_id in HINDI_TEMPLATE_IDS:
+            with self.subTest(template_id=template_id):
+                response = await self.client.get(f"/api/templates/{template_id}")
+                self.assertEqual(200, response.status)
+                detail = await response.json()
+                definition = detail["definition"]
+                self.assertEqual(
+                    {"model": "azure-speech", "language": "hi-IN"},
+                    definition["audio"]["input"]["transcription"],
+                )
+                self.assertEqual(expected_voice, definition["audio"]["output"]["voice"])
+                self.assertEqual(expected_voice["name"], detail["voice"])
+                for node in definition["handoff"]["nodes"]:
+                    self.assertEqual(expected_voice, node["config"].get("voice", expected_voice))
 
     async def test_templates_page_and_catalog_routes(self) -> None:
         page = await self.client.get("/templates")
@@ -797,8 +1056,14 @@ class TemplateRouteTests(unittest.IsolatedAsyncioTestCase):
         for template_id in MCP_TEMPLATES:
             with (
                 self.subTest(template_id=template_id),
-                patch("template_portal.validate_mcp_probe_url") as validate_url,
+                patch("template_portal.socket.getaddrinfo", side_effect=OSError("Offline DNS")) as dns,
+                patch("template_portal.requests.sessions.Session.request",
+                      side_effect=AssertionError("Public Template preparation attempted HTTP")) as network,
                 patch("template_portal.create_mcp_connection") as create_connection,
+                patch.object(
+                    VoicePolicy, "resolve",
+                    side_effect=AssertionError("Publication must not perform voice availability checks."),
+                ) as resolve_voice,
                 patch(
                     "template_portal.publish_agent",
                     return_value={"name": "local-only-synthetic", "version": "1"},
@@ -816,15 +1081,43 @@ class TemplateRouteTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual("", (await response.json())["mcp_connection_name"])
                 create_connection.assert_not_called()
                 publish.assert_called_once()
+                resolve_voice.assert_not_called()
+                authored = template_portal.TemplateCatalog().document(template_id)["definition"]
+                submitted = publish.call_args.kwargs["definition"]
+                self.assertEqual(
+                    authored["audio"]["output"]["voice"],
+                    submitted["audio"]["output"]["voice"],
+                )
+                self.assertEqual(
+                    [node["config"].get("voice") for node in authored.get("handoff", {}).get("nodes", [])],
+                    [node["config"].get("voice") for node in submitted.get("handoff", {}).get("nodes", [])],
+                )
                 self.assertEqual(
                     {"source_template_id": template_id, "source_template_version": "."},
                     publish.call_args.kwargs["metadata"],
                 )
-                self.assertEqual(2, validate_url.call_count)
-                validate_url.assert_called_with(MCP_BASE_URL + MCP_ROUTES[template_id])
+                dns.assert_not_called()
+                network.assert_not_called()
                 for tool in template_portal.iter_mcp_tools(publish.call_args.kwargs["definition"]):
                     self.assertEqual(MCP_BASE_URL + MCP_ROUTES[template_id], tool["server_url"])
                     self.assertNotIn("project_connection_id", tool)
+
+    async def test_template_publication_reports_the_actual_service_voice_error(self) -> None:
+        with (
+            patch("template_portal.validate_mcp_probe_url"),
+            patch.object(VoicePolicy, "resolve") as resolve_voice,
+            patch(
+                "template_portal.publish_agent",
+                side_effect=HttpResponseError(message="The selected voice is not supported."),
+            ) as publish,
+        ):
+            response = await self.client.post(
+                "/api/templates/finance-example-realtime-hi-in/publish", json={"name": "voice-error"}
+            )
+        self.assertEqual(502, response.status)
+        self.assertIn("The selected voice is not supported.", (await response.json())["error"])
+        publish.assert_called_once()
+        resolve_voice.assert_not_called()
 
     async def test_editor_connects_and_disconnects_one_system_of_a_working_copy(self) -> None:
         detail = await (await self.client.get("/api/templates/order-status-tracking-example")).json()
@@ -879,16 +1172,22 @@ class TemplateRouteTests(unittest.IsolatedAsyncioTestCase):
             handshake.assert_not_called()
 
     async def test_public_template_configuration_keeps_private_address_guard(self) -> None:
-        with patch(
-            "template_portal.validate_mcp_probe_url",
-            side_effect=McpProbeError("MCP probes cannot target private addresses"),
-        ), patch("template_portal.create_mcp_connection") as create_connection:
-            response = await self.client.post(
-                "/api/templates/finance-example-realtime/mcp/configure", json={}
-            )
-        self.assertEqual(502, response.status)
-        self.assertIn("cannot target private", (await response.json())["error"])
-        create_connection.assert_not_called()
+        catalog = self.client.server.app[template_portal.CATALOG_KEY]
+        source = catalog.source("finance-example-realtime")
+        for url in ("https://127.0.0.1/mcp", "https://10.0.0.1/mcp", "https://localhost/mcp"):
+            with (
+                self.subTest(url=url),
+                patch.object(catalog, "source", return_value=replace(source, mcp_server_url=url)),
+                patch("template_portal.socket.getaddrinfo") as dns,
+                patch("template_portal.create_mcp_connection") as create_connection,
+            ):
+                response = await self.client.post(
+                    "/api/templates/finance-example-realtime/mcp/configure", json={}
+                )
+                self.assertEqual(502, response.status)
+                self.assertIn("cannot target", (await response.json())["error"])
+                dns.assert_not_called()
+                create_connection.assert_not_called()
 
     async def test_template_assets_are_served_without_azure_credentials(self) -> None:
         for name in (
@@ -946,7 +1245,17 @@ class TemplateRouteTests(unittest.IsolatedAsyncioTestCase):
             with self.subTest(template_id=template_id):
                 response = await self.client.get(f"/api/templates/{template_id}/try-it")
                 self.assertEqual(200, response.status)
-                self.assertIn(expected, " ".join((await response.json())["turns"]))
+                payload = await response.json()
+                self.assertIn(expected, " ".join(payload["turns"]))
+                self.assertEqual("", payload["note"])
+
+    async def test_live_data_template_replaces_the_test_data_notice(self) -> None:
+        response = await self.client.get(f"/api/templates/{CONFERENCE_TEMPLATE}/try-it")
+        self.assertEqual(200, response.status)
+        payload = await response.json()
+        self.assertIn("live official Microsoft Ignite data", payload["note"])
+        self.assertNotIn("fictional", payload["note"])
+        self.assertTrue(any("BRK244" in turn for turn in payload["turns"]))
 
     async def test_logic_apps_mcp_guide_is_served(self) -> None:
         response = await self.client.get("/guide/logic-apps-mcp")

@@ -1,5 +1,11 @@
 # Create Salesforce, Zendesk, and Work IQ MCP servers with Azure Logic Apps
 
+**Optional integration guide, not Portal setup.** Default Templates already use
+the shared public no-auth MCP and need no local MCP, Dev Tunnel, Logic Apps
+deployment, or customer-owned facade. Follow this guide only when deliberately
+connecting your own systems. Reusing an already deployed server needs no tunnel;
+Dev Tunnel is an option only for the local facade development path below.
+
 ## Use these servers from the Voice Agent Playground
 
 This guide builds Salesforce and Zendesk MCP servers with Azure Logic Apps

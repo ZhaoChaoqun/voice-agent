@@ -21,6 +21,12 @@ before diagnosing Project, deployment, connection, MCP, or UI ownership.
 The portal runs locally and connects to the official Foundry Voice Agent
 endpoint.
 
+Default Portal Templates use the public no-auth MCP. Local MCP hosting,
+Dev Tunnel, `setup-local-examples.sh`, and local E2E are optional developer
+workflows, not Portal prerequisites. Apply local MCP checks only when the
+published Agent deliberately targets that runtime. An already deployed MCP
+does not require a local server or tunnel.
+
 ## Workflow
 
 1. Preserve identity before restarting anything.
@@ -42,7 +48,11 @@ endpoint.
   `shared_mcp/state/e2e/<UTC-run>/` directory.
 
 3. If setup, publication, or **Try it now** fails before a recording exists:
-   - Run `./scripts/setup-local-examples.sh --check`.
+   - For the default Portal, inspect its health, terminal/server log, selected
+     Project, and actual Foundry publication response. Do not start local MCP
+     or require a successful MCP probe before allowing publication.
+   - Only for the optional customer-owned local MCP/CLI path, run
+     `./scripts/setup-local-examples.sh --check`.
    - Confirm the relevant CLI sample `.env` files and `portal/.env` select the
      intended Project.
    - Confirm `model_type` and `model` identify an available model deployment
@@ -52,9 +62,10 @@ endpoint.
      `shared_mcp/config/generated/example*.local.env`; never print
      `shared_mcp/state/local/token`, and verify the selected Project contains
      the referenced RemoteTool connection.
-   - For a Portal Template, call its probe endpoint. The public no-auth MCP is
-     ready only after HTTP 200 `initialize` and `tools/list` with all expected
-     Agent tools. Its published definition must not contain
+   - For a Portal Template tool failure, optionally call its probe endpoint.
+     HTTP 200 `initialize` and `tools/list` prove the public no-auth MCP
+     inventory, not Agent publication or business success. Its default
+     published definition must not contain
      `project_connection_id`.
 
 4. If a recording exists, determine the actual data directory.
@@ -122,8 +133,11 @@ Streamable HTTP, while Foundry RemoteTool can use legacy HTTP+SSE against the
 same route.
 
 1. Get the failed handoff timestamp and target node from `events.jsonl`.
-2. Find the active native MCP artifact from the newest
-   `shared_mcp/state/e2e/<UTC-run>/native-mcp.log`.
+2. Resolve the published MCP URL first. For an explicitly selected local MCP,
+   find the active artifact under
+   `shared_mcp/state/e2e/<UTC-run>/native-mcp.log`. For public no-auth or
+   customer-hosted services, use that host's evidence when available; do not
+   start a local MCP or tunnel to create unrelated logs.
 3. Match Foundry requests by timestamp and public client address. A successful
    legacy sequence is:
 

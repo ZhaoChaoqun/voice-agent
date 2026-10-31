@@ -187,10 +187,12 @@ The saved setup uses managed **gpt-realtime-2.1**, **mai-transcribe-2** input tr
 and the selected Azure Speech HD output voice. Azure semantic turn detection
 keeps the headset noise-reduction processing on the service-owned audio path;
 GPT Realtime's upstream-owned `server_vad` rejects that denoiser.
-Tool descriptions remain in the attached Toolbox rather than the bundled Agent
-instructions. The prompt does not require weather searches or spoken pre-tool
-acknowledgements; tool selection uses the available tool definitions with
-`tool_choice: auto`.
+Tool descriptions remain in the attached Toolbox. The bundled Agent's `WEB SEARCH`
+policy requires lookup requests and current or changing facts, including the current
+time in a city, to use search before answering. It requires grounded answers and
+honest lookup-failure handling, without forcing tools for greetings, casual conversation,
+or simple arithmetic. It does not require spoken pre-tool acknowledgements;
+tool selection remains `tool_choice: auto`.
 
 An existing voice Agent is reused without changing its instructions, voice,
 denoise settings, or valid Toolbox version pins. Setup checks the saved weather
@@ -271,21 +273,48 @@ the configured resource. For the `va-dev-use2` project, the verified endpoint is
 `https://va-dev-use2.services.ai.azure.com/api/projects/va-dev-use2-project` and
 the Live deployment is `gpt-live-1-test`.
 
-Selecting **GPT Live** previews its native voice selector, defaulting to `marin`.
-Its choices follow the OpenAI SDK's
+GPT Live uses the voice in the saved Agent's `audio.output.voice`; new companions
+default to `marin`. The Live voice selector is disabled and displays **Saved Agent
+voice**. This endpoint rejects the realtime `x-ms-voice-session-override` header,
+and Live voices are immutable after startup. Change the saved voice in Foundry,
+using the OpenAI SDK's
 [Live BuiltInVoice catalog](https://github.com/openai/openai-python/blob/main/src/openai/types/live/built_in_voice.py);
-availability depends on the deployed model. Unsupported voices fail explicitly,
-without substituting an Azure Speech or Azure Realtime voice. Saving the model
-publishes a Live version with a Responses backend and `web_search` for any topic,
+availability depends on the deployed model. Cached pages requesting the same
+voice already saved on the Agent connect without an override. A different
+per-call voice is rejected explicitly instead of substituting a voice or editing
+the Agent during a call. Azure does not
+allow changing `sub_protocol` across versions of a saved Agent. Saving GPT Live
+therefore creates a **separate saved companion Agent**, normally named
+`<AZURE_VOICE_AGENT_NAME>-live` (long names use a shortened prefix and stable hash).
+The original realtime Agent and all its versions remain unchanged.
+The companion uses a Responses backend and `web_search` for any topic,
 including news, products, prices, documentation, travel, local information, and
 weather. Explicit lookup requests and facts needing verification trigger search;
 it is not limited to weather or current events. It does not attach the realtime
 weather Toolbox.
-The source instructions are supplied to that backend; its original complete
-realtime definition remains in the previous version. Version metadata records
-that source version so switching back restores its prompt, structured inputs,
-greeting, tools, audio settings and transcription before applying the selected
-realtime model/transcription.
+The source instructions are copied to that backend at companion creation.
+Later switches reuse the saved companion, including independently edited
+instructions; they do not recopy or overwrite its configuration. Ownership
+metadata binds it to the original Agent. An unrelated Agent at the companion
+name causes an explicit error and is never overwritten.
+Companions from earlier sample deployments are also reused when their metadata
+identifies this sample and their `companion_of` matches the configured Agent;
+their definitions, metadata and versions are not rewritten during switching.
+Switching back selects the original Agent's **latest** saved configuration,
+including its prompt, structured inputs, greeting, tools, audio and transcription,
+before applying any explicitly selected realtime model/transcription changes.
+Selecting an unchanged model does not publish an unnecessary version.
+
+Selection is scoped to the current page, not a mutable server-wide Agent pointer.
+Calls, preparation and YAML settings use the selected Agent; recording download
+tokens remain bound to the Agent that created the conversation, even after
+switching. Reloading the page selects the configured Agent again; selecting GPT
+Live reuses its existing companion across server restarts. Reset is disabled
+while GPT Live is selected, and resetting the realtime Agent does not delete the
+companion. To create a companion from updated realtime instructions, use a new
+configured Agent name or manage the saved companion explicitly in Foundry.
+An explicitly configured Live Agent can still be invoked directly, but cannot
+be converted to realtime by publishing another version.
 The deployment script passes both Live deployment settings to Azure Container
 Apps, and `check_websocket.py` detects Live Agents and checks native startup
 and graceful close without sending microphone audio.
@@ -379,9 +408,15 @@ same Foundry project:
 - Permission errors, incompatible Toolboxes, or failed creation stop setup
   visibly; an existing Toolbox is never overwritten.
 
-The Agent searches when the caller requests a lookup or facts need verification,
-then gives a concise answer grounded in the results. It asks for a location or
-date only when relevant to the question, not before every search. Try **"Search
+New demo Agents search when the caller requests a lookup or facts need verification,
+including current or changing facts, then give a concise answer grounded in the results.
+For example, **"What is the time now in Beijing?"** requires a lookup even without
+an explicit request to search. The Agent must attempt the lookup before claiming
+it lacks real-time access and honestly explain any lookup failure rather than inventing
+results. The Live speech model delegates these requests to its Responses backend,
+which uses `web_search` instead of the legacy Toolbox.
+The Agent asks for a location or date only when relevant to the question, not
+before every search. Try **"Search
 the web for the latest Azure AI announcements"** or **"Find the official Python
 asyncio documentation"**. Weather searches retain location/date guidance; try
 **"What is the weather in Seattle today?"**. Weather results are web-search
@@ -571,13 +606,15 @@ there is no silent fallback to a greeting without context.
 
 ### Output voice
 
-The voice list displays full service IDs, with
+For realtime Agents, the voice list displays full service IDs, with
 `en-US-Tyler:DragonHDLatestNeural` selected by default. For GPT models, choose
 an HD or MAI Flash voice before connecting, or choose **Saved Agent voice** to preserve the stored setting. The backend
 allowlists these choices and sends an `x-ms-voice-session-override` containing
 `audio.output.voice` and `voice_type: "azure-standard"` at connection time
 (the HD model is selected by the voice name, not a separate `azure-hd` type).
 This applies to the greeting and subsequent output without editing the Agent.
+GPT Live instead uses its saved voice, with no voice-override header; its voice
+control is disabled because per-call overrides are unavailable on this endpoint.
 
 The configured HD voices are:
 

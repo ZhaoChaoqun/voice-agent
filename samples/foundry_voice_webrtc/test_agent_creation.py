@@ -140,7 +140,11 @@ class CreationTests(unittest.IsolatedAsyncioTestCase):
                     prepare.assert_not_awaited()
 
     async def test_existing_agent_only_enables_without_publishing(self):
-        client = Client([Response(200, self.agent()), Response(200)], [Response(204)])
+        agent = self.agent()
+        definition = agent["versions"]["latest"]["definition"]
+        definition["instructions"] = "Keep this saved custom prompt without a search policy."
+        before = json.loads(json.dumps(agent))
+        client = Client([Response(200, agent), Response(200)], [Response(204)])
         result = await prepare_configured_agent(client, self.config(), {})
         self.assertFalse(result["created"])
         self.assertFalse(result["toolboxReferenceUpdated"])
@@ -148,6 +152,7 @@ class CreationTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result["personalizationRequired"])
         self.assertEqual(len(client.writes), 1)
         self.assertIn(":enable?", client.writes[0][0])
+        self.assertEqual(agent, before)
 
     async def test_missing_weather_version_is_repaired_without_replacing_agent_settings(self):
         agent = self.agent()
@@ -217,6 +222,7 @@ class CreationTests(unittest.IsolatedAsyncioTestCase):
         self.weather.assert_not_awaited()
 
     async def test_missing_agent_is_created_with_demo_definition_then_enabled(self):
+        self.weather.return_value["toolbox_version"] = "project-version-17"
         client = Client([Response(404), Response(200)], [Response(201), Response(204)])
         result = await prepare_configured_agent(client, self.config(), {})
         self.assertTrue(result["created"])
@@ -232,11 +238,26 @@ class CreationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(definition["audio"]["input"]["noise_reduction"]["type"],
                          "azure_deep_noise_suppression_headset")
         self.assertEqual(definition["tools"], [self.weather.return_value])
+        self.assertEqual(definition["tool_choice"], "auto")
+        instructions = definition["instructions"]
+        self.assertEqual(instructions.count("\n\nWEB SEARCH\n"), 1)
+        for policy in (
+                "The attached weather toolbox provides general web search, not only weather.",
+                "Search when the caller requests a lookup or facts need verification.",
+                "For current or changing facts--including the current time in a city--use the toolbox before answering.",
+                "Give concise answers grounded in the results.",
+                "Do not claim you lack real-time access without attempting the lookup.",
+                "If the lookup fails, explain that honestly.",
+                "Never invent results or claim a lookup succeeded without a successful tool result.",
+                "Use search when needed, not for greetings, casual conversation, or simple arithmetic."):
+            self.assertIn(policy, instructions)
         self.assertNotIn("WEATHER LOOKUP", definition["instructions"])
         self.assertNotIn("TOOL ACKNOWLEDGEMENT", definition["instructions"])
         self.assertIn("You are Riley, a general-purpose voice assistant.", definition["instructions"])
         self.assertIn("{{language_policy}}", definition["instructions"])
         self.assertIn("The configured greeting opens the conversation. Do not repeat it.", definition["instructions"])
+        template = self.agent()["versions"]["latest"]["definition"]
+        self.assertEqual(definition, {**template, "tools": [self.weather.return_value]})
         self.assertIn(":enable?", client.writes[1][0])
 
     async def test_failed_weather_setup_never_publishes_an_agent(self):

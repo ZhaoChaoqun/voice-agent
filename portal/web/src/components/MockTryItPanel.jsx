@@ -24,14 +24,19 @@ export function MockTryItPanel({ agent }) {
   const templateId = sourceTemplateId(agent);
   const mock = Boolean(mockTemplateId(agent));
   const [turns, setTurns] = useState([]);
+  const [note, setNote] = useState("");
 
   useEffect(() => {
     setTurns([]);
+    setNote("");
     if (!templateId) return undefined;
     const controller = new AbortController();
     fetch(`/api/templates/${encodeURIComponent(templateId)}/try-it`, { signal: controller.signal })
       .then((response) => (response.ok ? response.json() : null))
-      .then((payload) => setTurns(Array.isArray(payload?.turns) ? payload.turns : []))
+      .then((payload) => {
+        setTurns(Array.isArray(payload?.turns) ? payload.turns : []);
+        setNote(typeof payload?.note === "string" ? payload.note : "");
+      })
       .catch(() => {});
     return () => controller.abort();
   }, [templateId]);
@@ -39,11 +44,11 @@ export function MockTryItPanel({ agent }) {
   if (!templateId || !turns.length) return null;
   return (
     <details className="mock-try-it" open>
-      <summary>{mock ? "Test data for mock tools" : "Test data"}</summary>
+      <summary>{mock ? "Test data for mock tools" : note ? "Try these turns" : "Test data"}</summary>
       <p>
         {mock
           ? "This Agent uses mock tool calls with fixed, fictional test data. Use the names, numbers, and answers below; other values are treated as unknown records."
-          : "This Agent's sample service uses fixed, fictional test data. Use the details below when the Agent asks."}
+          : note || "This Agent's sample service uses fixed, fictional test data. Use the details below when the Agent asks."}
       </p>
       <ol>
         {turns.map((turn, index) => <li key={index}>{renderInline(turn)}</li>)}

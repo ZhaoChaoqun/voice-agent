@@ -7,8 +7,14 @@ empty Azure subscription. It is the shared source of truth for subscription,
 Project endpoint, permissions, model mode, and region eligibility. Do not
 continue to an example until those values are verified.
 
-After completing the criteria below, continue with
-[02: MCP settings, deployment, and development](./02_mcp_settings.md).
+After completing the criteria below, choose the path you need:
+
+- Default Portal and Templates: follow the [Portal guide](../portal/README.md).
+  They use the public no-auth MCP and need no local MCP or Dev Tunnel setup.
+- Optional customer-owned MCP for CLI samples or tool development: continue
+  with [02: MCP settings, deployment, and development](./02_mcp_settings.md).
+  Dev Tunnel is needed only for the documented locally hosted option, not an
+  already deployed MCP.
 
 ## Completion criteria
 

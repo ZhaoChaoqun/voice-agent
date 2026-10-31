@@ -1,0 +1,37 @@
+{
+  "evaluator_name": "flight_info_retrieval",
+  "observed_catalog_version": "4",
+  "type": "rubric",
+  "pass_score_threshold": 0.5,
+  "overall_score_range": [0, 1],
+  "dimension_score_range": [1, 5],
+  "generation_prompt": "Generate evaluation rubrics to assess whether the agent accurately captures and uses the following customer-provided information during a reservation cancellation request:\n\nReservation number: EHGLP3\nCustomer name: Emma Kim\nUser ID: emma_kim_9957\nBooking timing: The customer indicates that the reservation was booked more than 24 hours ago.\nCreate separate, independently scorable criteria for each item. Evaluate whether the agent uses the exact reservation number and user ID in the relevant lookup tool calls, correctly associates the reservation with Emma Kim, and recognizes that the booking is outside the 24-hour cancellation window.",
+  "dimensions": [
+    {
+      "id": "reservation_number_used",
+      "weight": 4,
+      "description": "Observable evidence that the agent captured the reservation number EHGLP3. Ignore case, whitespace, and symbols: remove all whitespace and non-alphanumeric characters from the captured value and compare case-insensitively against `ehglp3`."
+    },
+    {
+      "id": "user_id_used",
+      "weight": 4,
+      "description": "Observable evidence that the agent captured the user ID `emma_kim_9957`. Ignore case, whitespace, and symbols: remove all whitespace and non-alphanumeric characters from the captured value and compare case-insensitively against `emmakim9957`."
+    },
+    {
+      "id": "booking_timestamp_older_than_24h",
+      "weight": 9,
+      "description": "The agent explicitly mentions that more than 24 hours have passed since the reservation was booked. Evaluate only the agent's response"
+    },
+    {
+      "id": "retry_and_error_handling",
+      "weight": 3,
+      "description": "If an initial lookup_reservation call returns an error/timeout or null due to transient failure, the agent either retries the lookup with the same correct parameters (per the normalization rules) or explicitly reports and handles the transient failure in a reasonable way. Retrying with incorrect parameters or failing to recover/acknowledge a transient error (and thus returning an incorrect negative result) is a failure. This is observable from the sequence of tool-call logs and timestamps."
+    },
+    {
+      "id": "general_quality",
+      "weight": 5,
+      "description": "Other important quality factors not covered by listed criteria.",
+      "applicability": "Always applicable"
+    }
+  ]
+}

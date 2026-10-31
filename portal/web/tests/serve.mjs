@@ -10,8 +10,13 @@ const root = fileURLToPath(new URL("../../static/", import.meta.url));
 const types = { ".html": "text/html", ".js": "application/javascript", ".css": "text/css", ".png": "image/png" };
 
 createServer(async (request, response) => {
-  const path = new URL(request.url, "http://localhost").pathname;
-  const relative = path === "/demo/" ? "index.html" : path.startsWith("/static/demo/") ? path.slice(13) : null;
+  const url = new URL(request.url, "http://localhost");
+  const path = url.pathname;
+  if (["/demo", "/demo/", "/runtime"].includes(path)) {
+    response.writeHead(308, { Location: `/runtime/${url.search}` }).end();
+    return;
+  }
+  const relative = path === "/runtime/" ? "index.html" : path.startsWith("/static/demo/") ? path.slice(13) : null;
   const filename = relative !== null ? resolve(root, relative) : "";
   if (request.method !== "GET" || !filename.startsWith(root.endsWith(sep) ? root : `${root}${sep}`)) {
     response.writeHead(404).end("No test fixture for this route");

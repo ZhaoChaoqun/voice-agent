@@ -1,5 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Config loading + model/voice helpers (mirrors the demo's /config contract).
+import { groupVoicesByLocale, pipelineComponentOptions, PIPELINE_COMPONENTS } from "../../static/handoff/handoff-core.mjs";
+import { withDefaultVoiceCatalog } from "../../static/handoff/voice-catalog.mjs";
 
 async function readJson(response, path) {
   const text = await response.text();
@@ -28,7 +30,8 @@ async function readJson(response, path) {
 
 export async function loadConfig() {
   const resp = await fetch("/config");
-  return readJson(resp, "/config");
+  const cfg = await readJson(resp, "/config");
+  return withDefaultVoiceCatalog(cfg);
 }
 
 // Dynamically discover the BYOM Foundry account's usable deployments (realtime + cascaded), so BYOM
@@ -53,48 +56,27 @@ const PREVIEW_TRANSCRIPTION_MODELS = new Set([
   "gpt-transcribe",
 ]);
 
-export function compatibleTranscriptionModels(cfg, model, hosted = false) {
-  const fallback = cfg?.transcriptionModels || [cfg?.inputTranscriptionModel || "azure-speech"];
-  const configured = hosted || isCascaded(cfg, model)
-    ? cfg?.cascadedTranscriptionModels
-    : cfg?.realtimeTranscriptionModels;
-  return configured?.length ? configured : fallback;
-}
-
-export function transcriptionGroups(cfg, model, hosted = false) {
-  const compatible = new Set(compatibleTranscriptionModels(cfg, model, hosted));
-  const all = cfg?.transcriptionModels?.length
-    ? cfg.transcriptionModels
-    : [...compatible];
+export function transcriptionGroups(cfg) {
+  const all = [...new Set([
+    ...pipelineComponentOptions("stt").map((item) => item.id),
+    ...(cfg?.transcriptionModels || []),
+    ...(cfg?.realtimeTranscriptionModels || []),
+    ...(cfg?.cascadedTranscriptionModels || []),
+  ])].filter((value) => value !== "native-realtime-audio");
   const items = all.map((value) => ({
     value,
-    label: `${value}${PREVIEW_TRANSCRIPTION_MODELS.has(value) ? " · Preview" : ""}${
-      compatible.has(value) ? "" : " · unavailable for this model"
-    }`,
-    disabled: !compatible.has(value),
+    label: `${value}${PREVIEW_TRANSCRIPTION_MODELS.has(value) ? " · Preview" : ""}`,
   }));
   return [
     {
-      label: hosted || isCascaded(cfg, model)
-        ? "Cascaded input transcription"
-        : "Realtime transcript",
+      label: "Input transcription",
       items,
     },
   ];
 }
 
-export function defaultTranscriptionFor(cfg, model, hosted = false, preferred = "") {
-  const compatible = compatibleTranscriptionModels(cfg, model, hosted);
-  if (compatible.includes(preferred)) return preferred;
-  return compatible.includes(cfg?.inputTranscriptionModel)
-    ? cfg.inputTranscriptionModel
-    : compatible[0] || "azure-speech";
-}
-
-export function isVoiceCompatible(cfg, model, voice, azureOnly = false) {
-  if (!voice) return false;
-  if (!azureOnly && !isCascaded(cfg, model)) return true;
-  return (cfg?.azureVoices || []).includes(voice) || voice.includes("-");
+export function defaultTranscriptionFor(cfg) {
+  return cfg?.inputTranscriptionModel || "azure-speech";
 }
 
 // Build grouped options for a <select> of models: Realtime vs Cascaded. When `byom` is true, offer the
@@ -115,18 +97,16 @@ export function modelGroups(cfg, byom) {
   return groups.filter((g) => g.items.length);
 }
 
-// Build grouped voice options. When azureOnly is true (cascaded models), only Azure voices.
-export function voiceGroups(cfg, azureOnly) {
-  const openai = (cfg.openaiVoices || []).map((value) => ({
-    value,
-    label: `${value}${azureOnly ? " · unavailable for this model" : ""}`,
-    disabled: azureOnly,
-  }));
-  const groups = [
-    { label: "OpenAI native voices", items: openai },
-    { label: "Azure Speech voices", items: cfg.azureVoices || [] },
-  ];
-  return groups.filter((g) => g.items.length);
+export function voiceGroups(cfg) {
+  const catalog = cfg.voiceCatalog || PIPELINE_COMPONENTS.voice;
+  const entries = new Map(catalog.map((voice) => [
+    voice.id, { ...voice, value: voice.id, label: voice.id },
+  ]));
+  for (const value of [...(cfg.openaiVoices || []), ...(cfg.azureVoices || [])]) {
+    if (!entries.has(value)) entries.set(value, { value, label: value });
+  }
+  const voices = [...entries.values()].sort((left, right) => left.value.localeCompare(right.value));
+  return groupVoicesByLocale(voices);
 }
 
 // Default voice to preselect for a given model family. DragonHD is the recommended default for

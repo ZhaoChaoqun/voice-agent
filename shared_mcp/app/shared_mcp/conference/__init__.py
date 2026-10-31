@@ -1,0 +1,1 @@
+"""Conference concierge tool pack (generic; Ignite 2026 is the sample dataset)."""

@@ -118,6 +118,7 @@ ensure_devtunnel() {
 
   local install_root=""
   local installer=""
+  mkdir -p "${LOCAL_TOOLS_ROOT}"
   install_root="$(mktemp -d "${LOCAL_TOOLS_ROOT}/devtunnel-install.XXXXXX")"
   installer="${install_root}/install.sh"
   curl --proto '=https' --tlsv1.2 -fsSL \
