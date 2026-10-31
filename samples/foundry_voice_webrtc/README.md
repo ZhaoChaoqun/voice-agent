@@ -659,6 +659,11 @@ The included container uses Azure CLI authentication locally and automatically
 switches to the Container App's system-assigned managed identity in Azure. The
 local `.env` is excluded from the image and deployment build context.
 
+Standalone mode listens on `127.0.0.1` and rejects non-loopback network peers
+before any Azure credential acquisition, even when `PUBLIC_ORIGIN` is set.
+Origin/Host checks protect browser requests; they are not authentication.
+Do not expose the standalone server through an unauthenticated local proxy.
+
 From this directory, sign in and run:
 
 ```powershell
@@ -685,6 +690,15 @@ Unauthenticated browser requests redirect to Microsoft Entra; `/health` remains
 public for probes. Restrict the registration to the intended tenant/users or
 groups. Every accepted caller can consume Foundry quota through the app identity.
 Container Apps terminates HTTPS and supports the browser WebSocket used here.
+
+The deployment explicitly sets `TRUSTED_AZURE_INGRESS=true`, which requires a
+valid HTTPS `PUBLIC_ORIGIN` and enables the container's network listener.
+In this mode every route except `/health` also requires the
+`X-MS-CLIENT-PRINCIPAL-ID` supplied by Azure platform authentication. This header
+is not a standalone authentication mechanism: the ingress must authenticate
+callers, strip client-supplied identity headers, and prevent direct access to
+the backend. Never enable this mode for a directly exposed Python server or
+container, or disable the deployment's platform authentication.
 
 The app is intentionally limited to one active call per replica, and the deployment
 sets a maximum of one replica. This is suitable for a controlled demo, not a
@@ -896,6 +910,8 @@ and the manual microphone repro in your own project.
 
 This is a **local-development sample**, not a production service. It binds to
 loopback, checks browser Origin/Host, limits frames, and allows one active call.
+Offline access-boundary tests cover spoofed headers from non-loopback peers,
+local requests, explicit hosted-mode configuration, and Azure identity admission.
 Production hosting needs authentication, authorization, HTTPS, quotas, and a
 security review. Client-executed function tools and approval flows are not
 implemented; start with a simple conversational agent.

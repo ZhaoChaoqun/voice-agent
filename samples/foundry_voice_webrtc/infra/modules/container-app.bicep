@@ -141,6 +141,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: publicOrigin
             }
             {
+              name: 'TRUSTED_AZURE_INGRESS'
+              value: 'true'
+            }
+            {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
               value: appInsightsConnectionString
             }

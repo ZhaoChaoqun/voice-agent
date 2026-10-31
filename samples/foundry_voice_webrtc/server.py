@@ -6,6 +6,7 @@ import binascii
 import copy
 import hashlib
 import hmac
+import ipaddress
 import json
 import logging
 import os
@@ -359,9 +360,21 @@ class Settings:
     live_deployment: str = "gpt-live-1"
     live_backend_deployment: str = "gpt-5.4"
     companion_for: str = ""
+    trusted_azure_ingress: bool = False
 
     def __post_init__(self):
         object.__setattr__(self, "agent", self.agent.strip() or DEFAULT_AGENT_NAME)
+        if self.public_origin:
+            parsed = urlsplit(self.public_origin)
+            if (parsed.scheme != "https" or not parsed.hostname or parsed.username
+                    or parsed.password or parsed.path or parsed.query or parsed.fragment):
+                raise ValueError("PUBLIC_ORIGIN must be an HTTPS origin without a path, query or fragment.")
+        if self.trusted_azure_ingress and not self.public_origin:
+            raise ValueError("TRUSTED_AZURE_INGRESS requires PUBLIC_ORIGIN and an authenticated Azure ingress.")
+
+    @property
+    def listen_host(self):
+        return "0.0.0.0" if self.trusted_azure_ingress else "127.0.0.1"
 
     @property
     def setup_issues(self):
@@ -421,11 +434,6 @@ def load_settings():
     if not isinstance(ice, list) or any(not isinstance(s, dict) or not s.get("urls") for s in ice):
         raise ValueError("ICE_SERVERS_JSON must be a JSON array of ICE server objects.")
     public_origin = os.getenv("PUBLIC_ORIGIN", "").strip().rstrip("/")
-    if public_origin:
-        parsed = urlsplit(public_origin)
-        if (parsed.scheme != "https" or not parsed.hostname or parsed.username
-                or parsed.password or parsed.path or parsed.query or parsed.fragment):
-            raise ValueError("PUBLIC_ORIGIN must be an HTTPS origin without a path, query or fragment.")
     return Settings(os.getenv("AZURE_AI_PROJECT_ENDPOINT", "").strip().rstrip("/"),
                     os.getenv("AZURE_VOICE_AGENT_NAME", "").strip(),
                     os.getenv("AZURE_API_VERSION", "v1"),
@@ -433,7 +441,8 @@ def load_settings():
                     public_origin, os.getenv("PERSONALIZATION_REQUIRED", "").lower() == "true",
                     os.getenv("ALLOW_AGENT_RECREATE", "").lower() == "true",
                     os.getenv("GPT_LIVE_DEPLOYMENT", "gpt-live-1").strip(),
-                    os.getenv("GPT_LIVE_BACKEND_DEPLOYMENT", "gpt-5.4").strip())
+                    os.getenv("GPT_LIVE_BACKEND_DEPLOYMENT", "gpt-5.4").strip(),
+                    trusted_azure_ingress=os.getenv("TRUSTED_AZURE_INGRESS", "").lower() == "true")
 
 
 def origin_allowed(host_value, scheme, origin, public_origin=""):
@@ -459,6 +468,25 @@ def selected_settings(request):
     if agent == companion.agent:
         return companion
     raise web.HTTPBadRequest(text="Choose the configured Agent or its GPT Live companion.")
+
+
+@web.middleware
+async def client_access(request, handler):
+    cfg = request.app[SETTINGS]
+    if cfg.trusted_azure_ingress:
+        # Only an ingress that strips client-supplied identity headers may set this identity.
+        if request.path != "/health" and not request.headers.get("X-MS-CLIENT-PRINCIPAL-ID", "").strip():
+            raise web.HTTPUnauthorized(text="Sign in through the authenticated Azure ingress.")
+    else:
+        try:
+            peer = ipaddress.ip_address(request.remote or "")
+        except ValueError:
+            raise web.HTTPForbidden(text="Local mode requires a loopback network peer.") from None
+        if isinstance(peer, ipaddress.IPv6Address) and peer.ipv4_mapped:
+            peer = peer.ipv4_mapped
+        if not peer.is_loopback:
+            raise web.HTTPForbidden(text="Local mode requires a loopback network peer.")
+    return await handler(request)
 
 
 @web.middleware
@@ -1268,7 +1296,7 @@ DOWNLOAD_SECRET = web.AppKey("download_secret", bytes)
 
 
 def create_app(settings=None, token_provider=None):
-    app = web.Application(middlewares=[security_headers], client_max_size=MAX_FRAME)
+    app = web.Application(middlewares=[security_headers, client_access], client_max_size=MAX_FRAME)
     app[SETTINGS] = settings or load_settings()
     app[TOKENS] = token_provider or AzureTokenProvider()
     app[PREPARATION] = asyncio.Lock()
@@ -1291,4 +1319,4 @@ def create_app(settings=None, token_provider=None):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     app = create_app()
-    web.run_app(app, host="0.0.0.0", port=int(os.getenv("PORT", "8080")))
+    web.run_app(app, host=app[SETTINGS].listen_host, port=int(os.getenv("PORT", "8080")))
