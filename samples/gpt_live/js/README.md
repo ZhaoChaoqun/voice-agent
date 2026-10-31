@@ -14,6 +14,9 @@ access token from your `az login` session.
 The GPT Live APIs are not in an npm release yet, so `package.json` installs the bundled
 preview package `dist/azure-ai-projects-2.10.0.tgz`; see
 [`dist/README.md`](../../../dist/README.md) for its source and checksum.
+Azure Identity is pinned to `4.14.1`, which requires patched MSAL Node `7.1.0`
+or later for [GHSA-xcx6-jx8p-x3h5](https://github.com/AzureAD/microsoft-authentication-library-for-js/security/advisories/GHSA-xcx6-jx8p-x3h5).
+This sample uses Azure CLI authentication rather than the affected authorization-code flow.
 
 ## Files
 
@@ -44,8 +47,10 @@ npm start
 ```
 
 `npm ci` installs the bundled package from `../../../dist` (the path is relative to
-`package.json`). The lockfile records the public npm registry; npm uses your configured
-registry instead when you have one.
+`package.json`). The patched Azure Identity and MSAL packages resolve through
+Microsoft's anonymously accessible `npm-public` feed because these versions are
+not yet available on npmjs. Other packages retain their public npm registry URLs;
+npm uses your configured registry for those URLs when you have one.
 
 Open the printed address, `http://localhost:8080`, click **Start**, allow the microphone,
 and wait for **Ready**. Then ask, for example, **"Please correct my English: I goed to school
