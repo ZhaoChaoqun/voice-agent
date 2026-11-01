@@ -68,6 +68,34 @@ instructions, use [02: MCP settings](../docs/02_mcp_settings.md).
 For the execution order of that optional CLI/local MCP path, use
 [03: Start and run the samples](../docs/03_run_samples.md).
 
+## Finance session persistence
+
+Both finance stores accept identifiers starting with an ASCII letter or digit,
+followed by ASCII letters, digits, dots, underscores, or hyphens. Windows device
+names are excluded. Use the exact `call_id` or `session_id` returned by the tools;
+server-generated IDs are unchanged. Invalid identifiers raise `invalid_identifier`
+(reported as an MCP tool error), including when persistence is disabled.
+
+JSON session files must be direct children of the configured state directory,
+must not be symbolic links, and must contain the identifier used to retrieve them.
+Invalid paths or mismatched records raise `invalid_session_path` or
+`session_identifier_mismatch` before being cached. The same checks protect writes,
+idempotency-cache access, and the OTP store's internal deletion method; deletion
+is not an exposed MCP tool.
+
+Keep state directories writable only by the service administrator. These checks
+reject pre-existing symlinks but do not defend against a local process replacing
+files during filesystem operations or creating hard links. Path confinement is
+not per-caller authorization for otherwise valid session IDs.
+
+Run the offline finance regressions from this directory (the OTP service requires
+a POSIX runtime with `fcntl`):
+
+```bash
+PYTHONPATH=app .venv/bin/python -m unittest discover \
+    -s tests -p 'test_finance*.py' -v
+```
+
 ## Validate transport changes
 
 Run the focused shared MCP suite from this directory with the application on

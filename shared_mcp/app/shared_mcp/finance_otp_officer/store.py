@@ -5,6 +5,7 @@ import threading
 from pathlib import Path
 from typing import Any
 
+from ..session_paths import session_path
 from .domain import CallSession, LoanInterest, SearchAttempt, Turn
 
 
@@ -143,23 +144,23 @@ class SessionStore:
             state_dir.mkdir(parents=True, exist_ok=True)
 
     def _path(self, session_id: str) -> Path | None:
-        if self._state_dir is None:
-            return None
-        return self._state_dir / f"{session_id}.json"
+        return session_path(self._state_dir, session_id)
 
     def create(self, session: CallSession) -> None:
         with self._lock:
+            self._persist(session)
             self._sessions[session.session_id] = session
             self._operations.setdefault(session.session_id, {})
-            self._persist(session)
 
     def get(self, session_id: str) -> CallSession | None:
         with self._lock:
+            path = self._path(session_id)
             if session_id in self._sessions:
                 return self._sessions[session_id]
-            path = self._path(session_id)
             if path is not None and path.exists():
                 session = session_from_dict(json.loads(path.read_text("utf-8")))
+                if session.session_id != session_id:
+                    raise ValueError("session_identifier_mismatch")
                 self._sessions[session_id] = session
                 self._operations.setdefault(session_id, {})
                 return session
@@ -167,14 +168,14 @@ class SessionStore:
 
     def save(self, session: CallSession) -> None:
         with self._lock:
-            self._sessions[session.session_id] = session
             self._persist(session)
+            self._sessions[session.session_id] = session
 
     def delete(self, session_id: str) -> bool:
         with self._lock:
+            path = self._path(session_id)
             existed = self._sessions.pop(session_id, None) is not None
             self._operations.pop(session_id, None)
-            path = self._path(session_id)
             if path is not None and path.exists():
                 path.unlink()
                 existed = True
@@ -184,12 +185,14 @@ class SessionStore:
         self, session_id: str, operation_id: str
     ) -> dict[str, Any] | None:
         with self._lock:
+            self._path(session_id)
             return self._operations.get(session_id, {}).get(operation_id)
 
     def remember_operation(
         self, session_id: str, operation_id: str, result: dict[str, Any]
     ) -> None:
         with self._lock:
+            self._path(session_id)
             self._operations.setdefault(session_id, {})[operation_id] = result
 
     def _persist(self, session: CallSession) -> None:
