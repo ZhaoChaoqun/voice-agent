@@ -11,10 +11,13 @@ param(
 $ErrorActionPreference = "Stop"
 
 function Invoke-AzureCli {
-    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments)
+    param(
+        [Parameter(Mandatory = $true)][string]$Operation,
+        [Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments
+    )
     & az @Arguments
     if ($LASTEXITCODE -ne 0) {
-        throw "Azure CLI command failed: az $($Arguments -join ' ')"
+        throw "Azure CLI operation failed: $Operation (exit code $LASTEXITCODE)."
     }
 }
 
@@ -49,7 +52,7 @@ if (-not $projectEndpoint) {
 
 Push-Location $root
 try {
-    $account = Invoke-AzureCli account show | ConvertFrom-Json
+    $account = Invoke-AzureCli -Operation "Read Azure account" account show | ConvertFrom-Json
     $nameSuffix = $account.id.Replace("-", "").Substring(0, 8)
     $registryName = "favw$nameSuffix"
     $deploymentName = "$AppName-$Location"
@@ -88,21 +91,21 @@ try {
     $commonParameters += "personalizationRequired=$($settings['PERSONALIZATION_REQUIRED'] -eq 'true')".ToLowerInvariant()
     $commonParameters += "allowAgentRecreate=$($settings['ALLOW_AGENT_RECREATE'] -eq 'true')".ToLowerInvariant()
 
-    Invoke-AzureCli deployment sub create `
+    Invoke-AzureCli -Operation "Deploy infrastructure" deployment sub create `
         --name $deploymentName `
         --location $Location `
         --template-file infra/main.bicep `
         --parameters $commonParameters `
         --output none
 
-    Invoke-AzureCli acr build `
+    Invoke-AzureCli -Operation "Build container image" acr build `
         --registry $registryName `
         --image "foundry-voice-webrtc:$imageTag" `
         . `
         --output none
 
     $appId = "/subscriptions/$($account.id)/resourceGroups/$ResourceGroup/providers/Microsoft.App/containerApps/$AppName"
-    $principalId = Invoke-AzureCli resource show `
+    $principalId = Invoke-AzureCli -Operation "Read managed identity" resource show `
         --ids $appId `
         --api-version 2024-03-01 `
         --query identity.principalId `
@@ -110,7 +113,7 @@ try {
 
     if (-not $FoundryResourceId) {
         $resourceName = ([uri]$projectEndpoint).Host.Split('.')[0]
-        $FoundryResourceId = Invoke-AzureCli cognitiveservices account list `
+        $FoundryResourceId = Invoke-AzureCli -Operation "Find Foundry resource" cognitiveservices account list `
             --query "[?name=='$resourceName'].id | [0]" `
             --output tsv
     }
@@ -118,13 +121,13 @@ try {
         throw "Could not find the Foundry resource. Run again with -FoundryResourceId <resource-id>."
     }
 
-    $foundryRole = Invoke-AzureCli role assignment list `
+    $foundryRole = Invoke-AzureCli -Operation "Check Foundry role" role assignment list `
         --assignee-object-id $principalId `
         --scope $FoundryResourceId `
         --query "[?roleDefinitionName=='Foundry User'].id | [0]" `
         --output tsv
     if (-not $foundryRole) {
-        Invoke-AzureCli role assignment create `
+        Invoke-AzureCli -Operation "Assign Foundry role" role assignment create `
             --assignee-object-id $principalId `
             --assignee-principal-type ServicePrincipal `
             --role "Foundry User" `
@@ -132,19 +135,19 @@ try {
             --output none
     }
 
-    $fqdn = Invoke-AzureCli resource show `
+    $fqdn = Invoke-AzureCli -Operation "Read application hostname" resource show `
         --ids $appId `
         --api-version 2024-03-01 `
         --query properties.configuration.ingress.fqdn `
         --output tsv
     $publicOrigin = "https://$fqdn"
 
-    $entraApp = Invoke-AzureCli ad app list `
+    $entraApp = Invoke-AzureCli -Operation "Find Entra application" ad app list `
         --display-name $AppName `
         --query "[0]" `
         --output json | ConvertFrom-Json
     if (-not $entraApp) {
-        $entraApp = Invoke-AzureCli ad app create `
+        $entraApp = Invoke-AzureCli -Operation "Create Entra application" ad app create `
             --display-name $AppName `
             --sign-in-audience AzureADMyOrg `
             --web-redirect-uris "$publicOrigin/.auth/login/aad/callback" `
@@ -152,19 +155,19 @@ try {
             --service-management-reference $ServiceManagementReference `
             --output json | ConvertFrom-Json
     } else {
-        Invoke-AzureCli ad app update `
+        Invoke-AzureCli -Operation "Update Entra application" ad app update `
             --id $entraApp.appId `
             --web-redirect-uris "$publicOrigin/.auth/login/aad/callback" `
             --enable-id-token-issuance true `
             --service-management-reference $ServiceManagementReference
     }
 
-    $servicePrincipal = Invoke-AzureCli ad sp list `
+    $servicePrincipal = Invoke-AzureCli -Operation "Find service principal" ad sp list `
         --filter "appId eq '$($entraApp.appId)'" `
         --query "[0].id" `
         --output tsv
     if (-not $servicePrincipal) {
-        Invoke-AzureCli ad sp create --id $entraApp.appId --output none
+        Invoke-AzureCli -Operation "Create service principal" ad sp create --id $entraApp.appId --output none
     }
 
     $finalParameters = $commonParameters + @(
@@ -173,7 +176,7 @@ try {
         "entraTenantId=$($account.tenantId)",
         "entraClientId=$($entraApp.appId)"
     )
-    Invoke-AzureCli deployment sub create `
+    Invoke-AzureCli -Operation "Deploy application configuration" deployment sub create `
         --name $deploymentName `
         --location $Location `
         --template-file infra/main.bicep `

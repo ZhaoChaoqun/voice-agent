@@ -694,6 +694,18 @@ The Service Tree ID is required by Microsoft tenant governance. If resource
 discovery is unavailable, pass `-FoundryResourceId` with the Foundry resource's
 full Azure resource ID.
 
+Deployment-helper failures report a fixed operation label and the Azure CLI exit
+code, never the command arguments, which can include `ICE_SERVERS_JSON` TURN
+credentials. This does not sanitize Azure CLI's own output or shell tracing;
+restrict access to deployment logs and review them before sharing. If earlier
+failed deployments captured credentials, restrict or remove those logs according
+to your retention policy and revoke or rotate any still-valid TURN credentials.
+
+Run the offline deployment-helper regression tests from this directory with
+`python -B -m unittest test_deploy_azure.py` (requires PowerShell 7, `pwsh`).
+They extract the actual helper and mock Azure CLI; no `.env`, sign-in, or cloud
+resources are used.
+
 The tenant policy used by this sample forbids application client secrets, so the
 script configures secretless ID-token sign-in and leaves the token store disabled.
 Unauthenticated browser requests redirect to Microsoft Entra; `/health` remains
