@@ -437,10 +437,15 @@ def load_settings():
                     os.getenv("GPT_LIVE_BACKEND_DEPLOYMENT", "gpt-5.4").strip())
 
 
-def origin_allowed(host_value, scheme, origin, public_origin="", *, remote=None):
-    host = urlsplit(f"http://{host_value}").hostname
+def origin_allowed(host_value, scheme, origin, public_origin="", *, remote=None,
+                   allow_missing_origin=False):
+    try:
+        host = urlsplit(f"http://{host_value}").hostname
+    except ValueError:
+        return False
     if host not in {"localhost", "127.0.0.1", "::1"}:
-        return bool(public_origin and origin == public_origin
+        return bool(public_origin and (origin == public_origin or (
+                        origin is None and allow_missing_origin))
                     and host_value == urlsplit(public_origin).netloc)
     try:
         peer = ipaddress.ip_address(remote or "")
@@ -448,13 +453,15 @@ def origin_allowed(host_value, scheme, origin, public_origin="", *, remote=None)
         return False
     if isinstance(peer, ipaddress.IPv6Address) and peer.ipv4_mapped is not None:
         peer = peer.ipv4_mapped
-    return peer.is_loopback and origin == f"{scheme}://{host_value}"
+    return peer.is_loopback and (origin == f"{scheme}://{host_value}" or (
+        origin is None and allow_missing_origin))
 
 
-def allowed_origin(request):
+def allowed_origin(request, *, allow_missing_origin=False):
     cfg = request.app[SETTINGS]
     return origin_allowed(request.host, request.scheme, request.headers.get("Origin"),
-                          cfg.public_origin, remote=request.remote)
+                          cfg.public_origin, remote=request.remote,
+                          allow_missing_origin=allow_missing_origin)
 
 
 def selected_settings(request):
@@ -470,7 +477,12 @@ def selected_settings(request):
 
 @web.middleware
 async def security_headers(request, handler):
-    response = await handler(request)
+    # Browsers can omit Origin on reads; Host and the actual peer must still be trusted.
+    if (request.method in {"GET", "HEAD"} and request.path != "/health"
+            and not allowed_origin(request, allow_missing_origin=True)):
+        response = web.json_response({"error": "Open the page on this server."}, status=403)
+    else:
+        response = await handler(request)
     response.headers.update({
         "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
         "Referrer-Policy": "no-referrer", "Permissions-Policy": "microphone=(self)",

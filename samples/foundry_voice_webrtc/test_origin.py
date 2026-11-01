@@ -11,7 +11,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 
 from server import (Settings, allowed_origin, bridge, change_agent_model, create_app,
-                    download_conversation, origin_allowed, prepare_agent, recreate_agent)
+                    download_conversation, origin_allowed, prepare_agent, recreate_agent,
+                    security_headers)
 
 
 class OriginTests(unittest.TestCase):
@@ -51,6 +52,91 @@ class OriginTests(unittest.TestCase):
 
 
 class LocalBoundaryTests(unittest.IsolatedAsyncioTestCase):
+    @patch("server.lookup_configured_agent", new_callable=AsyncMock, return_value=None)
+    @patch("server.inspect_configured_agent", new_callable=AsyncMock, return_value={})
+    async def test_read_routes_reject_untrusted_hosts_and_origins_before_credentials(
+            self, inspect_agent, lookup_agent):
+        tokens = AsyncMock()
+        app = create_app(Settings("https://example.services.ai.azure.com/api/projects/demo",
+                                  "demo-agent"), tokens)
+        async with TestClient(TestServer(app)) as client:
+            for method in ("GET", "HEAD"):
+                for path in ("/api/config", "/api/agent", "/api/agent/settings"):
+                    for headers in (
+                        {"Host": "attacker.example:8080"},
+                        {"Host": "attacker.example:8080", "Origin": "http://attacker.example:8080"},
+                        {"Origin": "https://attacker.example"},
+                        {"Origin": "null"},
+                    ):
+                        with self.subTest(method=method, path=path, headers=headers):
+                            response = await client.request(method, path, headers=headers)
+                            self.assertEqual(response.status, 403)
+                            self.assertEqual(response.headers["Cache-Control"], "no-store")
+        tokens.get_token.assert_not_awaited()
+        inspect_agent.assert_not_awaited()
+        lookup_agent.assert_not_awaited()
+
+    async def test_read_routes_reject_network_peers_despite_forwarded_headers(self):
+        app = create_app(Settings("", ""))
+        headers = {"Host": "127.0.0.1:8080",
+                   "X-Forwarded-For": "127.0.0.1", "X-Real-IP": "127.0.0.1",
+                   "Forwarded": "for=127.0.0.1;host=127.0.0.1:8080;proto=http"}
+        for remote in ("198.51.100.42", "::ffff:198.51.100.42", None):
+            for method in ("GET", "HEAD"):
+                for path in ("/api/config", "/api/agent", "/api/agent/settings"):
+                    with self.subTest(remote=remote, method=method, path=path):
+                        request = make_mocked_request(method, path, headers=headers, app=app).clone(
+                            remote=remote)
+                        handler = AsyncMock(return_value=web.json_response({}))
+                        response = await security_headers(request, handler)
+                        self.assertEqual(response.status, 403)
+                        handler.assert_not_awaited()
+
+    async def test_trusted_read_requests_allow_missing_or_matching_origin(self):
+        app = create_app(Settings("", "", public_origin="https://voice.example.com"))
+        for host, remote, expected_origin in (
+            ("localhost:8080", "127.0.0.1", "http://localhost:8080"),
+            ("127.0.0.1:8080", "::ffff:127.0.0.1", "http://127.0.0.1:8080"),
+            ("[::1]:8080", "::1", "http://[::1]:8080"),
+            ("voice.example.com", "10.0.0.2", "https://voice.example.com"),
+        ):
+            for origin in (None, expected_origin):
+                for method in ("GET", "HEAD"):
+                    with self.subTest(host=host, origin=origin, method=method):
+                        headers = {"Host": host}
+                        if origin is not None:
+                            headers["Origin"] = origin
+                        request = make_mocked_request(method, "/api/agent/settings",
+                            headers=headers, app=app).clone(remote=remote)
+                        handler = AsyncMock(return_value=web.json_response({}))
+                        response = await security_headers(request, handler)
+                        self.assertEqual(response.status, 200)
+                        handler.assert_awaited_once_with(request)
+
+    async def test_cloud_reads_reject_wrong_host_or_origin(self):
+        app = create_app(Settings("", "", public_origin="https://voice.example.com"))
+        for headers in (
+            {"Host": "attacker.example"},
+            {"Host": "attacker.example", "Origin": "https://voice.example.com"},
+            {"Host": "voice.example.com", "Origin": "https://attacker.example"},
+            {"Host": "voice.example.com", "Origin": "null"},
+        ):
+            with self.subTest(headers=headers):
+                request = make_mocked_request("GET", "/api/agent/settings",
+                    headers=headers, app=app).clone(remote="10.0.0.2")
+                handler = AsyncMock(return_value=web.json_response({}))
+                response = await security_headers(request, handler)
+                self.assertEqual(response.status, 403)
+                handler.assert_not_awaited()
+
+    async def test_health_probe_does_not_require_a_trusted_host(self):
+        tokens = AsyncMock()
+        async with TestClient(TestServer(create_app(Settings("", ""), tokens))) as client:
+            response = await client.get("/health", headers={"Host": "container-probe"})
+            self.assertEqual(response.status, 200)
+            self.assertEqual(await response.json(), {"status": "ok"})
+        tokens.get_token.assert_not_awaited()
+
     async def test_network_peer_cannot_authorize_with_forged_or_forwarded_loopback_headers(self):
         tokens = AsyncMock()
         app = create_app(Settings("https://example.services.ai.azure.com/api/projects/demo",
