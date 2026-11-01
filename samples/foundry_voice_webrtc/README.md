@@ -163,7 +163,12 @@ another free port if needed. Use **End** to stop the microphone and connections.
 
 The local server binds to `127.0.0.1` by default. Its loopback-origin guard also
 checks the connection's actual peer address, so a network client cannot impersonate
-a local caller by forging `Host`, `Origin`, or forwarding headers. Do not expose
+a local caller by forging `Host`, `Origin`, or forwarding headers. All GET/HEAD
+requests except the non-sensitive `/health` probe pass this guard before a handler
+can access configuration or Azure credentials. Reads may omit `Origin`, as browsers
+normally do, but must still use a trusted host and peer; a supplied origin must
+match. This rejects attacker-controlled hosts used for DNS rebinding. Mutating
+requests and voice WebSockets continue to require a matching `Origin`. Do not expose
 the developer's Azure CLI identity through an unauthenticated network listener.
 Non-loopback binding requires an explicit `BIND_HOST` setting and authenticated
 ingress; origin checks are not user authentication.
