@@ -404,6 +404,26 @@ test('GPT Live selection previews only its voices and omits independent transcri
   assert.equal(ui.element('agent-transcription-choice').disabled, false);
 });
 
+test('legacy Live greeting upgrade requires explicit save and uses the returned immutable version', async () => {
+  const requests = [];
+  const live = {configured:true, agent:'demo-agent', exists:true, model:'gpt-live-1', version:'1',
+    liveGreetingMissing:true};
+  const fetch = async (url, options = {}) => {
+    requests.push([url, options.body ? JSON.parse(options.body) : null]);
+    return {ok:true, json:async()=>url === '/api/agent/model' ?
+      {...live, version:'2', liveGreetingMissing:false} : live};
+  };
+  const ui = await setup('websocket', {fetch});
+  assert.deepEqual(requests, [['/api/config', null], ['/api/agent', null]]);
+  ui.stop();
+  assert.equal(ui.element('save-model').textContent, 'Save greeting version');
+  assert.equal(ui.element('save-model').disabled, false);
+  await ui.element('save-model').onclick();
+  assert.deepEqual(requests[2], ['/api/agent/model', {model:'gpt-live-1', version:'1'}]);
+  assert.equal(ui.element('agent-version').textContent, '2');
+  assert.equal(ui.element('save-model').disabled, true);
+});
+
 test('initial Live companion supports round-trip model switching while preserving the configured realtime base', async () => {
   const requests = [];
   const realtime = {agent:'demo-agent', exists:true, model:'gpt-realtime-2.1', version:'3',

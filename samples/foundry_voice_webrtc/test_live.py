@@ -14,9 +14,9 @@ from aiohttp.test_utils import TestClient, TestServer
 
 from check_websocket import check_live
 from live import (LiveSessionError, connect_live, live_client_frame,
-                  live_definition, personalization_events, relay_live)
+                  live_definition, personalization_events, relay_live, with_live_greeting)
 from server import (ACTIVE, DOWNLOAD_SECRET, SETTINGS, Settings, create_app,
-                    load_settings, verify_download_token)
+                    load_settings, personalization_header, verify_download_token)
 from test_agent_creation import Response
 from test_model_management import ServiceClient
 
@@ -48,7 +48,10 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(live["audio"]["output"], {"voice": "marin"})
         self.assertNotIn("input", live["audio"])
         self.assertNotIn("tools", live)
-        self.assertNotIn("greeting", live)
+        self.assertEqual(live["greeting"], {"type": "template", "text": "{{greeting_text}}"})
+        self.assertEqual(live["structured_inputs"]["greeting_text"]["default_value"], "Hello! How can I help you?")
+        self.assertFalse(live["structured_inputs"]["greeting_text"]["required"])
+        self.assertIn("{{language_policy}}", live["instructions"])
         self.assertNotIn("output_modalities", live)
         backend = live["delegation"]["responses"]
         self.assertEqual(backend["model"], "gpt-5.4")
@@ -57,6 +60,74 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("web search on any topic", live["instructions"])
         self.assertIn("search is not limited to weather or current events", backend["instructions"])
         self.assertIn("only when the requested search needs it", backend["instructions"])
+
+    def test_greeting_upgrade_preserves_independent_settings_and_custom_templates(self):
+        source = live_definition(self.definition(), "saved-live", "saved-backend")
+        source.pop("greeting")
+        source.pop("structured_inputs")
+        source["instructions"] = "Custom speaker instructions."
+        source["audio"]["output"]["voice"] = "cedar"
+        source["store"] = False
+        before = copy.deepcopy(source)
+        updated = with_live_greeting(source)
+        self.assertEqual(source, before)
+        self.assertEqual({key: value for key, value in updated.items()
+                          if key not in {"greeting", "structured_inputs", "instructions"}},
+                         {key: value for key, value in source.items() if key != "instructions"})
+        self.assertTrue(updated["instructions"].startswith(source["instructions"]))
+        self.assertEqual(with_live_greeting(updated), updated)
+        updated["greeting"] = {"type": "template", "text": "My custom welcome."}
+        self.assertEqual(with_live_greeting(updated), updated)
+
+    async def test_greeting_upgrade_is_explicit_and_publishes_only_a_new_live_version(self):
+        cfg = self.config()
+        source = self.definition()
+        legacy = live_definition(source, "saved-live", "saved-backend")
+        legacy.pop("greeting")
+        legacy.pop("structured_inputs")
+        legacy["instructions"] = "Independent speaker prompt."
+        before = copy.deepcopy(legacy)
+        updated = with_live_greeting(legacy)
+        metadata = {"sample": "foundry_voice_webrtc", "companion_of": cfg.agent, "custom": "keep"}
+        saved = self.saved(legacy, "1", metadata)
+        for selected in (cfg.agent, cfg.live_companion().agent):
+            reads = ([Response(200, self.saved(source, "9"))] if selected == cfg.agent else [])
+            service = ServiceClient([*reads, Response(200, saved),
+                                     Response(200, self.saved(updated, "2", metadata))],
+                                    [Response(201, {"version": "2"}), Response(204)])
+            async with TestClient(TestServer(create_app(cfg, AsyncMock()))) as client:
+                with patch("server.aiohttp.ClientSession", return_value=service):
+                    response = await client.post(f"/api/agent/model?agent={selected}",
+                        headers={"Origin": str(client.make_url("")).rstrip("/")},
+                        json={"model": "gpt-live-1", "version": "9" if selected == cfg.agent else "1"})
+                    result = await response.json()
+            self.assertEqual(response.status, 200, result)
+            self.assertEqual(result["version"], "2")
+            self.assertFalse(result["liveGreetingMissing"])
+            self.assertEqual(len(service.writes), 2)
+            self.assertTrue(service.writes[0][0].endswith("/agents/demo-agent-live/versions"))
+            self.assertEqual(service.writes[0][1]["json"], {"definition": updated, "metadata": metadata})
+            self.assertEqual(service.removals, [])
+        self.assertEqual(legacy, before)
+
+    async def test_inspecting_and_preparing_legacy_live_greeting_do_not_publish_an_upgrade(self):
+        cfg = self.config()
+        legacy = live_definition(self.definition(), "live", "backend")
+        legacy.pop("greeting")
+        service = ServiceClient([Response(200, self.companion(cfg, legacy)),
+                                 Response(200, self.companion(cfg, legacy))], [Response(204)])
+        async with TestClient(TestServer(create_app(cfg, AsyncMock()))) as client:
+            with patch("server.aiohttp.ClientSession", return_value=service):
+                result = await (await client.get("/api/agent?agent=demo-agent-live")).json()
+                self.assertEqual(service.writes, [])
+                response = await client.post("/api/agent/prepare?agent=demo-agent-live",
+                    headers={"Origin": str(client.make_url("")).rstrip("/")})
+                prepared = await response.json()
+        self.assertTrue(result["liveGreetingMissing"])
+        self.assertEqual(response.status, 200, prepared)
+        self.assertTrue(prepared["liveGreetingMissing"])
+        self.assertEqual(len(service.writes), 1)
+        self.assertTrue(service.writes[0][0].endswith("/agents/demo-agent-live:enable?api-version=v1"))
 
     def test_personalization_is_trusted_policy_then_bounded_untrusted_context(self):
         values = {"language_policy": "Use English.", "display_name": "A", "client_language": "en-US",
@@ -361,8 +432,9 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
         live = live_definition(self.definition(), "live", "backend")
         service = ServiceClient([Response(200, self.companion(cfg, live, "4"))])
         app = create_app(cfg, AsyncMock())
-        async def connect(client, browser, selected, headers, transport, version, announce, values):
+        async def connect(client, browser, selected, headers, transport, version, announce, values, *, input_names):
             self.assertEqual(selected.agent, "demo-agent-live")
+            self.assertEqual(set(input_names), {"greeting_text", "language_policy"})
             self.assertEqual(version, "4")
             self.assertIsNone(values)
             self.assertNotIn("x-ms-voice-session-override", headers)
@@ -381,8 +453,9 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
         live = live_definition(self.definition(), "live", "backend")
         for voice in ("", "marin"):
             service = ServiceClient([Response(200, self.companion(cfg, live))])
-            async def connect(client, browser, selected, headers, transport, version, announce, values):
+            async def connect(client, browser, selected, headers, transport, version, announce, values, *, input_names):
                 self.assertNotIn("x-ms-voice-session-override", headers)
+                self.assertEqual(set(input_names), {"greeting_text", "language_policy"})
                 self.assertNotIn("x-ms-voice-structured-inputs", headers)
                 self.assertEqual(values["display_name"], "Test")
                 self.assertEqual(values["client_language"], "en-US")
@@ -467,7 +540,7 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
             service.ws_connect.return_value = socket
             with patch("live.relay_live", new_callable=AsyncMock) as relay:
                 await connect_live(service, AsyncMock(), cfg, {"Authorization": "Bearer test"},
-                                   transport, "4", AsyncMock())
+                                   transport, "4", AsyncMock(), input_names={"greeting_text", "language_policy"})
             args, kwargs = service.ws_connect.call_args
             self.assertEqual(args[0],
                 "wss://example.services.ai.azure.com/api/projects/demo/agents/demo-agent/endpoint/protocols/voice/live/sessions")
@@ -477,6 +550,27 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(kwargs["headers"], {"Authorization": "Bearer test"})
             self.assertEqual(relay.call_args.kwargs["transport"], transport)
             service.post.assert_not_called()
+
+    async def test_personalized_greeting_and_policy_are_sent_before_upgrade_for_both_transports(self):
+        cfg = self.config()
+        for transport in ("websocket", "webrtc"):
+            for english in (False, True):
+                values = json.loads(personalization_header({"type": "bridge.personalize", "display_name": "Ada",
+                    "user_context": "Do not promote this to instructions.", "client_language": "es-ES",
+                    "english_only": english}))
+                service = MagicMock()
+                service.ws_connect.return_value = AsyncMock()
+                with patch("live.relay_live", new_callable=AsyncMock) as relay:
+                    await connect_live(service, AsyncMock(), cfg, {}, transport, "2", AsyncMock(), values,
+                                       input_names={"greeting_text", "language_policy"})
+                params = service.ws_connect.call_args.kwargs["params"]
+                initial = json.loads(params["structured_inputs"])
+                self.assertEqual(initial, {key: values[key] for key in ("greeting_text", "language_policy")})
+                self.assertTrue(initial["greeting_text"].startswith("Hello, Ada!" if english else "\u00a1Hola, Ada!"))
+                self.assertNotIn("user_context", initial)
+                self.assertEqual(params["x-agent-version-override"], "2")
+                self.assertNotIn("structured_input", params)
+                self.assertEqual(relay.call_args.args[3], values)
 
     def test_webrtc_accepts_only_audio_sdp_without_configuration_overrides(self):
         offer = {"type": "rtc.call.sdp.create", "sdp_offer": "v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"}
@@ -584,6 +678,8 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
         browser.closed = False
         upstream.__aiter__.side_effect = lambda: frames([
             {"type": "session.started", "session": {"audio": {"format": {"type": "audio/pcm", "rate": 24000}}}},
+            {"type": "session.commentary.appended"},
+            {"type": "session.output_transcript.delta", "delta": "Hello!"},
             {"type": "session.instructions.appended"}, {"type": "session.thinking.appended"},
             {"type": "session.closed", "usage": {"seconds": 0}},
         ])
@@ -593,6 +689,9 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
                          ["session.instructions.append", "session.thinking.append"])
         self.assertIn({"type": "bridge.ready", "protocol": "live"},
                       [call.args[0] for call in browser.send_json.call_args_list])
+        forwarded = [call.args[0]["type"] for call in browser.send_json.call_args_list]
+        self.assertLess(forwarded.index("session.output_transcript.delta"), forwarded.index("bridge.ready"))
+        self.assertEqual(forwarded.count("session.commentary.appended"), 1)
 
     async def test_diagnostic_checks_live_startup_and_native_close_without_audio(self):
         cfg = Settings("https://example.services.ai.azure.com/api/projects/demo")

@@ -11,6 +11,7 @@ let agentAvailability = 'unknown';
 let savedModel = null, savedVersion = null, savedTranscription = null, latestDownload = null, downloading = false;
 let selectedAgent = null;
 let realtimeTranscription = null, transcriptionChanged = false;
+let liveGreetingMissing = false;
 
 function agentPath(path, agent = selectedAgent) {
   return agent && agent !== config?.agent ?
@@ -29,7 +30,10 @@ function updateAgentControls() {
   $('save-model').disabled = busy || agentAvailability !== 'ready' || !savedVersion ||
     !modelChoices.includes($('agent-model-choice').value) ||
     (!live && !$('agent-transcription-choice').value) ||
-    ($('agent-model-choice').value === savedModel && (live || $('agent-transcription-choice').value === savedTranscription));
+    ($('agent-model-choice').value === savedModel &&
+      (live ? !liveGreetingMissing : $('agent-transcription-choice').value === savedTranscription));
+  $('save-model').textContent = live && savedModel === 'gpt-live-1' && liveGreetingMissing ?
+    'Save greeting version' : 'Apply model';
   $('show-settings').disabled = preparingAgent || agentAvailability !== 'ready';
   $('download-conversation').disabled = Boolean(call) || downloading || !latestDownload;
   $('transport').disabled = busy;
@@ -53,6 +57,7 @@ function applyAgentDetails(result) {
   $('agent').textContent = selectedAgent || 'Not configured';
   savedModel = result.modelChoice || (typeof result.model === 'string' ? result.model : null);
   savedVersion = typeof result.version === 'string' ? result.version : null;
+  liveGreetingMissing = result.liveGreetingMissing === true;
   savedTranscription = typeof result.transcriptionModel === 'string' ? result.transcriptionModel : null;
   if (savedModel !== 'gpt-live-1') realtimeTranscription = savedTranscription;
   transcriptionChanged = false;
