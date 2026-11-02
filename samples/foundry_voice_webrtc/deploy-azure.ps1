@@ -4,6 +4,7 @@ param(
     [string]$Location = "canadacentral",
     [string]$AppName = "foundry-voice-agent",
     [string]$FoundryResourceId = "",
+    [string]$GptLiveFoundryResourceId = "",
     [Parameter(Mandatory = $true)]
     [string]$ServiceManagementReference
 )
@@ -85,6 +86,9 @@ try {
     if ($settings.ContainsKey("GPT_LIVE_BACKEND_DEPLOYMENT")) {
         $commonParameters += "gptLiveBackendDeployment=$($settings['GPT_LIVE_BACKEND_DEPLOYMENT'])"
     }
+    if ($settings.ContainsKey("GPT_LIVE_PROJECT_ENDPOINT")) {
+        $commonParameters += "gptLiveProjectEndpoint=$($settings['GPT_LIVE_PROJECT_ENDPOINT'])"
+    }
     if ($settings.ContainsKey("DEFAULT_TRANSPORT")) {
         $commonParameters += "defaultTransport=$($settings['DEFAULT_TRANSPORT'])"
     }
@@ -122,18 +126,34 @@ try {
         throw "Could not find the Foundry resource. Run again with -FoundryResourceId <resource-id>."
     }
 
-    $foundryRole = Invoke-AzureCli role assignment list `
-        --assignee-object-id $principalId `
-        --scope $FoundryResourceId `
-        --query "[?roleDefinitionName=='Foundry User'].id | [0]" `
-        --output tsv
-    if (-not $foundryRole) {
-        Invoke-AzureCli role assignment create `
+    $foundryResources = @($FoundryResourceId)
+    $liveProjectEndpoint = $settings["GPT_LIVE_PROJECT_ENDPOINT"]
+    if ($liveProjectEndpoint -and $liveProjectEndpoint.TrimEnd('/') -ne $projectEndpoint.TrimEnd('/')) {
+        if (-not $GptLiveFoundryResourceId) {
+            $liveResourceName = ([uri]$liveProjectEndpoint).Host.Split('.')[0]
+            $GptLiveFoundryResourceId = Invoke-AzureCli cognitiveservices account list `
+                --query "[?name=='$liveResourceName'].id | [0]" `
+                --output tsv
+        }
+        if (-not $GptLiveFoundryResourceId) {
+            throw "Could not find the GPT Live resource. Pass -GptLiveFoundryResourceId <resource-id>, including when it is in another subscription."
+        }
+        $foundryResources += $GptLiveFoundryResourceId
+    }
+    foreach ($resourceId in ($foundryResources | Select-Object -Unique)) {
+        $foundryRole = Invoke-AzureCli role assignment list `
             --assignee-object-id $principalId `
-            --assignee-principal-type ServicePrincipal `
-            --role "Foundry User" `
-            --scope $FoundryResourceId `
-            --output none
+            --scope $resourceId `
+            --query "[?roleDefinitionName=='Foundry User'].id | [0]" `
+            --output tsv
+        if (-not $foundryRole) {
+            Invoke-AzureCli role assignment create `
+                --assignee-object-id $principalId `
+                --assignee-principal-type ServicePrincipal `
+                --role "Foundry User" `
+                --scope $resourceId `
+                --output none
+        }
     }
 
     $fqdn = Invoke-AzureCli resource show `

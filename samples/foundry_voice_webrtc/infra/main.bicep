@@ -35,6 +35,8 @@ param azureApiVersion string
 param foundryFeatures string
 param gptLiveDeployment string = 'gpt-live-1'
 param gptLiveBackendDeployment string = 'gpt-5.4'
+@secure()
+param gptLiveProjectEndpoint string = ''
 @allowed(['websocket', 'webrtc'])
 param defaultTransport string = 'websocket'
 param startWithGptLive bool = false
@@ -110,6 +112,7 @@ module containerApp './modules/container-app.bicep' = {
     foundryFeatures: foundryFeatures
     gptLiveDeployment: gptLiveDeployment
     gptLiveBackendDeployment: gptLiveBackendDeployment
+    gptLiveProjectEndpoint: gptLiveProjectEndpoint
     defaultTransport: defaultTransport
     startWithGptLive: startWithGptLive
     iceServersJson: iceServersJson

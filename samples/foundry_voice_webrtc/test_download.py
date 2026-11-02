@@ -98,7 +98,8 @@ class DownloadTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(await response.json(), {"error": "Not ready"})
 
     async def test_downloads_remain_bound_to_original_or_companion_regardless_of_current_selection(self):
-        cfg = Settings("https://example.services.ai.azure.com/api/projects/demo", "agent")
+        cfg = Settings("https://example.services.ai.azure.com/api/projects/demo", "agent",
+                       live_project_endpoint="https://live.services.ai.azure.com/api/projects/tip")
         app = create_app(cfg, AsyncMock())
         writing = AsyncMock(side_effect=lambda client, cfg, headers, conversation, output: output.write(b"archive"))
         async with TestClient(TestServer(app)) as client:
@@ -110,6 +111,8 @@ class DownloadTests(unittest.IsolatedAsyncioTestCase):
                         headers=origin, json={"downloadToken": token})
                     self.assertEqual(response.status, 200, await response.text())
                     self.assertEqual(writing.call_args.args[1].agent, agent)
+                    self.assertEqual(writing.call_args.args[1].project_url(),
+                        cfg.project_url() if agent == cfg.agent else cfg.live_project_endpoint)
                 other = cfg.live_companion().agent if agent == cfg.agent else cfg.agent
                 response = await client.post(f"/api/conversation/download?agent={other}",
                     headers=origin, json={"downloadToken": token})

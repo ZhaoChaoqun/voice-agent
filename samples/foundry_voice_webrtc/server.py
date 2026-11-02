@@ -362,6 +362,7 @@ class Settings:
     companion_for: str = ""
     default_transport: str = "websocket"
     start_with_live: bool = False
+    live_project_endpoint: str = ""
 
     def __post_init__(self):
         object.__setattr__(self, "agent", self.agent.strip() or DEFAULT_AGENT_NAME)
@@ -403,7 +404,8 @@ class Settings:
             name = f"{self.agent[:49]}-live-{digest}"
         if not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?", name):
             raise AgentPreparationError("The configured Agent name cannot form a valid GPT Live companion name.")
-        return replace(self, agent=name, personalization_required=False, companion_for=self.agent)
+        return replace(self, endpoint=self.live_project_endpoint or self.endpoint,
+                       agent=name, personalization_required=False, companion_for=self.agent)
 
     def voice_url(self, transport="webrtc"):
         if transport not in TRANSPORTS:
@@ -440,7 +442,8 @@ def load_settings():
                     os.getenv("GPT_LIVE_DEPLOYMENT", "gpt-live-1").strip(),
                     os.getenv("GPT_LIVE_BACKEND_DEPLOYMENT", "gpt-5.4").strip(),
                     default_transport=os.getenv("DEFAULT_TRANSPORT", "websocket").strip(),
-                    start_with_live=os.getenv("START_WITH_GPT_LIVE", "").lower() == "true")
+                    start_with_live=os.getenv("START_WITH_GPT_LIVE", "").lower() == "true",
+                    live_project_endpoint=os.getenv("GPT_LIVE_PROJECT_ENDPOINT", "").strip().rstrip("/"))
 
 
 def origin_allowed(host_value, scheme, origin, public_origin="", *, remote=None,
