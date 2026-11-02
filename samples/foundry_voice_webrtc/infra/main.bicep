@@ -41,6 +41,7 @@ param gptLiveProjectEndpoint string = ''
 param defaultTransport string = 'websocket'
 param startWithGptLive bool = false
 
+@secure()
 param iceServersJson string = '[{"urls":"stun:stun.l.google.com:19302"}]'
 param personalizationRequired bool = false
 param allowAgentRecreate bool = false

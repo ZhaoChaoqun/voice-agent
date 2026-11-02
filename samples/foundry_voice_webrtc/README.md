@@ -754,6 +754,17 @@ The Service Tree ID is required by Microsoft tenant governance. If resource
 discovery is unavailable, pass `-FoundryResourceId` with the Foundry resource's
 full Azure resource ID.
 
+The script also forwards optional `ICE_SERVERS_JSON`, which may contain
+short-lived TURN credentials. Both the root deployment and Container App module
+declare `iceServersJson` as a secure parameter, keeping its supplied value out of
+ARM deployment parameter history. The runtime uses a Container Apps secret
+reference; the default contains only a public STUN server and no credentials.
+This protection applies to new deployments, not previously recorded history.
+If authenticated TURN configuration was deployed with an older template, rotate
+or revoke credentials that may still be valid and review removal of affected
+deployment-history records under your retention policy. Redeploying does not
+automatically remove past records or copies of them.
+
 The tenant policy used by this sample forbids application client secrets, so the
 script configures secretless ID-token sign-in and leaves the token store disabled.
 Unauthenticated browser requests redirect to Microsoft Entra; `/health` remains
@@ -937,6 +948,19 @@ call clears the previous call's ID; session IDs are not saved in browser storage
 | Retained history unavailable | The full answer is hidden. Check the surfaced retrieval error; restart after a timeout. |
 
 ## Validation and limitations
+
+To check deployment credential handling, install the standalone
+[Bicep CLI](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install)
+on PATH and run this separate offline regression from this directory:
+
+```powershell
+python -m unittest discover -s infra -p test_ice_parameters.py -v
+```
+
+It compiles the root and its local modules with `--no-restore`, checks that both
+deployment boundaries use `secureString`, and checks the public-only default,
+absence of ICE parameter outputs, and runtime secret reference. No Azure login,
+deployment, `.env` file, or actual TURN credentials are used.
 
 Run offline validation from this directory (Node.js is needed only for JavaScript checks):
 
