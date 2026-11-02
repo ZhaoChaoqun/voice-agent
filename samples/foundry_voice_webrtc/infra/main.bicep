@@ -37,6 +37,7 @@ param gptLiveDeployment string = 'gpt-live-1'
 param gptLiveBackendDeployment string = 'gpt-5.4'
 @allowed(['websocket', 'webrtc'])
 param defaultTransport string = 'websocket'
+param startWithGptLive bool = false
 
 param iceServersJson string = '[{"urls":"stun:stun.l.google.com:19302"}]'
 param personalizationRequired bool = false
@@ -110,6 +111,7 @@ module containerApp './modules/container-app.bicep' = {
     gptLiveDeployment: gptLiveDeployment
     gptLiveBackendDeployment: gptLiveBackendDeployment
     defaultTransport: defaultTransport
+    startWithGptLive: startWithGptLive
     iceServersJson: iceServersJson
     personalizationRequired: personalizationRequired
     allowAgentRecreate: allowAgentRecreate

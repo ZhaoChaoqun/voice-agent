@@ -404,6 +404,43 @@ test('GPT Live selection previews only its voices and omits independent transcri
   assert.equal(ui.element('agent-transcription-choice').disabled, false);
 });
 
+test('initial Live companion supports round-trip model switching while preserving the configured realtime base', async () => {
+  const requests = [];
+  const realtime = {agent:'demo-agent', exists:true, model:'gpt-realtime-2.1', version:'3',
+    transcriptionModel:'whisper-1'};
+  const live = {agent:'demo-agent-live', exists:true, model:'gpt-live-1',
+    modelChoice:'gpt-live-1', version:'4'};
+  const fetch = async (url, options = {}) => {
+    requests.push([url, options.body ? JSON.parse(options.body) : null]);
+    const body = url === '/api/config' ?
+      {configured:true, agent:'demo-agent', initialAgent:'demo-agent-live', defaultTransport:'webrtc'} :
+      url === '/api/agent/model?agent=demo-agent-live' ? {...realtime, switchedAgent:true} : live;
+    return {ok:true, json:async()=>body};
+  };
+  const ui = await setup('webrtc', {fetch});
+  assert.deepEqual(requests, [['/api/config', null], ['/api/agent?agent=demo-agent-live', null]]);
+  assert.equal(ui.element('agent').textContent, 'demo-agent-live');
+  assert.equal(ui.element('agent-model-choice').value, 'gpt-live-1');
+  assert.equal(ui.element('transport').value, 'webrtc');
+  ui.stop();
+  ui.element('agent-model-choice').value = 'gpt-realtime-2.1';
+  ui.element('agent-model-choice').onchange();
+  await ui.element('save-model').onclick();
+  assert.equal(ui.element('agent').textContent, 'demo-agent');
+  assert.equal(ui.element('agent-model-choice').value, 'gpt-realtime-2.1');
+  ui.element('agent-model-choice').value = 'gpt-live-1';
+  ui.element('agent-model-choice').onchange();
+  await ui.element('save-model').onclick();
+  assert.equal(ui.element('agent').textContent, 'demo-agent-live');
+  assert.deepEqual(requests.slice(2), [
+    ['/api/agent/model?agent=demo-agent-live', {model:'gpt-realtime-2.1', version:'4'}],
+    ['/api/agent/model', {model:'gpt-live-1', version:'3'}],
+  ]);
+  const reloaded = await setup('webrtc', {fetch});
+  assert.equal(reloaded.element('agent').textContent, 'demo-agent-live');
+  assert.equal(reloaded.element('transport').value, 'webrtc');
+});
+
 test('switching saved Agents routes preparation, settings, audio and previous-call downloads independently', async () => {
   const requests = [];
   let socketUrl;

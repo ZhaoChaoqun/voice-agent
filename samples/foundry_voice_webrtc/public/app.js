@@ -683,7 +683,9 @@ $('transport').onchange = () => {
 };
 try {
   const response = await fetch('/api/config'); if (!response.ok) throw new Error('Could not load server configuration.');
-  config = await response.json(); $('agent').textContent = config.agent || 'Not configured';
+  config = await response.json();
+  selectedAgent = config.initialAgent || config.agent;
+  $('agent').textContent = selectedAgent || 'Not configured';
   $('advanced-agent').hidden = !config.agentRecreateAllowed;
   if (config.personalizationRequired) {
     $('personalize').checked = true;

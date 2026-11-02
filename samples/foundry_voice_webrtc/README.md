@@ -280,15 +280,21 @@ the configured resource. The TiP configuration tested with saved-Agent WebRTC is
 
 ```dotenv
 AZURE_AI_PROJECT_ENDPOINT=https://voice-live-tip-resource.services.ai.azure.com/api/projects/voice-live-tip
-AZURE_VOICE_AGENT_NAME=webrtc-personalized-hd-demo-live
+AZURE_VOICE_AGENT_NAME=webrtc-personalized-hd-demo
 GPT_LIVE_DEPLOYMENT=gpt-live-1
 GPT_LIVE_BACKEND_DEPLOYMENT=gpt-5.4
 DEFAULT_TRANSPORT=webrtc
+START_WITH_GPT_LIVE=true
 ```
 
-This selects the existing saved Live Agent directly, without editing its
-definition. When starting from a realtime Agent instead, select GPT Live and
-save to create or reuse its companion as described below.
+Keep `AZURE_VOICE_AGENT_NAME` pointed at the **realtime base Agent**.
+`START_WITH_GPT_LIVE=true` initially selects its existing `-live` companion,
+without publishing or enabling anything on page load. Switching to a realtime
+model selects the base Agent; selecting GPT Live again reuses its companion.
+Both saved Agents retain their own instructions, configuration and versions.
+The default is `START_WITH_GPT_LIVE=false`. Create a missing companion first by
+starting with the base Agent and selecting/saving GPT Live, as described below;
+a missing or unrelated initial companion is reported as an error, not replaced.
 
 GPT Live uses the voice in the saved Agent's `audio.output.voice`; new companions
 default to `marin`. The Live voice selector is disabled and displays **Saved Agent
@@ -325,8 +331,9 @@ Selecting an unchanged model does not publish an unnecessary version.
 Selection is scoped to the current page, not a mutable server-wide Agent pointer.
 Calls, preparation and YAML settings use the selected Agent; recording download
 tokens remain bound to the Agent that created the conversation, even after
-switching. Reloading the page selects the configured Agent again; selecting GPT
-Live reuses its existing companion across server restarts. Reset is disabled
+switching. Reloading the page selects the configured base Agent, or its Live
+companion when `START_WITH_GPT_LIVE=true`; selecting GPT Live reuses its existing
+companion across server restarts. Reset is disabled
 while GPT Live is selected, and resetting the realtime Agent does not delete the
 companion. To create a companion from updated realtime instructions, use a new
 configured Agent name or manage the saved companion explicitly in Foundry.

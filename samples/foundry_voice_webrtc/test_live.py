@@ -3,6 +3,7 @@
 import asyncio
 import copy
 import json
+import os
 from pathlib import Path
 import re
 import unittest
@@ -15,7 +16,7 @@ from check_websocket import check_live
 from live import (LiveSessionError, connect_live, live_client_frame,
                   live_definition, personalization_events, relay_live)
 from server import (ACTIVE, DOWNLOAD_SECRET, SETTINGS, Settings, create_app,
-                    verify_download_token)
+                    load_settings, verify_download_token)
 from test_agent_creation import Response
 from test_model_management import ServiceClient
 
@@ -77,6 +78,34 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
     def companion(self, cfg, definition, version="1"):
         return self.saved(definition, version, {"sample": "foundry_voice_webrtc",
                                                "voice_companion_for": cfg.agent})
+
+    async def test_initial_live_selection_preserves_the_realtime_base_without_cloud_writes(self):
+        for enabled in (False, True):
+            tokens = AsyncMock()
+            cfg = self.config(start_with_live=enabled)
+            async with TestClient(TestServer(create_app(cfg, tokens))) as client:
+                result = await (await client.get("/api/config")).json()
+            self.assertEqual(result["agent"], "demo-agent")
+            self.assertEqual(result["initialAgent"], "demo-agent-live" if enabled else "demo-agent")
+            tokens.get_token.assert_not_awaited()
+        with patch("server.load_dotenv"), patch.dict(os.environ, {
+                "AZURE_AI_PROJECT_ENDPOINT": self.config().endpoint,
+                "AZURE_VOICE_AGENT_NAME": "demo-agent",
+                "START_WITH_GPT_LIVE": "true"}, clear=True):
+            cfg = load_settings()
+            self.assertEqual(cfg.agent, "demo-agent")
+            self.assertTrue(cfg.start_with_live)
+
+    async def test_missing_initial_companion_is_an_error_without_realtime_creation(self):
+        service = ServiceClient([Response(404), Response(200)])
+        async with TestClient(TestServer(create_app(self.config(start_with_live=True), AsyncMock()))) as client:
+            with patch("server.aiohttp.ClientSession", return_value=service):
+                response = await client.get("/api/agent?agent=demo-agent-live")
+                result = await response.json()
+        self.assertEqual(response.status, 502)
+        self.assertIn("START_WITH_GPT_LIVE=false", result["error"])
+        self.assertEqual(service.writes, [])
+        self.assertEqual(service.removals, [])
 
     async def test_switch_to_live_creates_separate_agent_without_changing_original(self):
         source = self.definition()
