@@ -72,6 +72,15 @@ def live_client_frame(raw, transport):
         raise ValueError("Expected a GPT Live event object.")
     if frame == {"type": "session.close"}:
         return frame
+    if transport == "webrtc" and frame.get("type") == "rtc.call.sdp.create":
+        sdp = frame.get("sdp_offer")
+        if (set(frame) != {"type", "sdp_offer"} or not isinstance(sdp, str)
+                or not sdp.startswith("v=0") or len(sdp) > 65536):
+            raise ValueError("Send a valid GPT Live SDP offer of at most 64 KiB.")
+        media = [line for line in sdp.splitlines() if line.startswith("m=")]
+        if not media or any(not line.startswith("m=audio ") for line in media):
+            raise LiveSessionError("GPT Live WebRTC requires audio-only SDP, without a data channel or video.")
+        return frame
     if transport == "websocket" and frame.get("type") == "session.input_audio.append":
         try:
             audio = base64.b64decode(frame.get("audio", ""), validate=True)
@@ -81,7 +90,7 @@ def live_client_frame(raw, transport):
             raise ValueError("GPT Live audio must be PCM16, at most one second per event.")
         return {"type": frame["type"], "audio": frame["audio"]}
     raise LiveSessionError(
-        "GPT Live accepts audio and end-call events here. Text-only replies and realtime "
+        "GPT Live accepts transport-specific audio/signaling and end-call events here. Text-only replies and realtime "
         "conversation-item controls are unavailable.")
 
 
@@ -109,7 +118,7 @@ def personalization_events(values):
     return events
 
 
-async def relay_live(browser, upstream, on_conversation, personalization=None):
+async def relay_live(browser, upstream, on_conversation, personalization=None, transport="websocket"):
     ready = asyncio.Event()
     closed = asyncio.Event()
     context = personalization_events(personalization)
@@ -121,9 +130,9 @@ async def relay_live(browser, upstream, on_conversation, personalization=None):
             kind = frame.get("type")
             if kind == "session.started":
                 audio = (frame.get("session") or {}).get("audio") or {}
-                if audio.get("format") != {"type": "audio/pcm", "rate": 24000}:
+                if transport == "websocket" and audio.get("format") != {"type": "audio/pcm", "rate": 24000}:
                     raise LiveSessionError("GPT Live did not negotiate PCM16 at 24 kHz.")
-                if frame.get("conversation_id"):
+                if transport == "websocket" and frame.get("conversation_id"):
                     await on_conversation(frame["conversation_id"])
                 if not browser.closed:
                     await browser.send_json(frame)
@@ -159,10 +168,17 @@ async def relay_live(browser, upstream, on_conversation, personalization=None):
             raise LiveSessionError("GPT Live disconnected without confirming final session usage.")
 
     async def send():
+        offer_sent = False
         async for message in browser:
             if message.type != aiohttp.WSMsgType.TEXT:
                 raise ValueError("Send GPT Live JSON events.")
-            frame = live_client_frame(message.data, "websocket")
+            frame = live_client_frame(message.data, transport)
+            if frame["type"] == "rtc.call.sdp.create":
+                if offer_sent or ready.is_set():
+                    raise LiveSessionError("Send exactly one GPT Live WebRTC SDP offer before session startup.")
+                offer_sent = True
+                await upstream.send_json(frame)
+                continue
             if not ready.is_set():
                 raise LiveSessionError("Wait for GPT Live session.started before sending audio.")
             await upstream.send_json(frame)
@@ -202,13 +218,15 @@ def live_session_url(cfg):
 
 
 async def connect_live(client, browser, cfg, headers, transport, version, on_conversation, personalization=None):
-    if transport != "websocket":
-        raise LiveSessionError(
-            "GPT Live saved Agents currently require WebSocket audio in this project. "
-            "Choose WebSocket; WebRTC remains available for the other models.")
+    if transport not in {"websocket", "webrtc"}:
+        raise LiveSessionError("Choose WebSocket or WebRTC for GPT Live.")
     base = live_session_url(cfg)
     params = {"api-version": cfg.api_version, "x-agent-version-override": version}
+    if transport == "webrtc":
+        # Live WebRTC cannot record; this per-call opt-out preserves the saved Agent.
+        params.update({"transport": "webrtc", "store": "false"})
     async with client.ws_connect(base.replace("https://", "wss://", 1), params=params,
-                                 headers=headers, heartbeat=20, max_msg_size=4 * 1024 * 1024) as upstream:
+                                 headers=headers, protocols=["live"],
+                                 heartbeat=20, max_msg_size=4 * 1024 * 1024) as upstream:
         # Foundry starts the saved Agent; do not send session.start again.
-        await relay_live(browser, upstream, on_conversation, personalization)
+        await relay_live(browser, upstream, on_conversation, personalization, transport=transport)

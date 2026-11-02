@@ -54,6 +54,7 @@ async function setup(transport, overrides = {}) {
     call = session;
     session.history = createHistory(session);
     return {markReady, handleEvent, updateTextInput, stop, connectWebRtc, start, openSocket, prepareAgent,
+      getCall: () => call,
       reconnect: () => { call = session; session.history = createHistory(session); }};
   })()`, context).then(api => context.api = api);
   return { ...context.api, element, session, sent, created };
@@ -166,6 +167,67 @@ test('GPT Live retains its session ID after backend errors and session closure',
   await ui.handleEvent(ui.session, {type:'session.closed', usage:{seconds:0}});
   assert.equal(ui.element('session-reference').textContent, 'Session ID: live_session');
   assert.equal(ui.element('session-reference').hidden, false);
+});
+
+test('GPT Live WebRTC uses audio-only SDP, disables recording and keeps the peer until native close', async () => {
+  let socket, peer;
+  const track = {enabled:true, stop() {}};
+  class Socket {
+    static OPEN = 1;
+    readyState = 1;
+    sent = [];
+    constructor(url) { this.url = url; socket = this; }
+    send(raw) { this.sent.push(JSON.parse(raw)); }
+    close() { this.closed = true; }
+  }
+  class Peer {
+    iceGatheringState = 'complete';
+    connectionState = 'new';
+    constructor() { peer = this; }
+    addTrack() {}
+    createDataChannel() { throw Error('Live must not include SCTP in its offer'); }
+    async createOffer() { return {type:'offer', sdp:'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n'}; }
+    async setLocalDescription(offer) { this.localDescription = offer; }
+    async setRemoteDescription(answer) { this.answer = answer; }
+    close() { this.closed = true; }
+  }
+  const ui = await setup('webrtc', {
+    fetch:async url => ({ok:true, json:async()=>url === '/api/config' ?
+      {configured:true, agent:'demo-agent-live', defaultTransport:'webrtc'} :
+      {exists:true, agent:'demo-agent-live', model:'gpt-live-1', modelChoice:'gpt-live-1', version:'1'}}),
+    window:{isSecureContext:true, RTCPeerConnection:Peer, addEventListener() {}},
+    navigator:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[track], getAudioTracks:()=>[track]})}},
+    RTCPeerConnection:Peer, MediaStream:class { getTracks() { return []; } },
+    location:{protocol:'http:', host:'localhost:8080'}, WebSocket:Socket,
+  });
+  ui.stop();
+  assert.equal(ui.element('transport').value, 'webrtc');
+  assert.equal(ui.element('transport').disabled, false);
+  await ui.start();
+  const session = ui.getCall();
+  assert.ok(session?.live);
+  assert.match(socket.url, /transport=webrtc&protocol=live/);
+  assert.equal(socket.sent[0].type, 'rtc.call.sdp.create');
+  assert.doesNotMatch(socket.sent[0].sdp_offer, /m=application/);
+  assert.match(ui.element('download-status').textContent, /not recorded/);
+  assert.equal(ui.element('download-conversation').disabled, true);
+  assert.equal(track.enabled, false);
+  await ui.handleEvent(session, {type:'rtc.call.sdp.created', sdp_answer:'answer', session_id:'live_rtc'});
+  assert.equal(peer.answer.sdp, 'answer');
+  assert.equal(ui.element('session-reference').textContent, 'Session ID: live_rtc');
+  await ui.handleEvent(session, {type:'bridge.ready'});
+  assert.equal(track.enabled, false, 'Readiness must also wait for the media connection');
+  peer.connectionState = 'connected';
+  peer.onconnectionstatechange();
+  assert.equal(track.enabled, true);
+  await ui.element('stop').onclick();
+  assert.equal(socket.sent.at(-1).type, 'session.close');
+  assert.equal(track.enabled, false);
+  assert.ok(!peer.closed);
+  await ui.handleEvent(session, {type:'session.closed', usage:{seconds:15}, reason:'close_requested'});
+  assert.equal(peer.closed, true);
+  assert.match(ui.element('hint').textContent, /15 seconds/);
+  assert.equal(ui.element('transport').disabled, false);
 });
 
 test('Agent preparation failure clears the previous session ID and reports it as unavailable', async () => {
@@ -334,7 +396,7 @@ test('GPT Live selection previews only its voices and omits independent transcri
   assert.equal(ui.element('agent-model-choice').value, 'gpt-live-1');
   assert.equal(ui.element('agent-transcription').textContent, 'Built into GPT Live');
   assert.equal(ui.element('transport').value, 'websocket');
-  assert.equal(ui.element('transport').disabled, true);
+  assert.equal(ui.element('transport').disabled, false);
   ui.element('agent-model-choice').value = 'gpt-5.4';
   ui.element('agent-model-choice').onchange();
   assert.equal(ui.element('live-voice').hidden, true);
