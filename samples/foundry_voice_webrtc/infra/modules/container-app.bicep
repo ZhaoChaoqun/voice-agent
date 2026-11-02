@@ -18,6 +18,8 @@ param azureApiVersion string
 param foundryFeatures string
 param gptLiveDeployment string = 'gpt-live-1'
 param gptLiveBackendDeployment string = 'gpt-5.4'
+@secure()
+param gptLiveProjectEndpoint string = ''
 @allowed(['websocket', 'webrtc'])
 param defaultTransport string = 'websocket'
 param startWithGptLive bool = false
@@ -130,6 +132,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'GPT_LIVE_BACKEND_DEPLOYMENT'
               value: gptLiveBackendDeployment
+            }
+            {
+              name: 'GPT_LIVE_PROJECT_ENDPOINT'
+              value: gptLiveProjectEndpoint
             }
             {
               name: 'DEFAULT_TRANSPORT'

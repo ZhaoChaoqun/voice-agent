@@ -276,11 +276,14 @@ GPT Live uses a self-deployed `gpt-live-1` model and the separate native Live
 protocol, not the realtime protocol. Configure its actual deployment name with
 `GPT_LIVE_DEPLOYMENT` and its Responses backend with
 `GPT_LIVE_BACKEND_DEPLOYMENT` (default `gpt-5.4`). Both deployments must exist in
-the configured resource. The TiP configuration tested with saved-Agent WebRTC is:
+the Live resource. By default this is the configured realtime project; optional
+`GPT_LIVE_PROJECT_ENDPOINT` places only the Live companion in another project.
+For example, configure separate realtime and Live projects:
 
 ```dotenv
-AZURE_AI_PROJECT_ENDPOINT=https://voice-live-tip-resource.services.ai.azure.com/api/projects/voice-live-tip
-AZURE_VOICE_AGENT_NAME=webrtc-personalized-hd-demo
+AZURE_AI_PROJECT_ENDPOINT=https://YOUR-REALTIME-RESOURCE.services.ai.azure.com/api/projects/YOUR-REALTIME-PROJECT
+AZURE_VOICE_AGENT_NAME=my-voice-agent
+GPT_LIVE_PROJECT_ENDPOINT=https://YOUR-LIVE-RESOURCE.services.ai.azure.com/api/projects/YOUR-LIVE-PROJECT
 GPT_LIVE_DEPLOYMENT=gpt-live-1
 GPT_LIVE_BACKEND_DEPLOYMENT=gpt-5.4
 DEFAULT_TRANSPORT=webrtc
@@ -292,6 +295,14 @@ Keep `AZURE_VOICE_AGENT_NAME` pointed at the **realtime base Agent**.
 without publishing or enabling anything on page load. Switching to a realtime
 model selects the base Agent; selecting GPT Live again reuses its companion.
 Both saved Agents retain their own instructions, configuration and versions.
+Inspection, publication, preparation, calls and downloads follow the selected
+Agent's project; switching back always uses the realtime project. No Agent is
+copied, moved or deleted when selecting another project. The server identity
+needs access to both resources. `deploy-azure.ps1` grants **Foundry User** on each;
+pass `-GptLiveFoundryResourceId` when the Live resource cannot be discovered in
+the selected subscription. Leave `GPT_LIVE_PROJECT_ENDPOINT` blank to retain
+the original single-project behavior. Keep the existing companion name/ownership
+metadata when reusing a saved companion in the Live project.
 The default is `START_WITH_GPT_LIVE=false`. Create a missing companion first by
 starting with the base Agent and selecting/saving GPT Live, as described below;
 a missing or unrelated initial companion is reported as an error, not replaced.

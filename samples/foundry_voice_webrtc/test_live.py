@@ -146,6 +146,48 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
     def config(self, **kwargs):
         return Settings("https://example.services.ai.azure.com/api/projects/demo", "demo-agent", **kwargs)
 
+    def test_live_project_override_preserves_base_and_defaults_to_shared_project(self):
+        cfg = self.config()
+        self.assertEqual(cfg.live_companion().project_url(), cfg.project_url())
+        split = self.config(live_project_endpoint="https://live.services.ai.azure.com/api/projects/tip")
+        self.assertEqual(split.project_url(), cfg.project_url())
+        self.assertEqual(split.live_companion().project_url(), split.live_project_endpoint)
+        self.assertEqual(split.live_companion().companion_for, cfg.agent)
+        with self.assertRaises(ValueError):
+            self.config(live_project_endpoint="http://invalid/api/projects/tip").live_companion().project_url()
+
+    async def test_split_projects_route_reads_and_round_trip_switches_without_copying_agents(self):
+        cfg = self.config(live_project_endpoint="https://live.services.ai.azure.com/api/projects/tip")
+        original = self.saved(self.definition(), "9")
+        live = self.companion(cfg, live_definition(self.definition(), "live", "backend"), "2")
+        service = ServiceClient([Response(200, value) for value in (
+            original, live, live, live, original, original, original, live, live)],
+            [Response(204), Response(204)])
+        async with TestClient(TestServer(create_app(cfg, AsyncMock()))) as client:
+            origin = {"Origin": str(client.make_url("")).rstrip("/")}
+            with patch("server.aiohttp.ClientSession", return_value=service), patch.object(
+                    service, "get", wraps=service.get) as reads:
+                for path in ("/api/agent", "/api/agent?agent=demo-agent-live",
+                             "/api/agent/settings?agent=demo-agent-live"):
+                    response = await client.get(path)
+                    self.assertEqual(response.status, 200, await response.text())
+                response = await client.post("/api/agent/model?agent=demo-agent-live", headers=origin,
+                    json={"model": original["versions"]["latest"]["definition"]["model"], "version": "2"})
+                self.assertEqual(response.status, 200, await response.text())
+                self.assertEqual((await response.json())["agent"], cfg.agent)
+                response = await client.post("/api/agent/model", headers=origin,
+                    json={"model": "gpt-live-1", "version": "9"})
+                self.assertEqual(response.status, 200, await response.text())
+                self.assertEqual((await response.json())["agent"], cfg.live_companion().agent)
+        base_url, live_url = cfg.project_url(), cfg.live_companion().project_url()
+        expected = [base_url, live_url, live_url, live_url, base_url, base_url, base_url, live_url, live_url]
+        self.assertEqual(len(reads.call_args_list), len(expected))
+        for request, project in zip(reads.call_args_list, expected):
+            self.assertTrue(request.args[0].startswith(project + "/agents/"))
+        self.assertEqual([url for url, _ in service.writes], [
+            base_url + "/agents/demo-agent:enable", live_url + "/agents/demo-agent-live:enable"])
+        self.assertEqual(service.removals, [])
+
     def companion(self, cfg, definition, version="1"):
         return self.saved(definition, version, {"sample": "foundry_voice_webrtc",
                                                "voice_companion_for": cfg.agent})
@@ -162,10 +204,12 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
         with patch("server.load_dotenv"), patch.dict(os.environ, {
                 "AZURE_AI_PROJECT_ENDPOINT": self.config().endpoint,
                 "AZURE_VOICE_AGENT_NAME": "demo-agent",
+                "GPT_LIVE_PROJECT_ENDPOINT": "https://live.services.ai.azure.com/api/projects/tip/",
                 "START_WITH_GPT_LIVE": "true"}, clear=True):
             cfg = load_settings()
             self.assertEqual(cfg.agent, "demo-agent")
             self.assertTrue(cfg.start_with_live)
+            self.assertEqual(cfg.live_companion().project_url(), "https://live.services.ai.azure.com/api/projects/tip")
 
     async def test_missing_initial_companion_is_an_error_without_realtime_creation(self):
         service = ServiceClient([Response(404), Response(200)])
@@ -182,7 +226,8 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
         source = self.definition()
         before = copy.deepcopy(source)
         live = live_definition(source, "live-deploy", "reasoning-deploy")
-        cfg = self.config(live_deployment="live-deploy", live_backend_deployment="reasoning-deploy")
+        cfg = self.config(live_deployment="live-deploy", live_backend_deployment="reasoning-deploy",
+                          live_project_endpoint="https://live.services.ai.azure.com/api/projects/tip")
         service = ServiceClient([Response(200, self.saved(source, metadata={"custom": "keep"})),
                                  Response(404), Response(200), Response(200, self.companion(cfg, live))],
                                 [Response(200, {"version": "1"}), Response(204)])
@@ -216,6 +261,7 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
             "voice_companion_for": cfg.agent, "realtime_source_version": "1"})
         self.assertTrue(service.writes[0][0].endswith("/agents/demo-agent-live/versions"))
         self.assertTrue(service.writes[1][0].endswith("/agents/demo-agent-live:enable"))
+        self.assertTrue(all(url.startswith(cfg.live_companion().project_url()) for url, _ in service.writes))
         self.assertEqual(service.removals, [])
 
     async def test_switch_back_selects_latest_original_without_republishing_or_deleting(self):
@@ -383,7 +429,8 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(service.removals, [])
 
     async def test_companion_status_settings_and_preparation_route_to_selected_agent(self):
-        cfg = self.config(personalization_required=True)
+        cfg = self.config(personalization_required=True,
+                          live_project_endpoint="https://live.services.ai.azure.com/api/projects/tip")
         live = live_definition(self.definition(), "live-deploy", "backend")
         saved = self.companion(cfg, live, "4")
         service = ServiceClient([Response(200, saved) for _ in range(3)], [Response(204)])
@@ -404,6 +451,7 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(response.status, 409)
                 for read in reads.call_args_list:
                     self.assertIn("/agents/demo-agent-live?", read.args[0])
+                    self.assertTrue(read.args[0].startswith(cfg.live_project_endpoint))
         self.assertEqual(len(service.writes), 1)
         self.assertIn("/agents/demo-agent-live:enable?", service.writes[0][0])
         self.assertEqual(service.removals, [])
@@ -428,12 +476,14 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
         tokens.get_token.assert_not_awaited()
 
     async def test_live_bridge_routes_to_companion_and_binds_download_token_to_it(self):
-        cfg = self.config(personalization_required=True)
+        cfg = self.config(personalization_required=True,
+                          live_project_endpoint="https://live.services.ai.azure.com/api/projects/tip")
         live = live_definition(self.definition(), "live", "backend")
         service = ServiceClient([Response(200, self.companion(cfg, live, "4"))])
         app = create_app(cfg, AsyncMock())
         async def connect(client, browser, selected, headers, transport, version, announce, values, *, input_names):
             self.assertEqual(selected.agent, "demo-agent-live")
+            self.assertEqual(selected.project_url(), cfg.live_project_endpoint)
             self.assertEqual(set(input_names), {"greeting_text", "language_policy"})
             self.assertEqual(version, "4")
             self.assertIsNone(values)
