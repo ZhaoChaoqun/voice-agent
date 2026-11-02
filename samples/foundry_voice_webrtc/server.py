@@ -27,7 +27,7 @@ from aiohttp import web
 from dotenv import load_dotenv
 
 from auth import AuthenticationError, AzureTokenProvider, authentication_mode, find_azure_cli
-from live import LIVE_VOICES, LiveSessionError, connect_live, live_definition
+from live import LIVE_VOICES, LiveSessionError, connect_live, live_definition, with_live_greeting
 
 ROOT = Path(__file__).resolve().parent
 LOGGER = logging.getLogger(__name__)
@@ -640,6 +640,7 @@ async def inspect_configured_agent(client, cfg, headers):
             "transcriptionModel": transcription_model(demo if definition is None else definition),
             "version": latest.get("version") if latest is not None else None,
             "weatherEnabled": definition is not None and weather_toolbox_attached(definition),
+            "liveGreetingMissing": (definition or {}).get("sub_protocol") == "live" and "greeting" not in definition,
             "personalizationRequired": cfg.personalization_required or (
                 definition is not None and required.issubset(definition.get("structured_inputs") or {}))}
 
@@ -689,6 +690,7 @@ async def prepare_configured_agent(client, cfg, headers):
             "transcriptionModel": transcription_model(definition),
             "version": version,
             "weatherEnabled": weather_toolbox_attached(definition),
+            "liveGreetingMissing": definition.get("sub_protocol") == "live" and "greeting" not in definition,
             "personalizationRequired": cfg.personalization_required or required.issubset(definition.get("structured_inputs") or {})}
 
 
@@ -819,6 +821,7 @@ async def change_agent_model(request):
                                         "voice_companion_for": base_cfg.agent,
                                         "realtime_source_version": latest["version"]}
                             destination_definition = None
+                    definition = with_live_greeting(definition)
                 else:
                     if was_live:
                         if not cfg.companion_for:
@@ -1266,7 +1269,8 @@ async def bridge(request):
                         "GPT Live uses its saved Agent voice; this endpoint does not support per-call voice overrides. "
                         "Refresh the page to use Saved Agent voice, or change the saved voice in Foundry.")
                 await connect_live(client, browser, cfg, headers, transport, latest["version"], announce_conversation,
-                                   json.loads(structured) if structured is not None else None)
+                                   json.loads(structured) if structured is not None else None,
+                                   input_names=(latest["definition"].get("structured_inputs") or {}).keys())
                 return browser
             if structured is not None:
                 headers["x-ms-voice-structured-inputs"] = structured

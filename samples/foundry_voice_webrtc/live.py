@@ -3,6 +3,7 @@
 import asyncio
 import base64
 import binascii
+import copy
 import json
 from urllib.parse import quote
 
@@ -14,10 +15,26 @@ LIVE_VOICES = {
     "delta", "echo", "gleam", "marin", "meridian", "quartz", "ripple", "sage",
     "shida", "shimmer", "stone", "tempo", "verse", "vesper", "willow",
 }
+LIVE_INITIAL_INPUTS = {
+    "greeting_text": "Hello! How can I help you?",
+    "language_policy": "Follow the caller's spoken or requested language.",
+}
 
 
 class LiveSessionError(Exception):
     """A safe, actionable GPT Live startup or transport failure."""
+
+
+def with_live_greeting(source):
+    definition = copy.deepcopy(source)
+    if "greeting" not in definition:
+        definition["greeting"] = {"type": "template", "text": "{{greeting_text}}"}
+        inputs = definition.get("structured_inputs") or {}
+        definition["structured_inputs"] = inputs
+        for key, value in LIVE_INITIAL_INPUTS.items():
+            inputs.setdefault(key, {"required": False, "default_value": value, "schema": {"type": "string"}})
+        definition["instructions"] = definition.get("instructions", "") + "\n\nLANGUAGE POLICY\n{{language_policy}}"
+    return definition
 
 
 def live_definition(source, deployment, backend):
@@ -28,7 +45,7 @@ def live_definition(source, deployment, backend):
         "client_language": "(not supplied)", "greeting_text": "(handled by the voice model)",
     }.items():
         instructions = instructions.replace("{{" + key + "}}", value)
-    return {
+    return with_live_greeting({
         "kind": "voice", "sub_protocol": "live", "model_type": "self_deployed",
         "model": deployment,
         "instructions": (
@@ -63,7 +80,7 @@ def live_definition(source, deployment, backend):
             "tools": [{"type": "web_search"}],
         }},
         "store": True,
-    }
+    })
 
 
 def live_client_frame(raw, transport):
@@ -217,11 +234,16 @@ def live_session_url(cfg):
             "/endpoint/protocols/voice/live/sessions")
 
 
-async def connect_live(client, browser, cfg, headers, transport, version, on_conversation, personalization=None):
+async def connect_live(client, browser, cfg, headers, transport, version, on_conversation, personalization=None,
+                       *, input_names=()):
     if transport not in {"websocket", "webrtc"}:
         raise LiveSessionError("Choose WebSocket or WebRTC for GPT Live.")
     base = live_session_url(cfg)
     params = {"api-version": cfg.api_version, "x-agent-version-override": version}
+    values = personalization or {}
+    initial_inputs = {key: values[key] for key in input_names if key in values}
+    if initial_inputs:
+        params["structured_inputs"] = json.dumps(initial_inputs, ensure_ascii=True, separators=(",", ":"))
     if transport == "webrtc":
         # Live WebRTC cannot record; this per-call opt-out preserves the saved Agent.
         params.update({"transport": "webrtc", "store": "false"})

@@ -372,8 +372,26 @@ text-only replies, and realtime conversation-item retrieval are disabled for
 Live. Browser echo cancellation/noise suppression still apply, but the
 realtime Agent's Azure headset denoiser/VAD settings do not. Optional
 personalization becomes trusted language-policy and untrusted-context append
-events after `session.started`, rather than a realtime AI greeting. The bridge
-waits for their acknowledgments before enabling microphone input; browsers
+events after `session.started`. GPT Live's automatic opening greeting uses a
+saved **template** (`greeting.type=template`), not realtime's `llm_generated`
+greeting. New companions use `{{greeting_text}}` with an English default and
+declare optional `greeting_text` and `language_policy` inputs. The server sends
+the application-selected greeting and language policy through `structured_inputs`
+on the initial Azure WebSocket upgrade, before Azure renders the greeting.
+English/Spanish greeting selection and English-only mode therefore apply before
+the first speech; post-start personalization is not used to race the greeting.
+Azure triggers it once automatically; the browser sends no greeting command,
+`response.create`, or extra `session.start`. WebRTC greeting audio arrives over RTP.
+
+Existing companions retain their custom templates and independent configuration.
+For a companion without a greeting, explicitly select **Save greeting version**
+while GPT Live is selected. This publishes a new immutable companion version
+adding only the template, optional inputs and initial language-policy placeholder;
+it preserves the voice, model, backend, recording setting, metadata and previous
+versions. Loading or starting the page does not migrate an existing Agent.
+
+The bridge waits for post-start context acknowledgments before enabling
+microphone input; browsers
 cannot submit arbitrary instruction events.
 The [direct-model Live WebRTC guide](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/gpt-live-webrtc)
 uses a different HTTP creation contract; do not substitute it for saved-Agent
