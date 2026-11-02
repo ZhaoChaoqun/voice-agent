@@ -278,12 +278,12 @@ protocol, not the realtime protocol. Configure its actual deployment name with
 `GPT_LIVE_BACKEND_DEPLOYMENT` (default `gpt-5.4`). Both deployments must exist in
 the Live resource. By default this is the configured realtime project; optional
 `GPT_LIVE_PROJECT_ENDPOINT` places only the Live companion in another project.
-The split configuration keeps realtime models in East US 2 and GPT Live in TiP:
+For example, configure separate realtime and Live projects:
 
 ```dotenv
-AZURE_AI_PROJECT_ENDPOINT=https://va-dev-use2.services.ai.azure.com/api/projects/va-dev-use2-project
-AZURE_VOICE_AGENT_NAME=webrtc-personalized-hd-demo
-GPT_LIVE_PROJECT_ENDPOINT=https://voice-live-tip-resource.services.ai.azure.com/api/projects/voice-live-tip
+AZURE_AI_PROJECT_ENDPOINT=https://YOUR-REALTIME-RESOURCE.services.ai.azure.com/api/projects/YOUR-REALTIME-PROJECT
+AZURE_VOICE_AGENT_NAME=my-voice-agent
+GPT_LIVE_PROJECT_ENDPOINT=https://YOUR-LIVE-RESOURCE.services.ai.azure.com/api/projects/YOUR-LIVE-PROJECT
 GPT_LIVE_DEPLOYMENT=gpt-live-1
 GPT_LIVE_BACKEND_DEPLOYMENT=gpt-5.4
 DEFAULT_TRANSPORT=webrtc
