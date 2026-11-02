@@ -88,6 +88,7 @@ try {
     if ($settings.ContainsKey("DEFAULT_TRANSPORT")) {
         $commonParameters += "defaultTransport=$($settings['DEFAULT_TRANSPORT'])"
     }
+    $commonParameters += "startWithGptLive=$($settings['START_WITH_GPT_LIVE'] -eq 'true')".ToLowerInvariant()
     $commonParameters += "personalizationRequired=$($settings['PERSONALIZATION_REQUIRED'] -eq 'true')".ToLowerInvariant()
     $commonParameters += "allowAgentRecreate=$($settings['ALLOW_AGENT_RECREATE'] -eq 'true')".ToLowerInvariant()
 

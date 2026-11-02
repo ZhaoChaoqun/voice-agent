@@ -361,6 +361,7 @@ class Settings:
     live_backend_deployment: str = "gpt-5.4"
     companion_for: str = ""
     default_transport: str = "websocket"
+    start_with_live: bool = False
 
     def __post_init__(self):
         object.__setattr__(self, "agent", self.agent.strip() or DEFAULT_AGENT_NAME)
@@ -438,7 +439,8 @@ def load_settings():
                     os.getenv("ALLOW_AGENT_RECREATE", "").lower() == "true",
                     os.getenv("GPT_LIVE_DEPLOYMENT", "gpt-live-1").strip(),
                     os.getenv("GPT_LIVE_BACKEND_DEPLOYMENT", "gpt-5.4").strip(),
-                    default_transport=os.getenv("DEFAULT_TRANSPORT", "websocket").strip())
+                    default_transport=os.getenv("DEFAULT_TRANSPORT", "websocket").strip(),
+                    start_with_live=os.getenv("START_WITH_GPT_LIVE", "").lower() == "true")
 
 
 def origin_allowed(host_value, scheme, origin, public_origin="", *, remote=None,
@@ -501,6 +503,7 @@ async def public_config(request):
     cfg = request.app[SETTINGS]
     auth_mode = authentication_mode()
     return web.json_response({"configured": cfg.configured, "agent": cfg.agent,
+                              "initialAgent": cfg.live_companion().agent if cfg.start_with_live else cfg.agent,
                               "iceServers": list(cfg.ice_servers),
                               "authentication": auth_mode,
                               "azureCliInstalled": auth_mode != "azure_cli" or bool(find_azure_cli()),
@@ -623,6 +626,10 @@ def transcription_model(definition):
 
 async def inspect_configured_agent(client, cfg, headers):
     latest = await lookup_configured_agent(client, cfg, headers, include_version=True)
+    if latest is None and cfg.companion_for:
+        raise AgentPreparationError(
+            "The GPT Live companion is missing. Set START_WITH_GPT_LIVE=false, "
+            "then select and save GPT Live from the realtime Agent to create it.")
     definition = latest["definition"] if latest is not None else None
     demo = json.loads((ROOT / "personalized-agent.json").read_text())
     required = set(demo["structured_inputs"])

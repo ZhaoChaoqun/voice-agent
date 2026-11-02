@@ -20,6 +20,7 @@ param gptLiveDeployment string = 'gpt-live-1'
 param gptLiveBackendDeployment string = 'gpt-5.4'
 @allowed(['websocket', 'webrtc'])
 param defaultTransport string = 'websocket'
+param startWithGptLive bool = false
 @secure()
 param iceServersJson string
 param personalizationRequired bool = false
@@ -133,6 +134,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'DEFAULT_TRANSPORT'
               value: defaultTransport
+            }
+            {
+              name: 'START_WITH_GPT_LIVE'
+              value: startWithGptLive ? 'true' : 'false'
             }
             {
               name: 'ICE_SERVERS_JSON'
