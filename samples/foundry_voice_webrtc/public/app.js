@@ -32,7 +32,7 @@ function updateAgentControls() {
     ($('agent-model-choice').value === savedModel && (live || $('agent-transcription-choice').value === savedTranscription));
   $('show-settings').disabled = preparingAgent || agentAvailability !== 'ready';
   $('download-conversation').disabled = Boolean(call) || downloading || !latestDownload;
-  $('transport').disabled = busy || savedModel === 'gpt-live-1';
+  $('transport').disabled = busy;
 }
 
 function updateVoiceChoices(model) {
@@ -67,10 +67,6 @@ function applyAgentDetails(result) {
   $('agent-model').textContent = typeof result.model === 'string' && result.model.trim() ?
     result.model + (result.exists === false ? ' (after setup)' : '') : 'Unavailable';
   $('weather-tool-hint').hidden = !(result.weatherEnabled || result.exists === false);
-  if (savedModel === 'gpt-live-1') {
-    $('transport').value = 'websocket';
-    $('transport').onchange?.();
-  }
   $('text-help').textContent = savedModel === 'gpt-live-1' ?
     'GPT Live uses microphone input and spoken replies. Text-only replies are unavailable.' :
     "Start a conversation to send text. Press Enter or Send for a text-only reply; wait for the agent's response before sending another message. Mute the mic to use text only.";
@@ -323,7 +319,7 @@ function stop(title = 'Conversation ended', hint = 'Start again whenever you’r
   $('remote-audio').pause(); $('remote-audio').srcObject = null;
   $('orb').className = 'orb'; $('play').hidden = true;
   updateAgentControls(); $('stop').disabled = true; $('mute').disabled = true;
-  $('transport').disabled = savedModel === 'gpt-live-1';
+  $('transport').disabled = false;
   $('personalization').disabled = false;
   updateVoiceChoices(savedModel);
   $('mute').textContent = 'Mute mic'; $('mute').setAttribute('aria-pressed', 'false');
@@ -452,7 +448,7 @@ async function connectWebRtc(session) {
 async function handleEvent(session, event) {
   if (call !== session) return;
   const type = event.type || '';
-  if (type.startsWith('session.')) {
+  if (type.startsWith('session.') || type === 'rtc.call.sdp.created') {
     const id = event.session?.id ?? event.session_id;
     if (typeof id === 'string' && id.trim()) {
       session.sessionId = id;
@@ -579,6 +575,10 @@ async function start() {
     live:savedModel === 'gpt-live-1',
     voice:savedModel === 'gpt-live-1' ? $('live-voice').value :
       savedModel === 'azure-realtime' ? $('native-voice').value : $('voice').value}; call = session;
+  if (session.live && session.transport === 'webrtc') {
+    latestDownload = null;
+    $('download-status').textContent = 'GPT Live WebRTC calls are not recorded. Conversation download is unavailable.';
+  }
   session.history = createHistory(session);
   $('personalization').disabled = true;
   $('voice').disabled = true;
@@ -641,8 +641,8 @@ async function start() {
         session.disconnectTimer = setTimeout(() => fail(session, new Error('Media connection lost. Start a new session.')),10000);
       }
     };
-    // Required in the offer. Events use the signaling socket to avoid duplicate transcripts.
-    session.channel = peer.createDataChannel('voice-live-events');
+    // Realtime requires SCTP; native Live requires audio-only SDP and uses the control socket.
+    if (!session.live) session.channel = peer.createDataChannel('voice-live-events');
     await connectWebRtc(session);
   } catch (error) {
     if (error.name === 'NotAllowedError') error = new Error('Microphone access was denied. Allow it in your browser’s site permissions and try again.');

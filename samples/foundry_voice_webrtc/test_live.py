@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import re
 import unittest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 from aiohttp.test_utils import TestClient, TestServer
@@ -430,13 +430,108 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(LiveSessionError):
             live_client_frame('{"type":"session.input_audio.append","audio":"AAA="}', "webrtc")
 
-    async def test_webrtc_is_rejected_without_creating_a_direct_model_session(self):
+    async def test_both_transports_use_saved_agent_version_and_live_subprotocol(self):
         cfg = Settings("https://example.services.ai.azure.com/api/projects/demo", "demo-agent")
-        service = AsyncMock()
-        with self.assertRaisesRegex(LiveSessionError, "require WebSocket"):
-            await connect_live(service, AsyncMock(), cfg, {}, "webrtc", "4", AsyncMock())
-        service.post.assert_not_called()
-        service.ws_connect.assert_not_called()
+        for transport in ("websocket", "webrtc"):
+            socket = AsyncMock()
+            service = MagicMock()
+            service.ws_connect.return_value = socket
+            with patch("live.relay_live", new_callable=AsyncMock) as relay:
+                await connect_live(service, AsyncMock(), cfg, {"Authorization": "Bearer test"},
+                                   transport, "4", AsyncMock())
+            args, kwargs = service.ws_connect.call_args
+            self.assertEqual(args[0],
+                "wss://example.services.ai.azure.com/api/projects/demo/agents/demo-agent/endpoint/protocols/voice/live/sessions")
+            self.assertEqual(kwargs["protocols"], ["live"])
+            self.assertEqual(kwargs["params"], {"api-version": "v1", "x-agent-version-override": "4",
+                **({"transport": "webrtc", "store": "false"} if transport == "webrtc" else {})})
+            self.assertEqual(kwargs["headers"], {"Authorization": "Bearer test"})
+            self.assertEqual(relay.call_args.kwargs["transport"], transport)
+            service.post.assert_not_called()
+
+    def test_webrtc_accepts_only_audio_sdp_without_configuration_overrides(self):
+        offer = {"type": "rtc.call.sdp.create", "sdp_offer": "v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"}
+        self.assertEqual(live_client_frame(json.dumps(offer), "webrtc"), offer)
+        for sdp in ("", "v=0\r\n", offer["sdp_offer"] + "m=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\n",
+                    offer["sdp_offer"] + "m=video 9 UDP/TLS/RTP/SAVPF 96\r\n",
+                    offer["sdp_offer"] + "a=" + "a" * 65536):
+            with self.assertRaises((ValueError, LiveSessionError)):
+                live_client_frame(json.dumps({**offer, "sdp_offer": sdp}), "webrtc")
+        for extra in ({"session": {"model": "other"}}, {"instructions": "injected"}):
+            with self.assertRaises(ValueError):
+                live_client_frame(json.dumps({**offer, **extra}), "webrtc")
+        with self.assertRaises(LiveSessionError):
+            live_client_frame(json.dumps(offer), "websocket")
+
+    async def test_webrtc_signals_before_startup_and_does_not_advertise_recording(self):
+        offered, ready, closing = asyncio.Event(), asyncio.Event(), asyncio.Event()
+        offer = {"type": "rtc.call.sdp.create", "sdp_offer": "v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"}
+        upstream, browser, announce = AsyncMock(), AsyncMock(), AsyncMock()
+        browser.closed = False
+
+        async def from_browser():
+            async for message in frames([offer]):
+                yield message
+            await ready.wait()
+            async for message in frames([{"type": "session.close"}]):
+                yield message
+
+        async def from_service():
+            await offered.wait()
+            async for message in frames([
+                {"type": "rtc.call.sdp.created", "sdp_answer": "answer", "session_id": "live_rtc"},
+                {"type": "session.started", "conversation_id": "must-not-be-downloadable", "session": {}},
+            ]):
+                yield message
+            await closing.wait()
+            async for message in frames([{"type": "session.closed", "reason": "close_requested",
+                                         "usage": {"seconds": 15}}]):
+                yield message
+
+        async def sent_upstream(frame):
+            if frame["type"] == "rtc.call.sdp.create":
+                offered.set()
+            elif frame["type"] == "session.close":
+                closing.set()
+
+        async def sent_browser(frame):
+            if frame["type"] == "bridge.ready":
+                ready.set()
+
+        upstream.__aiter__.side_effect = from_service
+        browser.__aiter__.side_effect = from_browser
+        upstream.send_json.side_effect = sent_upstream
+        browser.send_json.side_effect = sent_browser
+        async with asyncio.timeout(2):
+            await relay_live(browser, upstream, announce, transport="webrtc")
+        self.assertEqual([call.args[0] for call in upstream.send_json.call_args_list],
+                         [offer, {"type": "session.close"}])
+        self.assertIn({"type": "bridge.ready", "protocol": "live"},
+                      [call.args[0] for call in browser.send_json.call_args_list])
+        announce.assert_not_awaited()
+
+    async def test_webrtc_rejects_duplicate_offers(self):
+        offer = {"type": "rtc.call.sdp.create", "sdp_offer": "v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"}
+        upstream, browser = AsyncMock(), AsyncMock()
+        browser.closed = False
+
+        async def waiting_service():
+            await asyncio.Event().wait()
+            yield
+
+        upstream.__aiter__.side_effect = waiting_service
+        browser.__aiter__.side_effect = lambda: frames([offer, offer])
+        with self.assertRaisesRegex(LiveSessionError, "exactly one"):
+            await relay_live(browser, upstream, AsyncMock(), transport="webrtc")
+        upstream.send_json.assert_awaited_once_with(offer)
+
+    async def test_default_transport_is_configurable_and_validated(self):
+        with self.assertRaisesRegex(ValueError, "DEFAULT_TRANSPORT"):
+            Settings(self.config().endpoint, default_transport="invalid")
+        async with TestClient(TestServer(create_app(Settings(
+                self.config().endpoint, default_transport="webrtc"), AsyncMock()))) as client:
+            response = await client.get("/api/config")
+            self.assertEqual((await response.json())["defaultTransport"], "webrtc")
 
     async def test_live_ready_does_not_send_realtime_truncation_update(self):
         started = {"type": "session.started", "conversation_id": "conversation-1",

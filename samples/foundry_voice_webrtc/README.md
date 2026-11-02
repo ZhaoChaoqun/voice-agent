@@ -160,6 +160,8 @@ saved Agent without creating or enabling anything:
 
 Choose either transport and allow the microphone when prompted. Set `PORT` to
 another free port if needed. Use **End** to stop the microphone and connections.
+Set `DEFAULT_TRANSPORT=webrtc` to initially select WebRTC; the default is
+`websocket`, and callers can still select either transport.
 
 The local server binds to `127.0.0.1` by default. Its loopback-origin guard also
 checks the connection's actual peer address, so a network client cannot impersonate
@@ -274,9 +276,19 @@ GPT Live uses a self-deployed `gpt-live-1` model and the separate native Live
 protocol, not the realtime protocol. Configure its actual deployment name with
 `GPT_LIVE_DEPLOYMENT` and its Responses backend with
 `GPT_LIVE_BACKEND_DEPLOYMENT` (default `gpt-5.4`). Both deployments must exist in
-the configured resource. For the `va-dev-use2` project, the verified endpoint is
-`https://va-dev-use2.services.ai.azure.com/api/projects/va-dev-use2-project` and
-the Live deployment is `gpt-live-1-test`.
+the configured resource. The TiP configuration tested with saved-Agent WebRTC is:
+
+```dotenv
+AZURE_AI_PROJECT_ENDPOINT=https://voice-live-tip-resource.services.ai.azure.com/api/projects/voice-live-tip
+AZURE_VOICE_AGENT_NAME=webrtc-personalized-hd-demo-live
+GPT_LIVE_DEPLOYMENT=gpt-live-1
+GPT_LIVE_BACKEND_DEPLOYMENT=gpt-5.4
+DEFAULT_TRANSPORT=webrtc
+```
+
+This selects the existing saved Live Agent directly, without editing its
+definition. When starting from a realtime Agent instead, select GPT Live and
+save to create or reuse its companion as described below.
 
 GPT Live uses the voice in the saved Agent's `audio.output.voice`; new companions
 default to `marin`. The Live voice selector is disabled and displays **Saved Agent
@@ -324,16 +336,27 @@ The deployment script passes both Live deployment settings to Azure Container
 Apps, and `check_websocket.py` detects Live Agents and checks native startup
 and graceful close without sending microphone audio.
 
-GPT Live uses **WebSocket audio only** in this sample. The target project's
-saved-Agent Live WebRTC session-creation route returns HTTP 405, and its
-realtime WebRTC signaling route rejects a Live Agent. The UI selects and locks
-WebSocket for Live, while other models retain both transports. No direct-model
-fallback bypasses the saved Agent or its Foundry conversation recording.
+GPT Live supports **WebSocket and WebRTC** through the saved Agent's
+`/endpoint/protocols/voice/live/sessions` WebSocket endpoint. The backend offers
+the `live` subprotocol and pins the saved Agent version for both transports.
+It never invokes a direct-model endpoint or sends `session.start` again.
 WebSocket startup waits for `session.started` and streams native
 `session.input_audio.append` / `session.output_audio.delta` events through the
-Agent's `/endpoint/protocols/voice/live/sessions` WebSocket endpoint.
-Credentials never leave the server. **End** sends `session.close` and waits
-for final cumulative usage.
+control socket. WebRTC adds `transport=webrtc&store=false` to that same
+WebSocket upgrade, sends `rtc.call.sdp.create` with an **audio-only SDP offer**
+(no data channel or video), and applies the returned `rtc.call.sdp.created`
+answer. Audio then travels directly as RTP; captions, personalization,
+delegation events, errors and usage stay on the authenticated control socket.
+An HTTP POST to this saved-Agent route is not the WebRTC creation contract.
+
+Live WebRTC currently does **not** support recording. The per-call `store=false`
+opt-out is required even if the saved Agent enables storage; it does not edit
+that definition. These calls do not produce a conversation download, and the
+UI clears any earlier download reference when starting one. Choose WebSocket
+for saved conversation recordings. Credentials never leave the server.
+**End** sends `session.close` and keeps the peer and control socket open until
+`session.closed` confirms final usage. Live WebRTC has a 15-second minimum
+billable audio duration; the returned duration is not a monetary cost.
 
 GPT Live listens and speaks concurrently. Its timed transcript fragments are
 shown as **captions, not authoritative retained history**; there is no realtime
@@ -346,7 +369,8 @@ events after `session.started`, rather than a realtime AI greeting. The bridge
 waits for their acknowledgments before enabling microphone input; browsers
 cannot submit arbitrary instruction events.
 The [direct-model Live WebRTC guide](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/gpt-live-webrtc)
-does not establish support for saved-Agent WebRTC. See the
+uses a different HTTP creation contract; do not substitute it for saved-Agent
+signaling. See the
 [event reference](https://learn.microsoft.com/en-us/azure/foundry/openai/gpt-live-reference)
 for Live audio and session events.
 

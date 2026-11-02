@@ -85,6 +85,9 @@ try {
     if ($settings.ContainsKey("GPT_LIVE_BACKEND_DEPLOYMENT")) {
         $commonParameters += "gptLiveBackendDeployment=$($settings['GPT_LIVE_BACKEND_DEPLOYMENT'])"
     }
+    if ($settings.ContainsKey("DEFAULT_TRANSPORT")) {
+        $commonParameters += "defaultTransport=$($settings['DEFAULT_TRANSPORT'])"
+    }
     $commonParameters += "personalizationRequired=$($settings['PERSONALIZATION_REQUIRED'] -eq 'true')".ToLowerInvariant()
     $commonParameters += "allowAgentRecreate=$($settings['ALLOW_AGENT_RECREATE'] -eq 'true')".ToLowerInvariant()
 

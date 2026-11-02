@@ -360,9 +360,12 @@ class Settings:
     live_deployment: str = "gpt-live-1"
     live_backend_deployment: str = "gpt-5.4"
     companion_for: str = ""
+    default_transport: str = "websocket"
 
     def __post_init__(self):
         object.__setattr__(self, "agent", self.agent.strip() or DEFAULT_AGENT_NAME)
+        if self.default_transport not in TRANSPORTS:
+            raise ValueError("DEFAULT_TRANSPORT must be websocket or webrtc.")
 
     @property
     def setup_issues(self):
@@ -434,7 +437,8 @@ def load_settings():
                     public_origin, os.getenv("PERSONALIZATION_REQUIRED", "").lower() == "true",
                     os.getenv("ALLOW_AGENT_RECREATE", "").lower() == "true",
                     os.getenv("GPT_LIVE_DEPLOYMENT", "gpt-live-1").strip(),
-                    os.getenv("GPT_LIVE_BACKEND_DEPLOYMENT", "gpt-5.4").strip())
+                    os.getenv("GPT_LIVE_BACKEND_DEPLOYMENT", "gpt-5.4").strip(),
+                    default_transport=os.getenv("DEFAULT_TRANSPORT", "websocket").strip())
 
 
 def origin_allowed(host_value, scheme, origin, public_origin="", *, remote=None,
@@ -507,7 +511,7 @@ async def public_config(request):
                               "liveVoices": sorted(LIVE_VOICES),
                               "transcriptionModels": sorted(TRANSCRIPTION_MODELS),
                               "defaultTranscriptionModel": DEFAULT_TRANSCRIPTION_MODEL,
-                              "transports": ["websocket", "webrtc"], "defaultTransport": "websocket"})
+                              "transports": ["websocket", "webrtc"], "defaultTransport": cfg.default_transport})
 
 
 async def health(request):
