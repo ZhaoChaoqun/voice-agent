@@ -27,7 +27,7 @@ jobs:
         working-directory: tools/cost_calculator
         shell: pwsh
         run: |
-          node --test calculator.test.mjs
+          node --test calculator.test.mjs server.test.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --check app.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
