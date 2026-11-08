@@ -765,6 +765,24 @@ or revoke credentials that may still be valid and review removal of affected
 deployment-history records under your retention policy. Redeploying does not
 automatically remove past records or copies of them.
 
+On Azure CLI failure, the deployment wrapper stops with the exit code without
+echoing command arguments, which may contain TURN credentials. Azure CLI's own
+output is preserved, not sanitized; review it before sharing and avoid debug
+tracing when deploying secrets. If an earlier script failed with authenticated
+TURN configuration, rotate or revoke any potentially exposed credentials still
+valid and review terminal transcripts and CI logs under your retention policy.
+Updating the script does not remove existing logs or copies.
+
+Run the offline wrapper regression tests from this directory with Python and
+PowerShell 7 (`pwsh`) installed:
+
+```powershell
+python -m unittest test_deploy_azure -v
+```
+
+These tests extract only the wrapper function through PowerShell's AST and mock
+`az`; they do not read `.env`, execute the deployment, or contact Azure.
+
 The tenant policy used by this sample forbids application client secrets, so the
 script configures secretless ID-token sign-in and leaves the token store disabled.
 Unauthenticated browser requests redirect to Microsoft Entra; `/health` remains

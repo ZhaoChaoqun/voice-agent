@@ -15,7 +15,7 @@ function Invoke-AzureCli {
     param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments)
     & az @Arguments
     if ($LASTEXITCODE -ne 0) {
-        throw "Azure CLI command failed: az $($Arguments -join ' ')"
+        throw "Azure CLI command failed with exit code $LASTEXITCODE."
     }
 }
 
