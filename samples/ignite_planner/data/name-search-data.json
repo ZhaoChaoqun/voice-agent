@@ -1,0 +1,2856 @@
+{
+ "source": "phonetic-name-search/namesearch, exported by build_name_search_data.py",
+ "g2p": {
+  "exceptions": {
+   "nguyen": [
+    "W IH N",
+    "N UW Y EH N",
+    "N G W IY AH N"
+   ],
+   "huynh": [
+    "HH W IH N",
+    "W IH N"
+   ],
+   "pham": [
+    "F AE M"
+   ],
+   "tran": [
+    "CH AE N",
+    "T R AE N"
+   ],
+   "vuong": [
+    "V UW AO NG"
+   ],
+   "thao": [
+    "T AW"
+   ],
+   "doan": [
+    "D W AA N"
+   ],
+   "vo": [
+    "V OW"
+   ],
+   "bui": [
+    "B UW IY"
+   ],
+   "dinh": [
+    "D IH N"
+   ],
+   "quach": [
+    "K W AA K"
+   ],
+   "xiong": [
+    "SH AO NG",
+    "S IY AO NG"
+   ],
+   "xu": [
+    "SH UW"
+   ],
+   "xie": [
+    "SH IY EH"
+   ],
+   "xia": [
+    "SH IY AA"
+   ],
+   "zhang": [
+    "JH AA NG"
+   ],
+   "zhao": [
+    "JH AW"
+   ],
+   "zhou": [
+    "JH OW"
+   ],
+   "zhu": [
+    "JH UW"
+   ],
+   "qian": [
+    "CH IY EH N"
+   ],
+   "qin": [
+    "CH IH N"
+   ],
+   "cai": [
+    "T S AY",
+    "K AY"
+   ],
+   "cao": [
+    "T S AW",
+    "K AW"
+   ],
+   "hsieh": [
+    "SH EH"
+   ],
+   "hsu": [
+    "SH UW"
+   ],
+   "tsai": [
+    "T S AY"
+   ],
+   "cheung": [
+    "CH AH NG"
+   ],
+   "ng": [
+    "NG",
+    "EH N JH IY"
+   ],
+   "yeung": [
+    "Y AH NG"
+   ],
+   "ou": [
+    "OW"
+   ],
+   "shi": [
+    "SH IY"
+   ],
+   "zhi": [
+    "JH IY"
+   ],
+   "ji": [
+    "JH IY"
+   ],
+   "jia": [
+    "JH IY AA"
+   ],
+   "siobhan": [
+    "SH AH V AO N"
+   ],
+   "sean": [
+    "SH AO N"
+   ],
+   "shaun": [
+    "SH AO N"
+   ],
+   "eoin": [
+    "OW AH N"
+   ],
+   "aoife": [
+    "IY F AH"
+   ],
+   "niamh": [
+    "N IY V"
+   ],
+   "saoirse": [
+    "S ER SH AH"
+   ],
+   "caoimhe": [
+    "K W IY V AH"
+   ],
+   "mairead": [
+    "M AH R EY D"
+   ],
+   "vaughan": [
+    "V AO N"
+   ],
+   "vaughn": [
+    "V AO N"
+   ],
+   "colquhoun": [
+    "K AH HH UW N"
+   ],
+   "menzies": [
+    "M IH NG IH S",
+    "M EH N Z IY Z"
+   ],
+   "farquhar": [
+    "F AA R K ER"
+   ],
+   "mahony": [
+    "M AA N IY",
+    "M AH HH OW N IY"
+   ],
+   "gough": [
+    "G AA F"
+   ],
+   "hough": [
+    "HH AH F"
+   ],
+   "keogh": [
+    "K Y OW"
+   ],
+   "beauchamp": [
+    "B IY CH AH M"
+   ],
+   "jose": [
+    "HH OW Z EY"
+   ],
+   "juan": [
+    "W AA N",
+    "HH W AA N"
+   ],
+   "jorge": [
+    "HH AO R HH EY"
+   ],
+   "javier": [
+    "HH AA V IY EH R"
+   ],
+   "jesus": [
+    "HH EY S UW S"
+   ],
+   "joaquin": [
+    "W AA K IY N"
+   ],
+   "julio": [
+    "HH UW L IY OW"
+   ],
+   "jaime": [
+    "HH AY M IY",
+    "JH EY M"
+   ],
+   "guillermo": [
+    "G IY EH R M OW"
+   ],
+   "guadalupe": [
+    "G W AA D AH L UW P EY"
+   ],
+   "iglesias": [
+    "IY G L EY S IY AH S"
+   ],
+   "camacho": [
+    "K AH M AA CH OW"
+   ],
+   "gutierrez": [
+    "G UW T IY EH R EH S"
+   ],
+   "dominguez": [
+    "D OW M IH NG G EH S"
+   ],
+   "velazquez": [
+    "V EH L AA S K EH S"
+   ],
+   "giovanni": [
+    "JH OW V AA N IY"
+   ],
+   "gianni": [
+    "JH AA N IY"
+   ],
+   "giuseppe": [
+    "JH UW S EH P IY"
+   ],
+   "bianchi": [
+    "B Y AA N K IY"
+   ],
+   "cioffi": [
+    "CH OW F IY"
+   ],
+   "scalia": [
+    "S K AH L IY AH"
+   ],
+   "chiara": [
+    "K Y AA R AH"
+   ],
+   "michele": [
+    "M IY K EH L EY",
+    "M IH SH EH L"
+   ],
+   "beaulieu": [
+    "B UW L Y UW"
+   ],
+   "thibodeaux": [
+    "T IH B AH D OW"
+   ],
+   "boucher": [
+    "B UW SH EY",
+    "B AW CH ER"
+   ],
+   "gagne": [
+    "G AA N Y EY"
+   ],
+   "dubois": [
+    "D UW B W AA"
+   ],
+   "raghavan": [
+    "R AA G AH V AH N"
+   ],
+   "krishnan": [
+    "K R IH SH N AH N"
+   ],
+   "chandrasekhar": [
+    "CH AA N D R AH S EH K AA R"
+   ],
+   "venkatesh": [
+    "V EH NG K AH T EH SH"
+   ],
+   "gopalakrishnan": [
+    "G OW P AA L AH K R IH SH N AH N"
+   ],
+   "bhattacharya": [
+    "B AH T AA CH AA R Y AH"
+   ],
+   "chaudhary": [
+    "CH AW D R IY"
+   ],
+   "mukherjee": [
+    "M UW K ER JH IY"
+   ],
+   "banerjee": [
+    "B AA N ER JH IY"
+   ],
+   "thakur": [
+    "T AA K ER"
+   ],
+   "singh": [
+    "S IH NG"
+   ],
+   "shaikh": [
+    "SH EY K"
+   ],
+   "sheikh": [
+    "SH EY K"
+   ],
+   "gupta": [
+    "G UH P T AH"
+   ],
+   "khan": [
+    "K AA N"
+   ],
+   "ahmed": [
+    "AA M EH D"
+   ],
+   "muhammad": [
+    "M UW HH AA M AH D"
+   ],
+   "mohammed": [
+    "M OW HH AA M EH D"
+   ],
+   "worcester": [
+    "W UH S T ER"
+   ],
+   "leicester": [
+    "L EH S T ER"
+   ],
+   "geoffrey": [
+    "JH EH F R IY"
+   ],
+   "geoff": [
+    "JH EH F"
+   ],
+   "stephen": [
+    "S T IY V AH N"
+   ],
+   "stephens": [
+    "S T IY V AH N Z"
+   ],
+   "stephenson": [
+    "S T IY V AH N S AH N"
+   ],
+   "thomas": [
+    "T AA M AH S"
+   ],
+   "thompson": [
+    "T AA M P S AH N"
+   ],
+   "thomson": [
+    "T AA M S AH N"
+   ],
+   "anthony": [
+    "AE N TH AH N IY",
+    "AE N T AH N IY"
+   ],
+   "esther": [
+    "EH S T ER"
+   ],
+   "chloe": [
+    "K L OW IY"
+   ],
+   "zoe": [
+    "Z OW IY"
+   ],
+   "phoebe": [
+    "F IY B IY"
+   ],
+   "penelope": [
+    "P AH N EH L AH P IY"
+   ],
+   "hermione": [
+    "HH ER M AY AH N IY"
+   ],
+   "elise": [
+    "IH L IY Z"
+   ],
+   "denise": [
+    "D AH N IY S"
+   ],
+   "louise": [
+    "L UW IY Z"
+   ],
+   "renee": [
+    "R AH N EY"
+   ],
+   "irene": [
+    "AY R IY N"
+   ],
+   "monique": [
+    "M AH N IY K"
+   ],
+   "dominique": [
+    "D AA M AH N IY K"
+   ],
+   "nicole": [
+    "N IH K OW L"
+   ],
+   "michelle": [
+    "M IH SH EH L"
+   ],
+   "michael": [
+    "M AY K AH L"
+   ],
+   "rachel": [
+    "R EY CH AH L"
+   ],
+   "sarah": [
+    "S EH R AH"
+   ],
+   "hannah": [
+    "HH AE N AH"
+   ],
+   "deborah": [
+    "D EH B R AH"
+   ],
+   "leah": [
+    "L IY AH"
+   ],
+   "noah": [
+    "N OW AH"
+   ],
+   "isaiah": [
+    "AY Z EY AH"
+   ],
+   "joseph": [
+    "JH OW Z AH F"
+   ],
+   "sophia": [
+    "S OW F IY AH"
+   ],
+   "sophie": [
+    "S OW F IY"
+   ],
+   "naomi": [
+    "N EY OW M IY"
+   ],
+   "aaron": [
+    "EH R AH N"
+   ]
+  },
+  "rules": [
+   [
+    "^kn",
+    [
+     "N"
+    ]
+   ],
+   [
+    "^gn",
+    [
+     "N"
+    ]
+   ],
+   [
+    "^pn",
+    [
+     "N"
+    ]
+   ],
+   [
+    "^ps",
+    [
+     "S"
+    ]
+   ],
+   [
+    "^pt",
+    [
+     "T"
+    ]
+   ],
+   [
+    "^wr",
+    [
+     "R"
+    ]
+   ],
+   [
+    "^rh",
+    [
+     "R"
+    ]
+   ],
+   [
+    "^x",
+    [
+     "Z"
+    ]
+   ],
+   [
+    "^mc(?=[a-z]{2})",
+    [
+     "M AH K"
+    ]
+   ],
+   [
+    "^mac(?=[bcdfghjklmnpqrstvwxz][a-z])",
+    [
+     "M AH K"
+    ]
+   ],
+   [
+    "^sch",
+    [
+     "SH",
+     "S K"
+    ]
+   ],
+   [
+    "^ch(?=r)",
+    [
+     "K"
+    ]
+   ],
+   [
+    "^wh",
+    [
+     "W"
+    ]
+   ],
+   [
+    "^h(?=[aeiouy])",
+    [
+     "HH"
+    ]
+   ],
+   [
+    "^cz",
+    [
+     "CH",
+     "Z"
+    ]
+   ],
+   [
+    "^tz",
+    [
+     "Z",
+     "T S"
+    ]
+   ],
+   [
+    "^ll(?=[aeiouy])",
+    [
+     "Y",
+     "L"
+    ]
+   ],
+   [
+    "tion$",
+    [
+     "SH AH N"
+    ]
+   ],
+   [
+    "sion$",
+    [
+     "ZH AH N"
+    ]
+   ],
+   [
+    "cion$",
+    [
+     "SH AH N"
+    ]
+   ],
+   [
+    "eaux$",
+    [
+     "OW"
+    ]
+   ],
+   [
+    "eux$",
+    [
+     "UW"
+    ]
+   ],
+   [
+    "ough$",
+    [
+     "OW",
+     "AH F"
+    ]
+   ],
+   [
+    "dge$",
+    [
+     "JH"
+    ]
+   ],
+   [
+    "ey$",
+    [
+     "IY"
+    ]
+   ],
+   [
+    "ow$",
+    [
+     "OW"
+    ]
+   ],
+   [
+    "ng$",
+    [
+     "NG"
+    ]
+   ],
+   [
+    "y$",
+    [
+     "IY"
+    ]
+   ],
+   [
+    "(?<=[bcdfghjklmnpqrstvwxz])es$",
+    [
+     "Z",
+     "EH S"
+    ]
+   ],
+   [
+    "(?<=[bcdfghjklmnpqrstvwxz])e$",
+    [
+     "",
+     "IY"
+    ]
+   ],
+   [
+    "(?<=[aeiou])e$",
+    [
+     "IY"
+    ]
+   ],
+   [
+    "a$",
+    [
+     "AH"
+    ]
+   ],
+   [
+    "i$",
+    [
+     "IY"
+    ]
+   ],
+   [
+    "o$",
+    [
+     "OW"
+    ]
+   ],
+   [
+    "u$",
+    [
+     "UW"
+    ]
+   ],
+   [
+    "air",
+    [
+     "EH R"
+    ]
+   ],
+   [
+    "ear(?![aeiouy])",
+    [
+     "ER",
+     "IY R"
+    ]
+   ],
+   [
+    "our(?![aeiouy])",
+    [
+     "ER",
+     "AW R"
+    ]
+   ],
+   [
+    "oor(?![aeiouy])",
+    [
+     "UH R"
+    ]
+   ],
+   [
+    "eau",
+    [
+     "OW"
+    ]
+   ],
+   [
+    "eigh",
+    [
+     "EY"
+    ]
+   ],
+   [
+    "igh",
+    [
+     "AY"
+    ]
+   ],
+   [
+    "augh",
+    [
+     "AO"
+    ]
+   ],
+   [
+    "ai",
+    [
+     "EY"
+    ]
+   ],
+   [
+    "ay",
+    [
+     "EY"
+    ]
+   ],
+   [
+    "ea",
+    [
+     "IY",
+     "EH"
+    ]
+   ],
+   [
+    "ee",
+    [
+     "IY"
+    ]
+   ],
+   [
+    "ei",
+    [
+     "EY"
+    ]
+   ],
+   [
+    "ey",
+    [
+     "EY"
+    ]
+   ],
+   [
+    "eu",
+    [
+     "UW"
+    ]
+   ],
+   [
+    "ew",
+    [
+     "UW"
+    ]
+   ],
+   [
+    "ie",
+    [
+     "IY"
+    ]
+   ],
+   [
+    "ia",
+    [
+     "IY AH"
+    ]
+   ],
+   [
+    "io",
+    [
+     "IY OW"
+    ]
+   ],
+   [
+    "eo",
+    [
+     "IY AH"
+    ]
+   ],
+   [
+    "oa",
+    [
+     "OW"
+    ]
+   ],
+   [
+    "oe",
+    [
+     "OW"
+    ]
+   ],
+   [
+    "oi",
+    [
+     "OY"
+    ]
+   ],
+   [
+    "oy",
+    [
+     "OY"
+    ]
+   ],
+   [
+    "oo",
+    [
+     "UW"
+    ]
+   ],
+   [
+    "ou",
+    [
+     "AW",
+     "UW"
+    ]
+   ],
+   [
+    "ow",
+    [
+     "AW",
+     "OW"
+    ]
+   ],
+   [
+    "ue",
+    [
+     "UW"
+    ]
+   ],
+   [
+    "ui",
+    [
+     "UW"
+    ]
+   ],
+   [
+    "au",
+    [
+     "AO"
+    ]
+   ],
+   [
+    "aw",
+    [
+     "AO"
+    ]
+   ],
+   [
+    "ar(?![aeiouy])",
+    [
+     "AA R"
+    ]
+   ],
+   [
+    "er(?![aeiouy])",
+    [
+     "ER"
+    ]
+   ],
+   [
+    "ir(?![aeiouy])",
+    [
+     "ER"
+    ]
+   ],
+   [
+    "ur(?![aeiouy])",
+    [
+     "ER"
+    ]
+   ],
+   [
+    "yr(?![aeiouy])",
+    [
+     "ER"
+    ]
+   ],
+   [
+    "or(?![aeiouy])",
+    [
+     "AO R"
+    ]
+   ],
+   [
+    "tch",
+    [
+     "CH"
+    ]
+   ],
+   [
+    "dg(?=[eiy])",
+    [
+     "JH"
+    ]
+   ],
+   [
+    "ph",
+    [
+     "F"
+    ]
+   ],
+   [
+    "gh(?=[aeiouy])",
+    [
+     "G"
+    ]
+   ],
+   [
+    "gh",
+    [
+     ""
+    ]
+   ],
+   [
+    "ck",
+    [
+     "K"
+    ]
+   ],
+   [
+    "ch",
+    [
+     "CH",
+     "K",
+     "SH"
+    ]
+   ],
+   [
+    "sh",
+    [
+     "SH"
+    ]
+   ],
+   [
+    "th",
+    [
+     "TH",
+     "T"
+    ]
+   ],
+   [
+    "wh",
+    [
+     "W"
+    ]
+   ],
+   [
+    "qu",
+    [
+     "K W"
+    ]
+   ],
+   [
+    "nk",
+    [
+     "NG K"
+    ]
+   ],
+   [
+    "ng(?=[bcdfghjklmnpqrstvwxz]|$)",
+    [
+     "NG"
+    ]
+   ],
+   [
+    "cc(?=[eiy])",
+    [
+     "K S"
+    ]
+   ],
+   [
+    "sc(?=[eiy])",
+    [
+     "S"
+    ]
+   ],
+   [
+    "c(?=[eiy])",
+    [
+     "S"
+    ]
+   ],
+   [
+    "c",
+    [
+     "K"
+    ]
+   ],
+   [
+    "q",
+    [
+     "K"
+    ]
+   ],
+   [
+    "x",
+    [
+     "K S"
+    ]
+   ],
+   [
+    "g(?=[eiy])",
+    [
+     "JH",
+     "G"
+    ]
+   ],
+   [
+    "g",
+    [
+     "G"
+    ]
+   ],
+   [
+    "j",
+    [
+     "JH",
+     "HH",
+     "Y"
+    ]
+   ],
+   [
+    "(?<=[aeiouy])s(?=[aeiouy])",
+    [
+     "Z",
+     "S"
+    ]
+   ],
+   [
+    "z",
+    [
+     "Z",
+     "S"
+    ]
+   ],
+   [
+    "a(?=[bcdfghjklmnprstvz]es?$)",
+    [
+     "EY"
+    ]
+   ],
+   [
+    "e(?=[bcdfghjklmnprstvz]es?$)",
+    [
+     "IY"
+    ]
+   ],
+   [
+    "i(?=[bcdfghjklmnprstvz]es?$)",
+    [
+     "AY"
+    ]
+   ],
+   [
+    "o(?=[bcdfghjklmnprstvz]es?$)",
+    [
+     "OW"
+    ]
+   ],
+   [
+    "u(?=[bcdfghjklmnprstvz]es?$)",
+    [
+     "UW"
+    ]
+   ],
+   [
+    "a(?=[bcdfghjklmnprstvz][aeiouy])",
+    [
+     "EY"
+    ]
+   ],
+   [
+    "e(?=[bcdfghjklmnprstvz][aeiouy])",
+    [
+     "IY"
+    ]
+   ],
+   [
+    "i(?=[bcdfghjklmnprstvz][aeiouy])",
+    [
+     "AY"
+    ]
+   ],
+   [
+    "o(?=[bcdfghjklmnprstvz][aeiouy])",
+    [
+     "OW"
+    ]
+   ],
+   [
+    "u(?=[bcdfghjklmnprstvz][aeiouy])",
+    [
+     "UW"
+    ]
+   ],
+   [
+    "^y",
+    [
+     "Y"
+    ]
+   ],
+   [
+    "y(?=[aeiou])",
+    [
+     "Y"
+    ]
+   ],
+   [
+    "y",
+    [
+     "IH"
+    ]
+   ],
+   [
+    "a",
+    [
+     "AE"
+    ]
+   ],
+   [
+    "e",
+    [
+     "EH"
+    ]
+   ],
+   [
+    "i",
+    [
+     "IH"
+    ]
+   ],
+   [
+    "o",
+    [
+     "AA"
+    ]
+   ],
+   [
+    "u",
+    [
+     "AH"
+    ]
+   ],
+   [
+    "b",
+    [
+     "B"
+    ]
+   ],
+   [
+    "d",
+    [
+     "D"
+    ]
+   ],
+   [
+    "f",
+    [
+     "F"
+    ]
+   ],
+   [
+    "h",
+    [
+     "HH"
+    ]
+   ],
+   [
+    "k",
+    [
+     "K"
+    ]
+   ],
+   [
+    "l",
+    [
+     "L"
+    ]
+   ],
+   [
+    "m",
+    [
+     "M"
+    ]
+   ],
+   [
+    "n",
+    [
+     "N"
+    ]
+   ],
+   [
+    "p",
+    [
+     "P"
+    ]
+   ],
+   [
+    "r",
+    [
+     "R"
+    ]
+   ],
+   [
+    "s",
+    [
+     "S"
+    ]
+   ],
+   [
+    "t",
+    [
+     "T"
+    ]
+   ],
+   [
+    "v",
+    [
+     "V"
+    ]
+   ],
+   [
+    "w",
+    [
+     "W"
+    ]
+   ]
+  ],
+  "max_states": 24,
+  "max_variants": 6
+ },
+ "normalize": {
+  "strong_filler": [
+   "account",
+   "actually",
+   "adviser",
+   "advisor",
+   "again",
+   "agent",
+   "available",
+   "branch",
+   "called",
+   "calling",
+   "connect",
+   "connecting",
+   "could",
+   "department",
+   "dept",
+   "doctor",
+   "dr",
+   "ext",
+   "extension",
+   "gentleman",
+   "give",
+   "guy",
+   "hello",
+   "know",
+   "lady",
+   "loan",
+   "looking",
+   "man",
+   "maybe",
+   "miss",
+   "missus",
+   "mister",
+   "mortgage",
+   "mr",
+   "mrs",
+   "ms",
+   "mx",
+   "name",
+   "need",
+   "needed",
+   "number",
+   "office",
+   "officer",
+   "person",
+   "please",
+   "possibly",
+   "put",
+   "reach",
+   "reaching",
+   "regard",
+   "regarding",
+   "rep",
+   "representative",
+   "right",
+   "should",
+   "somebody",
+   "someone",
+   "sorry",
+   "speak",
+   "speaking",
+   "spoke",
+   "talk",
+   "talking",
+   "team",
+   "tell",
+   "thank",
+   "thanks",
+   "think",
+   "today",
+   "transfer",
+   "transferred",
+   "trying",
+   "want",
+   "wanted",
+   "with",
+   "woman",
+   "would"
+  ],
+  "weak_filler": [
+   "a",
+   "about",
+   "am",
+   "an",
+   "and",
+   "are",
+   "as",
+   "ask",
+   "at",
+   "be",
+   "by",
+   "call",
+   "can",
+   "did",
+   "do",
+   "does",
+   "for",
+   "from",
+   "get",
+   "go",
+   "got",
+   "had",
+   "has",
+   "have",
+   "he",
+   "hear",
+   "her",
+   "here",
+   "hers",
+   "hey",
+   "hi",
+   "him",
+   "his",
+   "how",
+   "i",
+   "id",
+   "if",
+   "im",
+   "in",
+   "is",
+   "it",
+   "its",
+   "just",
+   "like",
+   "look",
+   "may",
+   "me",
+   "my",
+   "of",
+   "oh",
+   "ok",
+   "okay",
+   "on",
+   "one",
+   "or",
+   "our",
+   "out",
+   "over",
+   "say",
+   "see",
+   "she",
+   "so",
+   "that",
+   "the",
+   "their",
+   "them",
+   "then",
+   "there",
+   "they",
+   "this",
+   "to",
+   "try",
+   "uh",
+   "um",
+   "up",
+   "us",
+   "was",
+   "we",
+   "well",
+   "were",
+   "what",
+   "when",
+   "which",
+   "who",
+   "will",
+   "yeah",
+   "yes",
+   "you",
+   "your"
+  ],
+  "particles": [
+   "da",
+   "das",
+   "de",
+   "del",
+   "dela",
+   "della",
+   "den",
+   "der",
+   "di",
+   "dos",
+   "du",
+   "mac",
+   "mc",
+   "o",
+   "saint",
+   "st",
+   "ter",
+   "van",
+   "von"
+  ],
+  "spelled_markers": [
+   "as",
+   "for",
+   "in",
+   "like",
+   "of"
+  ]
+ },
+ "phonemes": {
+  "consonants": {
+   "P": [
+    "labial",
+    "stop",
+    0
+   ],
+   "B": [
+    "labial",
+    "stop",
+    1
+   ],
+   "T": [
+    "alveolar",
+    "stop",
+    0
+   ],
+   "D": [
+    "alveolar",
+    "stop",
+    1
+   ],
+   "K": [
+    "velar",
+    "stop",
+    0
+   ],
+   "G": [
+    "velar",
+    "stop",
+    1
+   ],
+   "CH": [
+    "postalveolar",
+    "affricate",
+    0
+   ],
+   "JH": [
+    "postalveolar",
+    "affricate",
+    1
+   ],
+   "F": [
+    "labiodental",
+    "fricative",
+    0
+   ],
+   "V": [
+    "labiodental",
+    "fricative",
+    1
+   ],
+   "TH": [
+    "dental",
+    "fricative",
+    0
+   ],
+   "DH": [
+    "dental",
+    "fricative",
+    1
+   ],
+   "S": [
+    "alveolar",
+    "fricative",
+    0
+   ],
+   "Z": [
+    "alveolar",
+    "fricative",
+    1
+   ],
+   "SH": [
+    "postalveolar",
+    "fricative",
+    0
+   ],
+   "ZH": [
+    "postalveolar",
+    "fricative",
+    1
+   ],
+   "HH": [
+    "glottal",
+    "fricative",
+    0
+   ],
+   "M": [
+    "labial",
+    "nasal",
+    1
+   ],
+   "N": [
+    "alveolar",
+    "nasal",
+    1
+   ],
+   "NG": [
+    "velar",
+    "nasal",
+    1
+   ],
+   "L": [
+    "alveolar",
+    "liquid",
+    1
+   ],
+   "R": [
+    "postalveolar",
+    "liquid",
+    1
+   ],
+   "W": [
+    "labial",
+    "glide",
+    1
+   ],
+   "Y": [
+    "palatal",
+    "glide",
+    1
+   ]
+  },
+  "vowels": {
+   "IY": [
+    3,
+    0,
+    0,
+    1
+   ],
+   "IH": [
+    2,
+    0,
+    0,
+    0
+   ],
+   "EY": [
+    2,
+    0,
+    0,
+    1
+   ],
+   "EH": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "AE": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "AA": [
+    0,
+    2,
+    0,
+    1
+   ],
+   "AO": [
+    1,
+    2,
+    1,
+    1
+   ],
+   "OW": [
+    2,
+    2,
+    1,
+    1
+   ],
+   "UH": [
+    2,
+    2,
+    1,
+    0
+   ],
+   "UW": [
+    3,
+    2,
+    1,
+    1
+   ],
+   "AH": [
+    1,
+    1,
+    0,
+    0
+   ],
+   "ER": [
+    1,
+    1,
+    0,
+    1
+   ],
+   "AY": [
+    0,
+    1,
+    0,
+    1
+   ],
+   "AW": [
+    0,
+    1,
+    0,
+    1
+   ],
+   "OY": [
+    1,
+    2,
+    1,
+    1
+   ]
+  },
+  "place_order": [
+   "labial",
+   "labiodental",
+   "dental",
+   "alveolar",
+   "postalveolar",
+   "palatal",
+   "velar",
+   "glottal"
+  ],
+  "manner_distance": [
+   [
+    "affricate",
+    "fricative",
+    0.25
+   ],
+   [
+    "affricate",
+    "glide",
+    0.7
+   ],
+   [
+    "affricate",
+    "liquid",
+    0.85
+   ],
+   [
+    "affricate",
+    "nasal",
+    0.85
+   ],
+   [
+    "affricate",
+    "stop",
+    0.3
+   ],
+   [
+    "fricative",
+    "glide",
+    0.55
+   ],
+   [
+    "fricative",
+    "liquid",
+    0.75
+   ],
+   [
+    "fricative",
+    "nasal",
+    0.75
+   ],
+   [
+    "fricative",
+    "stop",
+    0.55
+   ],
+   [
+    "glide",
+    "liquid",
+    0.4
+   ],
+   [
+    "glide",
+    "nasal",
+    0.75
+   ],
+   [
+    "glide",
+    "stop",
+    0.85
+   ],
+   [
+    "liquid",
+    "nasal",
+    0.65
+   ],
+   [
+    "liquid",
+    "stop",
+    0.85
+   ],
+   [
+    "nasal",
+    "stop",
+    0.55
+   ]
+  ],
+  "confusion_pairs": [
+   [
+    "AA",
+    "ER",
+    0.28
+   ],
+   [
+    "AH",
+    "ER",
+    0.12
+   ],
+   [
+    "B",
+    "P",
+    0.2
+   ],
+   [
+    "B",
+    "V",
+    0.12
+   ],
+   [
+    "CH",
+    "JH",
+    0.18
+   ],
+   [
+    "CH",
+    "SH",
+    0.16
+   ],
+   [
+    "CH",
+    "TH",
+    0.4
+   ],
+   [
+    "D",
+    "DH",
+    0.12
+   ],
+   [
+    "D",
+    "T",
+    0.18
+   ],
+   [
+    "D",
+    "TH",
+    0.3
+   ],
+   [
+    "DH",
+    "TH",
+    0.1
+   ],
+   [
+    "DH",
+    "V",
+    0.22
+   ],
+   [
+    "DH",
+    "Z",
+    0.14
+   ],
+   [
+    "ER",
+    "R",
+    0.3
+   ],
+   [
+    "F",
+    "HH",
+    0.45
+   ],
+   [
+    "F",
+    "P",
+    0.22
+   ],
+   [
+    "F",
+    "TH",
+    0.18
+   ],
+   [
+    "F",
+    "V",
+    0.15
+   ],
+   [
+    "G",
+    "HH",
+    0.5
+   ],
+   [
+    "G",
+    "JH",
+    0.35
+   ],
+   [
+    "G",
+    "K",
+    0.2
+   ],
+   [
+    "HH",
+    "JH",
+    0.35
+   ],
+   [
+    "HH",
+    "K",
+    0.45
+   ],
+   [
+    "HH",
+    "Y",
+    0.45
+   ],
+   [
+    "JH",
+    "Y",
+    0.28
+   ],
+   [
+    "JH",
+    "ZH",
+    0.14
+   ],
+   [
+    "L",
+    "R",
+    0.14
+   ],
+   [
+    "L",
+    "W",
+    0.4
+   ],
+   [
+    "M",
+    "N",
+    0.32
+   ],
+   [
+    "M",
+    "NG",
+    0.45
+   ],
+   [
+    "N",
+    "NG",
+    0.14
+   ],
+   [
+    "R",
+    "W",
+    0.35
+   ],
+   [
+    "S",
+    "SH",
+    0.24
+   ],
+   [
+    "S",
+    "TH",
+    0.12
+   ],
+   [
+    "S",
+    "Z",
+    0.1
+   ],
+   [
+    "SH",
+    "ZH",
+    0.16
+   ],
+   [
+    "T",
+    "TH",
+    0.12
+   ],
+   [
+    "V",
+    "W",
+    0.08
+   ],
+   [
+    "Z",
+    "ZH",
+    0.2
+   ]
+  ],
+  "cheap_to_drop": {
+   "AH": 0.24,
+   "ER": 0.3,
+   "IH": 0.3,
+   "HH": 0.22,
+   "Y": 0.32,
+   "W": 0.34
+  },
+  "reduced_vowel_cost": {
+   "AH": 0.12,
+   "IH": 0.18,
+   "ER": 0.2,
+   "UH": 0.2
+  },
+  "final_deletion_discount": 0.65,
+  "max_vowel_sub_cost": 0.45,
+  "min_consonant_sub_cost": 0.14
+ },
+ "keys": {
+  "classes": {
+   "P": "P",
+   "B": "P",
+   "F": "F",
+   "V": "F",
+   "W": "F",
+   "T": "T",
+   "D": "T",
+   "TH": "T",
+   "DH": "T",
+   "S": "S",
+   "Z": "S",
+   "SH": "S",
+   "ZH": "S",
+   "CH": "S",
+   "JH": "S",
+   "K": "K",
+   "G": "K",
+   "M": "M",
+   "N": "N",
+   "NG": "N",
+   "L": "L",
+   "R": "L",
+   "Y": "Y",
+   "HH": ""
+  }
+ },
+ "nicknames": [
+  "abigail abby abbie gail",
+  "adam ad addy",
+  "albert al bert bertie",
+  "alexander alex alec sandy xander lex",
+  "alexandra alex alexa sasha sandra",
+  "alfred alf alfie fred freddy",
+  "alison ali allie",
+  "amanda mandy manda",
+  "andrew andy drew",
+  "angela angie ange",
+  "anne ann annie nancy nan",
+  "anthony tony ant",
+  "antonio tony tonio",
+  "arthur art artie",
+  "barbara barb barbie babs",
+  "benjamin ben benny benji",
+  "bernard bernie barney",
+  "beverly bev",
+  "bradley brad",
+  "brandon brandy",
+  "brian bryan bri",
+  "bridget bridie biddy",
+  "cameron cam",
+  "carolyn caroline carol carrie lynn",
+  "catherine katherine kathryn kate katie kathy cathy kat kitty",
+  "charles charlie chuck chas chip",
+  "charlotte lottie charlie",
+  "christina christine chris tina christy",
+  "christopher chris kit topher",
+  "clarence clare",
+  "clifford cliff",
+  "constance connie",
+  "cynthia cindy cyn",
+  "daniel dan danny",
+  "danielle dani danny",
+  "david dave davey",
+  "deborah debra deb debbie",
+  "dennis denny",
+  "desmond des",
+  "diana diane di",
+  "dolores lola",
+  "donald don donnie",
+  "dorothy dot dottie dora",
+  "douglas doug",
+  "edward ed eddie ted teddy ned",
+  "edwin ed eddie",
+  "eleanor ellie nora",
+  "elizabeth liz beth betty betsy eliza lisa libby",
+  "emily em emmy",
+  "eugene gene",
+  "florence flo flossie",
+  "francis frank frankie",
+  "francisco frank paco pancho cisco",
+  "frederick fred freddy fritz",
+  "gabriel gabe",
+  "geoffrey jeffrey jeff geoff",
+  "george georgie geordie",
+  "gerald jerry gerry",
+  "gregory greg",
+  "gwendolyn gwen",
+  "harold harry hal",
+  "harriet hattie",
+  "heather heath",
+  "henry hank harry hal",
+  "herbert herb bert",
+  "isabella isabel bella izzy belle",
+  "jacob jake jay",
+  "james jim jimmy jamie",
+  "jasmine jazz jas",
+  "jeffrey jeff",
+  "jennifer jen jenny jenn",
+  "jeremy jerry",
+  "jerome jerry",
+  "jessica jess jessie",
+  "joanna jo joan",
+  "johnathan jonathan jon john johnny nathan",
+  "john johnny jack jackie",
+  "joseph joe joey jos",
+  "josephine jo josie",
+  "joshua josh",
+  "juan johnny",
+  "judith judy jude",
+  "julia julie jules",
+  "karen kare",
+  "kenneth ken kenny",
+  "kimberly kim kimmy",
+  "lawrence laurence larry lars",
+  "leonard leo lenny len",
+  "leslie les",
+  "lillian lily lil",
+  "lincoln linc",
+  "linda lin lindy",
+  "louis lou louie",
+  "lucas luke luca",
+  "margaret maggie meg peggy marge greta",
+  "martha marty mattie",
+  "martin marty",
+  "mary molly mae may mamie",
+  "matthew matt matty",
+  "maurice maury mo",
+  "megan meg",
+  "melissa mel missy lisa",
+  "michael mike mikey mick micky",
+  "michelle shelly mich",
+  "nathaniel nathan nate",
+  "nicholas nick nicky cole",
+  "nicole nikki nicki cole",
+  "norman norm",
+  "olivia liv livvy olive",
+  "patricia pat patty tricia trish",
+  "patrick pat paddy rick",
+  "paul paulie",
+  "penelope penny",
+  "peter pete petey",
+  "philip phillip phil",
+  "priscilla cilla priss",
+  "rachel rae",
+  "raymond ray",
+  "rebecca becky becca",
+  "reginald reggie",
+  "richard rick ricky dick rich richie",
+  "robert bob bobby rob robbie bert",
+  "roberta bobbie bert",
+  "rodney rod",
+  "roger rodge",
+  "ronald ron ronnie",
+  "russell russ",
+  "samuel sam sammy",
+  "samantha sam sammy",
+  "sandra sandy",
+  "sebastian seb",
+  "sharon shari",
+  "sheila shelly",
+  "stanley stan",
+  "stephanie steph stevie",
+  "stephen steven steve stevie",
+  "susan sue susie suzy",
+  "sylvia sylvie",
+  "terence terrence terry",
+  "theodore ted teddy theo",
+  "theresa teresa terry tess tessa",
+  "thomas tom tommy",
+  "timothy tim timmy",
+  "valerie val",
+  "veronica ronnie roni",
+  "victor vic",
+  "victoria vicky tori",
+  "vincent vince vinny",
+  "virginia ginny ginger",
+  "walter walt wally",
+  "wesley wes",
+  "wilhelmina mina billie",
+  "william bill billy will willie liam",
+  "yolanda yoli",
+  "zachary zach zack"
+ ],
+ "common_words": [
+  "able",
+  "about",
+  "above",
+  "accept",
+  "access",
+  "account",
+  "across",
+  "action",
+  "actually",
+  "add",
+  "address",
+  "advance",
+  "after",
+  "afternoon",
+  "again",
+  "against",
+  "age",
+  "ago",
+  "agree",
+  "ahead",
+  "all",
+  "allow",
+  "almost",
+  "alone",
+  "along",
+  "already",
+  "also",
+  "although",
+  "always",
+  "amount",
+  "another",
+  "answer",
+  "any",
+  "anybody",
+  "anymore",
+  "anything",
+  "anyway",
+  "apply",
+  "appointment",
+  "approval",
+  "approve",
+  "approved",
+  "area",
+  "around",
+  "arrive",
+  "ask",
+  "asking",
+  "assume",
+  "attach",
+  "attention",
+  "automatic",
+  "available",
+  "away",
+  "back",
+  "bad",
+  "balance",
+  "bank",
+  "bankrupt",
+  "because",
+  "become",
+  "been",
+  "before",
+  "begin",
+  "behind",
+  "being",
+  "believe",
+  "below",
+  "best",
+  "better",
+  "between",
+  "big",
+  "bill",
+  "bit",
+  "both",
+  "bottom",
+  "bought",
+  "break",
+  "bring",
+  "broker",
+  "brought",
+  "budget",
+  "build",
+  "building",
+  "business",
+  "busy",
+  "buy",
+  "buying",
+  "call",
+  "came",
+  "cancel",
+  "cannot",
+  "car",
+  "card",
+  "care",
+  "carry",
+  "case",
+  "cash",
+  "catch",
+  "cause",
+  "center",
+  "certain",
+  "certainly",
+  "chance",
+  "change",
+  "charge",
+  "chart",
+  "chat",
+  "cheap",
+  "check",
+  "checking",
+  "choice",
+  "choose",
+  "claim",
+  "clear",
+  "client",
+  "close",
+  "closed",
+  "closing",
+  "collect",
+  "come",
+  "coming",
+  "company",
+  "complete",
+  "computer",
+  "condition",
+  "confirm",
+  "confirmation",
+  "consider",
+  "contact",
+  "continue",
+  "contract",
+  "copy",
+  "correct",
+  "cost",
+  "could",
+  "country",
+  "couple",
+  "course",
+  "cover",
+  "credit",
+  "current",
+  "customer",
+  "cut",
+  "date",
+  "day",
+  "deal",
+  "debit",
+  "debt",
+  "decide",
+  "decision",
+  "deduct",
+  "default",
+  "delay",
+  "delete",
+  "deliver",
+  "department",
+  "deposit",
+  "detail",
+  "did",
+  "difference",
+  "different",
+  "difficult",
+  "digit",
+  "direct",
+  "discuss",
+  "document",
+  "does",
+  "doing",
+  "dollar",
+  "done",
+  "door",
+  "double",
+  "down",
+  "draw",
+  "drop",
+  "due",
+  "during",
+  "each",
+  "early",
+  "easy",
+  "edit",
+  "either",
+  "else",
+  "email",
+  "emergency",
+  "employer",
+  "empty",
+  "end",
+  "enough",
+  "enter",
+  "entire",
+  "equity",
+  "error",
+  "escrow",
+  "even",
+  "evening",
+  "ever",
+  "every",
+  "everybody",
+  "everything",
+  "exact",
+  "example",
+  "except",
+  "expect",
+  "expense",
+  "expensive",
+  "explain",
+  "extra",
+  "face",
+  "fact",
+  "fail",
+  "family",
+  "far",
+  "fast",
+  "father",
+  "fault",
+  "favor",
+  "fax",
+  "fee",
+  "feel",
+  "few",
+  "figure",
+  "file",
+  "fill",
+  "final",
+  "finance",
+  "financial",
+  "find",
+  "fine",
+  "finish",
+  "first",
+  "fix",
+  "fixed",
+  "follow",
+  "foreclose",
+  "forget",
+  "form",
+  "forward",
+  "found",
+  "free",
+  "friend",
+  "front",
+  "full",
+  "fund",
+  "funds",
+  "further",
+  "future",
+  "gave",
+  "general",
+  "get",
+  "getting",
+  "given",
+  "giving",
+  "glad",
+  "going",
+  "good",
+  "great",
+  "group",
+  "guess",
+  "half",
+  "hand",
+  "handle",
+  "happen",
+  "happy",
+  "hard",
+  "have",
+  "having",
+  "head",
+  "hear",
+  "heard",
+  "help",
+  "high",
+  "history",
+  "hold",
+  "home",
+  "hope",
+  "hour",
+  "house",
+  "housing",
+  "however",
+  "hundred",
+  "hurry",
+  "idea",
+  "important",
+  "improve",
+  "include",
+  "income",
+  "increase",
+  "indeed",
+  "inform",
+  "information",
+  "initial",
+  "inquiry",
+  "inside",
+  "instead",
+  "insurance",
+  "interest",
+  "internet",
+  "issue",
+  "item",
+  "job",
+  "join",
+  "keep",
+  "kept",
+  "key",
+  "kind",
+  "knew",
+  "know",
+  "known",
+  "land",
+  "large",
+  "last",
+  "late",
+  "later",
+  "law",
+  "lead",
+  "learn",
+  "least",
+  "leave",
+  "left",
+  "lender",
+  "lending",
+  "length",
+  "less",
+  "let",
+  "letter",
+  "level",
+  "lien",
+  "life",
+  "light",
+  "limit",
+  "line",
+  "list",
+  "listen",
+  "little",
+  "live",
+  "loan",
+  "local",
+  "lock",
+  "locked",
+  "long",
+  "look",
+  "loss",
+  "lot",
+  "low",
+  "lower",
+  "made",
+  "mail",
+  "main",
+  "make",
+  "manage",
+  "many",
+  "mark",
+  "market",
+  "matter",
+  "mean",
+  "meant",
+  "meeting",
+  "mention",
+  "message",
+  "middle",
+  "might",
+  "mind",
+  "minute",
+  "miss",
+  "missing",
+  "mistake",
+  "moment",
+  "money",
+  "month",
+  "monthly",
+  "more",
+  "morning",
+  "most",
+  "mother",
+  "move",
+  "much",
+  "must",
+  "mute",
+  "name",
+  "near",
+  "need",
+  "never",
+  "new",
+  "next",
+  "nice",
+  "night",
+  "none",
+  "normal",
+  "note",
+  "nothing",
+  "notice",
+  "now",
+  "number",
+  "offer",
+  "often",
+  "once",
+  "only",
+  "open",
+  "opening",
+  "operator",
+  "opinion",
+  "option",
+  "order",
+  "other",
+  "outside",
+  "over",
+  "overdue",
+  "owe",
+  "owed",
+  "own",
+  "owner",
+  "page",
+  "paid",
+  "paper",
+  "part",
+  "partial",
+  "pass",
+  "password",
+  "past",
+  "pay",
+  "payable",
+  "payment",
+  "payoff",
+  "penalty",
+  "pending",
+  "people",
+  "percent",
+  "perhaps",
+  "period",
+  "person",
+  "phone",
+  "pick",
+  "place",
+  "plan",
+  "please",
+  "point",
+  "policy",
+  "poor",
+  "portal",
+  "position",
+  "possible",
+  "post",
+  "prepay",
+  "press",
+  "pretty",
+  "previous",
+  "price",
+  "principal",
+  "print",
+  "prior",
+  "private",
+  "probably",
+  "problem",
+  "process",
+  "program",
+  "promise",
+  "proof",
+  "property",
+  "provide",
+  "pull",
+  "purchase",
+  "push",
+  "put",
+  "qualify",
+  "quarter",
+  "question",
+  "queue",
+  "quick",
+  "quiet",
+  "quite",
+  "quote",
+  "random",
+  "rate",
+  "rather",
+  "reach",
+  "read",
+  "ready",
+  "real",
+  "really",
+  "reason",
+  "receive",
+  "recent",
+  "record",
+  "refer",
+  "refinance",
+  "refund",
+  "regular",
+  "reject",
+  "release",
+  "remain",
+  "remember",
+  "remove",
+  "rent",
+  "repair",
+  "repeat",
+  "reply",
+  "report",
+  "request",
+  "require",
+  "reset",
+  "resolve",
+  "rest",
+  "result",
+  "return",
+  "review",
+  "right",
+  "rise",
+  "room",
+  "round",
+  "rule",
+  "run",
+  "sale",
+  "same",
+  "save",
+  "saving",
+  "say",
+  "says",
+  "schedule",
+  "score",
+  "screen",
+  "search",
+  "second",
+  "section",
+  "secure",
+  "see",
+  "seem",
+  "sell",
+  "send",
+  "sent",
+  "serious",
+  "service",
+  "set",
+  "settle",
+  "several",
+  "share",
+  "short",
+  "should",
+  "show",
+  "side",
+  "sign",
+  "signature",
+  "simple",
+  "since",
+  "single",
+  "sit",
+  "site",
+  "situation",
+  "size",
+  "slow",
+  "small",
+  "social",
+  "sold",
+  "solve",
+  "some",
+  "somebody",
+  "something",
+  "sometimes",
+  "soon",
+  "sorry",
+  "sound",
+  "speak",
+  "special",
+  "speed",
+  "spend",
+  "spent",
+  "spoke",
+  "start",
+  "state",
+  "statement",
+  "stay",
+  "step",
+  "still",
+  "stop",
+  "story",
+  "straight",
+  "street",
+  "strong",
+  "study",
+  "submit",
+  "such",
+  "sudden",
+  "suggest",
+  "sum",
+  "summary",
+  "supply",
+  "support",
+  "suppose",
+  "sure",
+  "surprise",
+  "switch",
+  "system",
+  "table",
+  "take",
+  "talk",
+  "task",
+  "tax",
+  "team",
+  "tell",
+  "term",
+  "terms",
+  "text",
+  "thank",
+  "that",
+  "their",
+  "them",
+  "then",
+  "there",
+  "these",
+  "thing",
+  "think",
+  "third",
+  "those",
+  "though",
+  "thought",
+  "thousand",
+  "three",
+  "through",
+  "throw",
+  "time",
+  "title",
+  "today",
+  "together",
+  "told",
+  "tomorrow",
+  "tonight",
+  "took",
+  "top",
+  "total",
+  "touch",
+  "toward",
+  "transfer",
+  "treat",
+  "trouble",
+  "true",
+  "trust",
+  "try",
+  "turn",
+  "twice",
+  "type",
+  "under",
+  "understand",
+  "unit",
+  "unless",
+  "until",
+  "update",
+  "upgrade",
+  "upon",
+  "urgent",
+  "use",
+  "used",
+  "usual",
+  "value",
+  "verify",
+  "version",
+  "very",
+  "view",
+  "visit",
+  "voice",
+  "wait",
+  "waive",
+  "walk",
+  "want",
+  "warn",
+  "watch",
+  "water",
+  "week",
+  "weekend",
+  "welcome",
+  "well",
+  "went",
+  "were",
+  "what",
+  "whatever",
+  "when",
+  "where",
+  "whether",
+  "which",
+  "while",
+  "who",
+  "whole",
+  "why",
+  "wife",
+  "will",
+  "willing",
+  "win",
+  "wire",
+  "wish",
+  "within",
+  "without",
+  "word",
+  "work",
+  "worry",
+  "worse",
+  "worth",
+  "would",
+  "write",
+  "written",
+  "wrong",
+  "year",
+  "yesterday",
+  "yet",
+  "your",
+  "zone"
+ ],
+ "search": {
+  "ROLE_WEIGHT": {
+   "first": 0.75,
+   "middle": 0.35,
+   "last": 1.0
+  },
+  "MIN_PAIR_SIMILARITY": 0.68,
+  "SCORE_FLOOR": 0.6,
+  "MATCH_FLOOR": 0.85,
+  "AMBIGUITY_MARGIN": 0.07,
+  "NO_SURNAME_PENALTY": 0.72,
+  "UNMATCHED_TOKEN_PENALTY": 0.86,
+  "ALIAS_PENALTY": 0.99,
+  "MIN_JOINED_SIMILARITY": 0.72,
+  "COMMON_WORD_EVIDENCE": 0.86,
+  "MAX_SCORING_VARIANTS": 2,
+  "MAX_JOIN_SPAN": 4,
+  "MAX_JOIN_WORD_LENGTH": 9,
+  "RRF_K": 60
+ }
+}

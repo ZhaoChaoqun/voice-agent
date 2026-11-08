@@ -95,13 +95,13 @@ test("editable input accepts Auto, language names and loosely formatted locale c
   assert.equal(buildInputTranscription("mai-transcribe-2", "Hindi").language, "hi");
   assert.equal(buildInputTranscription("gpt-4o-transcribe", "Hindi").language, "hi");
   assert.equal(buildInputTranscription("azure-speech", "en in, Hindi").language, "en-IN,hi-IN");
-  assert.match(transcriptionLanguageError("azure-speech", "English"), /published Voice Live/);
+  assert.match(transcriptionLanguageError("azure-speech", "English"), /published Voice Agent/);
 });
 
 test("model-specific invalid input languages are explicit errors, never silently reset", () => {
   assert.match(transcriptionLanguageError("mai-transcribe-2", "en-IN,hi-IN"), /only one/);
   assert.equal(transcriptionLanguageError("gpt-4o-transcribe", "hi-IN"), "");
-  assert.match(transcriptionLanguageError("azure-speech", "not-a-locale"), /published Voice Live/);
+  assert.match(transcriptionLanguageError("azure-speech", "not-a-locale"), /published Voice Agent/);
   assert.match(transcriptionLanguageError("azure-speech", "hi-IN,"), /empty/);
   assert.match(transcriptionLanguageError("azure-speech", "en-IN,en-US"), /one locale per language/);
   assert.equal(transcriptionLanguageError("azure-speech", "ta-IN,hi-IN"), "");

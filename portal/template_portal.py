@@ -40,7 +40,11 @@ SAMPLES_DIR = VOICE_AGENT_ROOT / "samples"
 SHARED_MCP_DIR = VOICE_AGENT_ROOT / "shared_mcp"
 DOCS_DIR = VOICE_AGENT_ROOT / "docs"
 sys.path.insert(0, str(SAMPLES_DIR))
-from voice_agent_definition import materialize_handoff_instruction_inheritance
+from voice_agent_definition import (
+    materialize_handoff_instruction_inheritance,
+    project_inline_subagents,
+    uses_inline_subagents,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -619,8 +623,15 @@ def materialize_template(
                 tool["project_connection_id"] = connection_id
             tool.pop("authorization", None)
             tool.pop("headers", None)
-    materialize_handoff_instruction_inheritance(definition)
+    materialize_handoff_instruction_inheritance(definition, project_inline=False)
     return definition
+
+
+def legacy_graph_definition(definition: dict[str, Any]) -> dict[str, Any]:
+    """A read-only view of the definition as a handoff graph, for summaries and previews."""
+    if not uses_inline_subagents(definition):
+        return definition
+    return project_inline_subagents(copy.deepcopy(definition))
 
 
 def graph_summary(definition: dict[str, Any]) -> dict[str, Any]:
@@ -994,7 +1005,7 @@ class TemplateCatalog:
     def _card(self, source: TemplateSource) -> dict[str, Any]:
         document = self._load(source)
         definition = document["definition"]
-        graph = graph_summary(definition)
+        graph = graph_summary(legacy_graph_definition(definition))
         mcp_tools = list(iter_mcp_tools(definition))
         systems = [
             {"id": group["id"], "label": group["label"], "connectable": group["connectable"]}
@@ -1035,7 +1046,7 @@ class TemplateCatalog:
             return None
         document = self._load(source)
         definition = document["definition"]
-        graph = template_graph_view(definition)
+        graph = template_graph_view(legacy_graph_definition(definition))
         mcp_tools = list(iter_mcp_tools(definition))
         connection_configured = bool(
             source.mcp_server_url
@@ -1498,7 +1509,7 @@ async def get_template(request: web.Request) -> web.Response:
             tool.pop("project_connection_id", None)
         tool.pop("authorization", None)
         tool.pop("headers", None)
-    materialize_handoff_instruction_inheritance(definition)
+    materialize_handoff_instruction_inheritance(definition, project_inline=False)
     detail["definition"] = definition
     detail["yaml"] = json.dumps({**document, "definition": definition}, indent=2)
     detail["suggested_agent_name"] = template_agent_name("", template_id)

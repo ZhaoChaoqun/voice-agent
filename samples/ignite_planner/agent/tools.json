@@ -1,0 +1,235 @@
+[
+  {
+    "type": "function",
+    "name": "highlight_session",
+    "description": "Reveal and highlight a specific meeting in the continuous session feed, even if it is not loaded yet. The page makes it immediately visible without loading the entire catalog. Use its exact id from Ignite MCP results as instance_id, never a title or session code.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "instance_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150
+        }
+      },
+      "required": [
+        "instance_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "type": "function",
+    "name": "add_to_agenda",
+    "description": "Add the requested meeting batch to the calendar FIRST, even if times overlap. Pass all requested exact MCP IDs in one instance_ids array, not one call per meeting. Returns added, already-present and rejected items plus the current agenda IDs. Then acknowledge the additions and use ignite_validate_agenda to report problems; never block additions or remove meetings because of conflicts. Does not reserve seats.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "instance_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          }
+        }
+      },
+      "required": [
+        "instance_ids"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "type": "function",
+    "name": "remove_from_agenda",
+    "description": "Remove the exact instance_id from the current agenda when requested. Return the updated agenda and transfer windows. Removing an already absent meeting is safe.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "instance_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150
+        }
+      },
+      "required": [
+        "instance_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "type": "function",
+    "name": "overview_agenda",
+    "description": "Focus and summarize the user's always-visible calendar on the right, including start/end times, rooms, venues and transfer windows. Manual and Agent additions share this agenda. The meeting list stays visible on the left.",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "type": "function",
+    "name": "show_ranked_sessions",
+    "description": "Replace the session feed on the left with an interest-ranked shortlist, in exactly the given order, with rank badges and the attendee's interests shown on each card. Pass the instance_ids returned by ignite_rank_sessions (usually the top 10) and the same interest phrases. Pass an empty instance_ids array to return to the full catalog. Does not change the agenda.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "instance_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 20,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          }
+        },
+        "interests": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        }
+      },
+      "required": [
+        "instance_ids",
+        "interests"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "type": "function",
+    "name": "open_session_details",
+    "description": "Open the full detail sheet for one exact session and spotlight it: time, venue, format, level, recording, speakers with job titles and companies, overlaps with the attendee's agenda, other times and related sessions. Use when the attendee asks for more about a specific session. Returns the same facts for you to talk about: speakers with job titles and companies, format, recording, seating, and agenda_fit (overlaps and venue changes with saved sessions). The attendee closes it.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "instance_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150
+        }
+      },
+      "required": [
+        "instance_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "type": "function",
+    "name": "find_speaker",
+    "description": "Find a conference speaker by name and show their sessions. Speech recognition often mangles names (\"Yiwen Rong\" may arrive as \"e when wrong\", \"Nguyen\" as \"new yen\"), so pass the name EXACTLY as you heard it, misspelled or split into words, never corrected or guessed; the page matches by sound. If you are unsure how it was spelled, add up to 4 alternative spellings. Obey the returned status: one_match means their sessions are now listed; multiple_matches or no_match with did_you_mean means ask the attendee which person they meant (the page shows the options); no_match without suggestions means say nobody matched and ask them to spell the name.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "alternatives": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "type": "function",
+    "name": "fill_free_time",
+    "description": "Find the attendee's free windows of 30 minutes or more between 9 AM and 6 PM on one day, around the sessions already on their agenda, and list the sessions that fit entirely inside each window. The calendar marks the windows and the session list shows the suggestions. Pass the attendee's interests if they gave any; otherwise the topics already on their agenda are used. Does not change the agenda.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "enum": [
+            "2026-11-16",
+            "2026-11-17",
+            "2026-11-18",
+            "2026-11-19",
+            "2026-11-20"
+          ]
+        },
+        "interests": {
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        }
+      },
+      "required": [
+        "date"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "type": "function",
+    "name": "compare_sessions",
+    "description": "Show 2 or 3 sessions side by side on the page (time, venue, format, level, length, speakers with their roles, topics, recording, how each fits the agenda) and return the same facts with the fields that differ. Use when the attendee wants to choose between sessions, especially overlapping ones.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "instance_ids": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 3,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          }
+        }
+      },
+      "required": [
+        "instance_ids"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "type": "function",
+    "name": "show_how_it_works",
+    "description": "Open the board on the right that explains how you drive this page. Use it when the attendee asks how you work, how you control the page, or how the voice agent and the web page interact. Call it WITHOUT a step to start the walkthrough: it returns the facts for all five steps (connect, register, call, execute, together), and the board moves to the next step each time you finish a sentence. Give a step only to show one step again, or step close to hide the board.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "step": {
+          "type": "string",
+          "enum": [
+            "connect",
+            "register",
+            "call",
+            "execute",
+            "together",
+            "close"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]

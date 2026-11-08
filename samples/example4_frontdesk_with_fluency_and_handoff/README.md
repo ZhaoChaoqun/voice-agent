@@ -60,7 +60,8 @@ Support or a message, never invent an article.
 ## Preserved runtime settings
 
 - Managed `gpt-realtime`, Whisper transcription, and Ava Dragon HD voice.
-- Eager semantic VAD, noise suppression, and automatic truncation.
+- Example 1's semantic VAD with 600 ms silence (`profile: normal`, Smart Turn
+  end-of-utterance detection off), noise suppression, and automatic truncation.
 - No server echo cancellation, preserving the front-desk self-interruption
   mitigation.
 - No required `call_id` input: reuse a supplied call ID or generate the
@@ -102,4 +103,4 @@ neither owns a second copy of the business definition.
 ## Template versions
 
 The root [`agent.json`](agent.json) is the only version, using `gpt-realtime`
-and 400 ms Semantic VAD. Earlier versions were removed on 2026-10-21 and remain in Git history.
+and 600 ms Semantic VAD. Earlier versions were removed on 2026-10-21 and remain in Git history.

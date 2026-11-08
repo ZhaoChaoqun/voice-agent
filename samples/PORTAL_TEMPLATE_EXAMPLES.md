@@ -90,9 +90,18 @@ Requirements:
   Template's configured values at publish time.
 - Declare every expected MCP tool in `allowed_tools`. Portal readiness checks
   compare this list with the live server's `tools/list` response.
-- A handoff example may include `definition.handoff.nodes` and
-  `definition.handoff.edges`; use stable node and edge IDs so the workflow
-  graph and recorded events remain correlatable.
+- Author a handoff example as inline subagents in
+  `definition.subagent_config` with `subagent_type: inline`. The first
+  subagent is `$entrypoint`; each subagent lists its outgoing routes in
+  `handoff_conditions`. Put the prompt shared by every stage in the top-level
+  `instructions`, set `inherit_base_instructions: true` on every subagent, and
+  keep only stage-specific text in each subagent's `instructions`. Use stable
+  subagent and condition IDs so the workflow graph and recorded events remain
+  correlatable. The portal and sample publishers publish this inline form as
+  authored, so the shared prompt is stored once and the service prepends it
+  to each subagent's instructions. Only when a service version rejects inline
+  subagents do they retry once with the equivalent `handoff.nodes` /
+  `handoff.edges` graph, copying the shared prompt into each node.
 - Set `store` deliberately. Local portal session recording is a separate
   setting and does not change the Agent's Azure persistence policy.
 

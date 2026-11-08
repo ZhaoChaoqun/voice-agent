@@ -1,5 +1,6 @@
 import { transcriptionLanguageError } from "./transcription-languages.mjs?v=20261028-settings-import";
 import { JSON_SCHEMA, load } from "./js-yaml.mjs?v=20261028-yaml-import";
+import { editorGraphToInline, inlineToEditorGraph } from "./inline-subagents.mjs?v=20261104-inline-subagents";
 
 export const ENTRYPOINT_ID = "$entrypoint";
 
@@ -217,28 +218,28 @@ const TRANSCRIBERS = Object.freeze([
     label: "Azure Speech",
     latencyMs: 1016,
     latencySource: "Pipecat public TTFS median",
-    costSource: "Voice Live Standard Speech audio-input rate",
+    costSource: "Voice Agent Standard Speech audio-input rate",
   },
   {
     id: "mai-transcribe",
     label: "MAI Transcribe",
     latencyMs: 525,
-    latencySource: "Voice Live observed family estimate",
-    costSource: "Azure Voice Live public rate via service estimator mapping",
+    latencySource: "Voice Agent observed family estimate",
+    costSource: "Azure Voice Agent public rate via service estimator mapping",
   },
   {
     id: "mai-transcribe-2",
     label: "MAI Transcribe 2",
     latencyMs: 525,
-    latencySource: "Voice Live observed family estimate",
-    costSource: "Azure Voice Live public rate via service estimator mapping",
+    latencySource: "Voice Agent observed family estimate",
+    costSource: "Azure Voice Agent public rate via service estimator mapping",
   },
   {
     id: "mai-transcribe-2-streaming",
     label: "MAI Transcribe 2 Streaming",
     latencyMs: 130,
     latencySource: "Microsoft public end-of-speech latency",
-    costSource: "Azure Voice Live public rate via service estimator mapping",
+    costSource: "Azure Voice Agent public rate via service estimator mapping",
     preview: true,
   },
   {
@@ -325,7 +326,7 @@ const AZURE_STANDARD_VOICES = Object.freeze([
     label: "Ava · Azure Dragon HD",
     type: "azure-standard",
     latencyMs: 307,
-    latencySource: "Voice Live first-text-to-first-audio observation; public Dragon HD proxy is ~356 ms",
+    latencySource: "Voice Agent first-text-to-first-audio observation; public Dragon HD proxy is ~356 ms",
   },
   ...[
     "en-US-AvaNeural", "en-US-AndrewNeural", "en-US-EmmaNeural", "en-US-BrianNeural",
@@ -342,7 +343,7 @@ const AZURE_STANDARD_VOICES = Object.freeze([
     label: "Diya · Azure Dragon HD",
     type: "azure-standard",
     latencyMs: 307,
-    latencySource: "Voice Live first-text-to-first-audio observation; public Dragon HD proxy is ~356 ms",
+    latencySource: "Voice Agent first-text-to-first-audio observation; public Dragon HD proxy is ~356 ms",
   },
 ]);
 const VOICES = Object.freeze([...OPENAI_VOICES, ...AZURE_REALTIME_VOICES, ...AZURE_STANDARD_VOICES]);
@@ -443,7 +444,7 @@ function transcriptionPublicRateLabel(transcription, model, customSpeech) {
   if (transcription.id === "native-realtime-audio") return "$0 additional transcription";
   const rates = componentRates(model);
   const rate = customSpeech ? rates.customSpeechInput : rates.speechInput;
-  return `$${rate} / 1M Voice Live ${customSpeech ? "custom " : ""}speech-input tokens`;
+  return `$${rate} / 1M Voice Agent ${customSpeech ? "custom " : ""}speech-input tokens`;
 }
 
 function modelPublicRateLabel(model) {
@@ -464,7 +465,7 @@ function voicePublicRateLabel(model, voiceType) {
   let rate = rates.speechOutput;
   if (nativeOutput) rate = rates.nativeAudioOutput;
   else if (voiceType === "azure-custom") rate = rates.customSpeechOutput;
-  return `$${rate} / 1M ${nativeOutput ? "native audio-output" : "Voice Live speech-output"} tokens`;
+  return `$${rate} / 1M ${nativeOutput ? "native audio-output" : "Voice Agent speech-output"} tokens`;
 }
 
 function estimatedHandoffLatency(model) {
@@ -488,9 +489,9 @@ function buildPipeline({ model, stt, voice, voiceType = "", customSpeech = false
   const modelAllowance = Boolean(model.budgetRates || model.costIsAllowance);
   const customInput = customSpeech && transcription.id === "azure-speech";
   let transcriptionSource = transcription.costSource;
-  if (customInput) transcriptionSource = "Voice Live Custom Speech audio-input retail rate";
+  if (customInput) transcriptionSource = "Voice Agent Custom Speech audio-input retail rate";
   if (transcriptionAllowance || model.budgetRates) {
-    transcriptionSource = "Conservative transcription allowance; exact public Voice Live rate is unverified";
+    transcriptionSource = "Conservative transcription allowance; exact public Voice Agent rate is unverified";
   }
   return {
     architecture: model.architecture,
@@ -512,8 +513,8 @@ function buildPipeline({ model, stt, voice, voiceType = "", customSpeech = false
       publicRateLabel: modelPublicRateLabel(model),
       costIsAllowance: modelAllowance,
       costSource: `${modelAllowance
-        ? "Conservative model allowance; exact public Voice Live rate is unverified"
-        : "Azure Voice Live public retail rate"}. Temporary model budget /${PIPELINE_LLM_ESTIMATE_DIVISOR}; workload revision pending approval`,
+        ? "Conservative model allowance; exact public Voice Agent rate is unverified"
+        : "Azure Voice Agent public retail rate"}. Temporary model budget /${PIPELINE_LLM_ESTIMATE_DIVISOR}; workload revision pending approval`,
     },
     voice: {
       ...selectedVoice,
@@ -521,8 +522,8 @@ function buildPipeline({ model, stt, voice, voiceType = "", customSpeech = false
       publicRateLabel: voicePublicRateLabel(model, selectedVoice.type),
       costIsAllowance: Boolean(model.budgetRates) || selectedVoice.type === "azure-personal",
       costSource: model.budgetRates || selectedVoice.type === "azure-personal"
-        ? "Conservative speech allowance; exact public Voice Live rate is unverified"
-        : "Azure Voice Live public retail rate",
+        ? "Conservative speech allowance; exact public Voice Agent rate is unverified"
+        : "Azure Voice Agent public retail rate",
     },
   };
 }
@@ -720,7 +721,7 @@ export function pipelineComponentOptions(kind, selection = {}) {
 
 export function pipelineComponentProvider(kind, component = {}) {
   if (kind === "model") {
-    return component.id === "azure-realtime" ? "Azure Realtime" : "Voice Live managed";
+    return component.id === "azure-realtime" ? "Azure Realtime" : "Voice Agent managed";
   }
   if (kind === "stt") {
     const id = String(component.id || "");
@@ -728,7 +729,7 @@ export function pipelineComponentProvider(kind, component = {}) {
     if (id === "azure-speech") return "Azure Speech";
     if (id.startsWith("mai-")) return "Microsoft AI";
     if (id.startsWith("gpt-") || id === "whisper-1") return "OpenAI";
-    return "Voice Live";
+    return "Voice Agent";
   }
   const providers = {
     openai: "GPT native",
@@ -737,7 +738,7 @@ export function pipelineComponentProvider(kind, component = {}) {
     "azure-custom": "Azure Custom Voice",
     "azure-personal": "Azure Personal Voice",
   };
-  return providers[component.type] || "Voice Live";
+  return providers[component.type] || "Voice Agent";
 }
 
 export function pipelineMetricMinimum(component = {}, metric) {
@@ -1264,7 +1265,8 @@ export function createSampleDefinition() {
 
 export function ensureEditableDefinition(value) {
   if (!isObject(value)) throw new Error("The selected Agent does not contain a definition object.");
-  const definition = deepClone(value);
+  // Inline subagents are edited as the equivalent graph and published back as inline subagents.
+  const definition = inlineToEditorGraph(value);
   if (!isObject(definition.handoff)) {
     definition.handoff = {
       max_transfers: 8,
@@ -1290,7 +1292,7 @@ export function publicationDefinition(value) {
   ) {
     delete definition.handoff;
   }
-  return definition;
+  return editorGraphToInline(definition);
 }
 
 export function extractLatestAgent(resource) {
@@ -1452,7 +1454,7 @@ export function modelEstimate(model) {
   const name = normalizePipelineModelId(typeof model === "string" ? model : "");
   const estimate = MODEL_ESTIMATE_CATALOG[name];
   return estimate
-    ? { ...estimate, source: "Estimated from Voice Live guidance and public retail tier", available: true }
+    ? { ...estimate, source: "Estimated from Voice Agent guidance and public retail tier", available: true }
     : {
         latency: "Not available",
         cost: "Not available",

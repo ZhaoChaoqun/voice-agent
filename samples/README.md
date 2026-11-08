@@ -92,6 +92,7 @@ an existing customer-hosted MCP does not need a local tunnel.
 | [Travel Agency Trip Planner with Handoff](example33_travel_agency_trip_planner/README.md) | Run a trip planning graph that recommends sample packages with ballpark pricing and captures a trip request without booking it. |
 | [User Research Interviewer with Handoff](example34_user_research_interviewer/README.md) | Run a interview graph that branches on available time between a deep dive and priority questions and recaps the answers. |
 | [Conference Concierge (Ignite 2026)](example35_conference_concierge/README.md) | Find sessions, get recommendations, build an agenda with clash checks, hear what is starting now and official room changes, and get FAQ and on-site logistics answers in any language, on the stateless conference MCP pack with the live public catalog, the official FAQ, and the event guide. |
+| [Ignite Session Planner](ignite_planner/README.md) | Run a browser page whose voice Agent operates the page through client-executed functions: it ranks, highlights and compares Ignite 2026 sessions, finds speakers by sound, and builds an agenda. |
 | [C# voice agent sample](CSharp/README.md) | Create and manage a temporary Agent or use an existing Agent, stream audio over WebSocket, and read persisted conversations and recordings. |
 | [Java live audio Voice Agent sample](java/README.md) | Create a temporary Agent and run an asynchronous microphone and speaker conversation with Enter-to-end, barge-in, persisted conversation readback, and cleanup. |
 | [`download_conversation_artifacts.py`](download_conversation_artifacts.py) | Download conversation JSON, per-turn WAV files, and the merged stereo WAV. |
@@ -104,7 +105,9 @@ real is booked, sent, or charged. To use your own systems, see
 
 ### Realtime sample: Project region, model, and GPU routing
 
-The eight original Portal template cards (Examples 1–7) use 400 ms `azure_semantic_vad` silence.
+Examples 1 and 2 use 400 ms `azure_semantic_vad` silence. Examples 3–34 use Example 1's turn
+detection (`profile: normal`, explicit barge-in thresholds, `end_of_utterance_detection: null`,
+no server echo cancellation) with 600 ms silence.
 Most use `gpt-realtime`; Finance Realtime uses `gpt-realtime-regional` and
 Finance Cascade uses `gpt-4.1-mini`. Each card has a single version, its root
 `agent.json`. Runtime configuration does not by itself establish improved

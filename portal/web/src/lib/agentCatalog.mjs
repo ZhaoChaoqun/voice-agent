@@ -1,5 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 
+import { legacyGraphView } from "../../../static/handoff/inline-subagents.mjs";
+
 function errorMessage(data, fallback) {
   const error = data && data.error;
   if (typeof error === "string") return error;
@@ -21,6 +23,8 @@ export function asVoiceAgent(resource) {
   const store = typeof definition.store === "boolean"
     ? definition.store
     : definition.audio_logging === "enabled";
+  // Inline subagents summarize as the equivalent handoff graph.
+  const handoff = legacyGraphView(definition)?.handoff;
 
   return {
     name: resource.name,
@@ -38,7 +42,7 @@ export function asVoiceAgent(resource) {
       && echoCancellation?.channels === 2,
     store,
     toolCount: Array.isArray(definition.tools) ? definition.tools.length : 0,
-    handoff: definition.handoff ? structuredClone(definition.handoff) : null,
+    handoff: handoff ? structuredClone(handoff) : null,
     definition: structuredClone(definition),
     description: latest.description || "",
     metadata: latest.metadata ? { ...latest.metadata } : {},
@@ -81,7 +85,7 @@ export function assertBridgeCompatibleHostedAgent(resource, name, version) {
   if (definition.kind !== "hosted") {
     throw new Error(
       `Target agent '${label}' is kind '${definition.kind || "unknown"}'; `
-      + "expected a hosted agent that supports Voice Live Bridge Protocol 1.0.",
+      + "expected a hosted agent that supports Voice Agent Bridge Protocol 1.0.",
     );
   }
   if (selected.status && selected.status !== "active") {
@@ -105,7 +109,7 @@ export function assertBridgeCompatibleHostedAgent(resource, name, version) {
   if (bridgeProtocolVersion !== "1.0") missing.push("bridgeProtocolVersion=1.0");
   if (missing.length) {
     throw new Error(
-      `Target hosted agent '${label}' does not support Voice Live Bridge Protocol 1.0; `
+      `Target hosted agent '${label}' does not support Voice Agent Bridge Protocol 1.0; `
       + `missing ${missing.join(", ")}.`,
     );
   }

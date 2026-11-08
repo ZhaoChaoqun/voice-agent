@@ -27,6 +27,7 @@ from template_portal import (
     materialize_template,
     template_agent_name,
 )
+from voice_agent_definition import project_inline_subagents
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -207,18 +208,29 @@ class TemplateCatalogTests(unittest.TestCase):
                     mcp_connection_id="", mcp_public=True,
                 )
                 self.assertEqual(expected, definition["audio"]["output"]["voice"])
-                for node in definition["handoff"]["nodes"]:
-                    self.assertEqual(expected, node["config"].get("voice", expected))
+                self.assertNotIn("handoff", definition)
+                for subagent in definition["subagent_config"]["subagents"]:
+                    self.assertEqual(expected, subagent.get("voice", expected))
 
-    def test_tuned_handoff_examples_preserve_normal_400ms_vad(self) -> None:
+    def test_tuned_handoff_examples_use_example1_vad_with_600ms_silence(self) -> None:
         catalog = TemplateCatalog()
+        # Example 1's turn detection (Smart Turn EOU off, explicit barge-in thresholds) with 600 ms
+        # silence, and no server echo cancellation.
         expected = {
             "type": "azure_semantic_vad",
             "profile": "normal",
-            "auto_truncate": True,
+            "threshold_assistant_speaking": 0.7,
+            "window_size_assistant_speaking": 2,
+            "distinct_ci_phones_assistant_speaking": 2,
+            "remove_filler_words": True,
+            "threshold": 0.5,
+            "prefix_padding_ms": 300,
+            "silence_duration_ms": 600,
+            "create_response": True,
+            "idle_timeout_ms": 15000,
             "interrupt_response": True,
-            "prefix_padding_ms": 800,
-            "silence_duration_ms": 400,
+            "auto_truncate": True,
+            "end_of_utterance_detection": None,
         }
 
         for template_id, *_ in ORIGINAL_TEMPLATES:
@@ -228,6 +240,7 @@ class TemplateCatalogTests(unittest.TestCase):
                 self.assertEqual(
                     expected, document["definition"]["audio"]["input"]["turn_detection"],
                 )
+                self.assertNotIn("echo_cancellation", document["definition"]["audio"]["input"])
                 definition = materialize_template(
                     document, model="", voice="",
                     mcp_server_url=MCP_BASE_URL + MCP_ROUTES[template_id],
@@ -256,13 +269,10 @@ class TemplateCatalogTests(unittest.TestCase):
                 agent = json.loads(
                     (ROOT.parent / "samples" / folder / "agent.json").read_text(encoding="utf-8")
                 )
-                handoff = agent["definition"]["handoff"]
+                subagents = agent["definition"]["subagent_config"]["subagents"]
                 self.assertEqual(template_id, agent["name"])
-                self.assertEqual("end", handoff["nodes"][-1]["id"])
-                self.assertEqual(
-                    [END_CONVERSATION_TOOL],
-                    handoff["nodes"][-1]["config"]["tools"],
-                )
+                self.assertEqual("end", subagents[-1]["id"])
+                self.assertEqual([END_CONVERSATION_TOOL], subagents[-1]["tools"])
                 tools = list(template_portal.iter_mcp_tools(agent["definition"]))
                 self.assertTrue(tools)
                 for tool in tools:
@@ -291,15 +301,17 @@ class TemplateCatalogTests(unittest.TestCase):
                     tool["server_url"] = server_url
                 self.assertEqual(authored["audio"], definition["audio"])
                 self.assertEqual(authored["instructions"], definition["instructions"])
-                self.assertEqual(
-                    authored["handoff"]["nodes"], definition["handoff"]["nodes"],
-                )
+                self.assertEqual(authored["subagent_config"], definition["subagent_config"])
+                self.assertNotIn("handoff", definition)
 
     def test_customer_support_matches_reference_privacy_and_ticket_rules(self) -> None:
         agent = json.loads(
             (ROOT.parent / "samples" / "example5_customer_support" / "agent.json").read_text(encoding="utf-8")
         )
-        nodes = {node["id"]: node["config"] for node in agent["definition"]["handoff"]["nodes"]}
+        nodes = {
+            subagent["id"]: subagent
+            for subagent in agent["definition"]["subagent_config"]["subagents"]
+        }
         self.assertIn("share its title and company", nodes["account_billing"]["instructions"])
         self.assertIn("Never read back phone numbers", nodes["account_billing"]["instructions"])
         self.assertIn("Never change an existing ticket", nodes["resolve_or_escalate"]["instructions"])
@@ -458,13 +470,17 @@ class TemplateCatalogTests(unittest.TestCase):
         self.assertNotIn("structured_inputs", definition)
         self.assertNotIn("interim_response", definition)
         self.assertNotIn("echo_cancellation", definition["audio"]["input"])
-        self.assertEqual(
-            definition["audio"]["input"]["turn_detection"]["profile"], "eager",
-        )
+        turn_detection = definition["audio"]["input"]["turn_detection"]
+        self.assertEqual(turn_detection["profile"], "normal")
+        self.assertEqual(turn_detection["silence_duration_ms"], 600)
+        self.assertIsNone(turn_detection["end_of_utterance_detection"])
         self.assertEqual(definition["tools"], [])
         self.assertEqual(definition["tool_choice"], "required")
         self.assertEqual(definition["greeting"]["tool_choice"], "none")
-        handoff = definition["handoff"]
+        self.assertNotIn("handoff", definition)
+        self.assertEqual("inline", definition["subagent_config"]["subagent_type"])
+        graph = template_portal.legacy_graph_definition(definition)
+        handoff = graph["handoff"]
         nodes = {node["id"]: node["config"] for node in handoff["nodes"]}
         self.assertEqual(set(nodes), {
             "identify_intent", "company_info", "zendesk_search", "transfer",
@@ -473,7 +489,7 @@ class TemplateCatalogTests(unittest.TestCase):
         self.assertEqual(handoff["max_transfers"], 24)
         self.assertEqual(handoff["max_attempts"], 24)
         separator = "\n\n## CURRENT WORKFLOW STAGE\n"
-        base, entrypoint = definition["instructions"].split(separator)
+        base, entrypoint = graph["instructions"].split(separator)
         self.assertEqual(
             hashlib.sha256(base.encode()).hexdigest(),
             "fc89fd8aa4729b17d4a61c956de435798ca3fd77098e6b715378a7b3b74ad90c",
@@ -622,7 +638,9 @@ class TemplateCatalogTests(unittest.TestCase):
             assert document is not None
             end = next(
                 node
-                for node in document["definition"]["handoff"]["nodes"]
+                for node in template_portal.legacy_graph_definition(
+                    document["definition"],
+                )["handoff"]["nodes"]
                 if node["id"] == "end"
             )
             self.assertEqual(
@@ -689,7 +707,9 @@ class TemplateCatalogTests(unittest.TestCase):
             mcp_server_url="https://tools.example/mcp",
             mcp_connection_id="elevator-connection",
         )
-        for node in materialized["handoff"]["nodes"]:
+        self.assertNotIn("handoff", materialized)
+        self.assertEqual("inline", materialized["subagent_config"]["subagent_type"])
+        for node in template_portal.legacy_graph_definition(materialized)["handoff"]["nodes"]:
             config = node["config"]
             self.assertNotIn("inherit_from_base_instructions", config)
             self.assertTrue(config["instructions"].startswith("## GLOBAL POLICY\n"))
@@ -904,11 +924,11 @@ class TemplateRouteTests(unittest.IsolatedAsyncioTestCase):
     async def test_hindi_template_routes_preserve_the_explicit_locale(self) -> None:
         expected_voice = {
             "type": "azure-standard",
-            "name": "hi-IN-Diya:DragonLatestNeural",
+            "name": "en-IN-Diya:DragonHDLatestNeural",
         }
         voices = json.loads((ROOT / "static/handoff/azure-voices.json").read_text())["voices"]
         self.assertTrue(any(
-            voice["id"] == expected_voice["name"] and voice["locale"] == "hi-IN"
+            voice["id"] == expected_voice["name"]
             for voice in voices
         ))
         for template_id in HINDI_TEMPLATE_IDS:
@@ -923,8 +943,9 @@ class TemplateRouteTests(unittest.IsolatedAsyncioTestCase):
                 )
                 self.assertEqual(expected_voice, definition["audio"]["output"]["voice"])
                 self.assertEqual(expected_voice["name"], detail["voice"])
-                for node in definition["handoff"]["nodes"]:
-                    self.assertEqual(expected_voice, node["config"].get("voice", expected_voice))
+                self.assertNotIn("handoff", definition)
+                for subagent in definition["subagent_config"]["subagents"]:
+                    self.assertEqual(expected_voice, subagent.get("voice", expected_voice))
 
     async def test_templates_page_and_catalog_routes(self) -> None:
         page = await self.client.get("/templates")

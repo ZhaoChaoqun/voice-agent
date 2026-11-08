@@ -9,7 +9,7 @@ import {
   withTurnTcpFallback,
 } from "./webrtcPeer.mjs";
 
-test("data channel label matches the Voice Live media contract", () => {
+test("data channel label matches the Voice Agent media contract", () => {
   assert.equal(WEBRTC_DATA_CHANNEL, "voice-live-events");
 });
 

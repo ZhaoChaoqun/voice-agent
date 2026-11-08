@@ -1,0 +1,111 @@
+{
+  "verified": "2026-10-28",
+  "timezone": "America/Los_Angeles",
+  "notice": "Editorial introductions for eight verified sessions. The full catalog is generated separately from the public Ignite snapshot.",
+  "sessions": [
+    {
+      "id": "BRK244",
+      "speakers": ["Yiwen Rong", "Archer Zhao", "Marvin Hsu", "Matt Landis"],
+      "instance_id": "1787856610200001EYMD-1791587924228001FSUX",
+      "title": "Voice agents in Microsoft Foundry: Prototype to production in 45 mins",
+      "summary": "Take your voice-agent work from an early prototype toward production. Explore the application journey with Microsoft Foundry, with a focus on practical voice experiences.",
+      "takeaway": "A useful pick if you are building conversational products, contact-center experiences, or a voice-first application.",
+      "tags": ["Voice AI", "Foundry", "Agents"],
+      "start": "2026-11-20T01:15:00Z",
+      "end": "2026-11-20T02:00:00Z",
+      "location": "AMC Metreon | Level 3, Theater 12",
+      "url": "https://ignite.microsoft.com/en-US/sessions/BRK244"
+    },
+    {
+      "id": "BRK243",
+      "speakers": ["Glenn Condron", "Amanda Foster", "Lakshmi Ramakrishnan", "Jeffrey Quesnelle"],
+      "instance_id": "1787856610049001EgNH-1791588175331001CupD",
+      "title": "How much should you own? Choosing the right agent architecture",
+      "summary": "How much of your agent stack should your team own? Start with the architecture decisions behind an agent application and consider where managed services fit.",
+      "takeaway": "A useful starting point for developers and architects deciding how to structure an agent project.",
+      "tags": ["Architecture", "Agents", "Platform"],
+      "start": "2026-11-19T21:30:00Z",
+      "end": "2026-11-19T22:15:00Z",
+      "location": "AMC Metreon | Level 3, Theater 12",
+      "url": "https://ignite.microsoft.com/en-US/sessions/BRK243"
+    },
+    {
+      "id": "BRK245",
+      "speakers": ["Chu Lahlou", "Krishna Doss Mohan", "Sheldon Foster"],
+      "instance_id": "1787856610351001EtOJ-1791588199498001CmN4",
+      "title": "Content-aware agents with Content Understanding/Document Intelligence",
+      "summary": "Connect agents with the business content they need to understand. Explore the role of Content Understanding and Document Intelligence in content-aware applications.",
+      "takeaway": "Consider this session if your agents work with documents, forms, or other business content.",
+      "tags": ["Documents", "Agents", "Azure AI"],
+      "start": "2026-11-19T22:45:00Z",
+      "end": "2026-11-19T23:30:00Z",
+      "location": "Moscone West | Level 3, Room 3006",
+      "url": "https://ignite.microsoft.com/en-US/sessions/BRK245"
+    },
+    {
+      "id": "BRK246",
+      "speakers": ["Manoj Bableshwar", "Gulsimo Osimi", "Miguel Armenta", "Pavan Tagirisa"],
+      "instance_id": "1787856610499001EA0J-1791588200189001CaK0",
+      "title": "From open weights to workload: Operationalizing at enterprise scale",
+      "summary": "Move the conversation from model selection to enterprise workloads. Look at the operational questions involved in taking open-weight models to scale.",
+      "takeaway": "A relevant choice for platform teams and engineers responsible for operating model-backed applications.",
+      "tags": ["Models", "Operations", "Platform"],
+      "start": "2026-11-18T21:45:00Z",
+      "end": "2026-11-18T22:30:00Z",
+      "location": "AMC Metreon | Level 3, Theater 12",
+      "url": "https://ignite.microsoft.com/en-US/sessions/BRK246"
+    },
+    {
+      "id": "BRK241",
+      "instance_id": "1787856609732001EXxL-1791588156764001CGmX",
+      "title": "How SThree is reimagining recruitment with human-led AI",
+      "speakers": ["Marco Casalaina", "Rajneesh Singh", "Steve Bowpitt", "Nick Folkes", "Timo Lehne"],
+      "summary": "Explore SThree's approach to putting AI alongside recruitment consultants rather than replacing their judgment. The discussion connects agent design with the relationship-building work people want more time for.",
+      "takeaway": "For leaders and builders exploring human-in-the-loop AI and practical business transformation.",
+      "tags": ["Human-led AI", "Agents", "Customer story"],
+      "start": "2026-11-18T18:15:00Z",
+      "end": "2026-11-18T19:00:00Z",
+      "location": "AMC Metreon | Level 3, Theater 11",
+      "url": "https://ignite.microsoft.com/en-US/sessions/BRK241"
+    },
+    {
+      "id": "BRK242",
+      "instance_id": "1787856609892001EgHv-1791588100232001CFk6",
+      "title": "Build your self-improving AI Platform with Microsoft Foundry",
+      "speakers": ["Naomi Moneypenny", "Steve Sweetman"],
+      "summary": "Connect evaluation, observability and optimization into a continuous improvement loop. Consider how a governed AI platform can adapt to changing customer context while balancing quality, cost and reliability.",
+      "takeaway": "For platform engineers designing the feedback loop around production AI applications.",
+      "tags": ["Foundry", "Evaluation", "Platform"],
+      "start": "2026-11-17T23:15:00Z",
+      "end": "2026-11-18T00:00:00Z",
+      "location": "Moscone West | Level 3, Room 3006",
+      "url": "https://ignite.microsoft.com/en-US/sessions/BRK242"
+    },
+    {
+      "id": "BRK247",
+      "instance_id": "1787856610647001ED9l-1791588131979001CbhB",
+      "title": "Token economics: Get more from your production AI budget",
+      "speakers": ["Chris Hoder", "Kosti Vasilakakis", "SukYeon Jung", "Cathy Rowe", "Alex Tyrrell"],
+      "summary": "Look at the choices behind a production AI budget: models, inference tiers, caching, routing and capacity handling. Customer examples connect those decisions to the trade-offs between cost, quality and latency.",
+      "takeaway": "For teams looking to make production AI spending more intentional and measurable.",
+      "tags": ["Cost optimization", "Production AI", "Foundry"],
+      "start": "2026-11-18T19:30:00Z",
+      "end": "2026-11-18T20:15:00Z",
+      "location": "AMC Metreon | Level 3, Theater 14",
+      "url": "https://ignite.microsoft.com/en-US/sessions/BRK247"
+    },
+    {
+      "id": "BRK248",
+      "instance_id": "1787856610796001ElME-1791588120928001CdYn",
+      "title": "Trust at scale: Governance lessons from Microsoft",
+      "speakers": ["Sarah Bird", "Natasha Crampton"],
+      "summary": "Explore how governance, safety and accountability become part of operating AI at scale. Learn from Microsoft's approach to embedding risk-based controls and ongoing monitoring into AI systems.",
+      "takeaway": "For attendees focused on responsible AI, governance, security and enterprise adoption.",
+      "tags": ["Responsible AI", "Governance", "Trust"],
+      "start": "2026-11-18T18:15:00Z",
+      "end": "2026-11-18T19:00:00Z",
+      "location": "AMC Metreon | Level 3, Theater 14",
+      "url": "https://ignite.microsoft.com/en-US/sessions/BRK248"
+    }
+  ]
+}

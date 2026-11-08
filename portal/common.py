@@ -108,19 +108,44 @@ def build_voice_config(voice: str) -> dict[str, str]:
     return {"type": voice_type, "name": voice}
 
 
+def _inline_subagent_helpers():
+    """The shared definition helpers, imported lazily from the samples beside the portal."""
+    import sys
+    from pathlib import Path
+
+    samples = str(Path(__file__).resolve().parents[1] / "samples")
+    if samples not in sys.path:
+        sys.path.insert(0, samples)
+    from voice_agent_definition import project_inline_subagents, uses_inline_subagents
+
+    return project_inline_subagents, uses_inline_subagents
+
+
 def regional_model_publish_fallback(
     definition: dict[str, Any],
     status_code: int | None,
     error_message: str,
 ) -> dict[str, Any] | None:
+    """Return one repaired definition to retry a rejected publication, or None.
+
+    A service version that rejects inline subagents gets the equivalent legacy
+    handoff graph; a region without managed gpt-realtime-regional gets gpt-realtime.
+    """
+    if status_code != 400 or definition.get("kind") != "voice":
+        return None
+    project_inline_subagents, uses_inline_subagents = _inline_subagent_helpers()
+    if uses_inline_subagents(definition) and "subagent" in error_message.lower():
+        try:
+            projected = project_inline_subagents(copy.deepcopy(definition))
+        except ValueError:
+            return None
+        logging.getLogger("voice_agent_portal").warning(
+            "Publication rejected inline subagents; preparing one retry as the equivalent handoff graph.",
+        )
+        return projected
     regional_model = "gpt-realtime-regional"
     fallback_model = "gpt-realtime"
-    if (
-        status_code != 400
-        or definition.get("kind") != "voice"
-        or f"Model '{regional_model}' is not supported in managed mode in this region."
-        not in error_message
-    ):
+    if f"Model '{regional_model}' is not supported in managed mode in this region." not in error_message:
         return None
     updated = copy.deepcopy(definition)
     configs = [updated]
@@ -130,6 +155,13 @@ def regional_model_publish_fallback(
             node["config"]
             for node in handoff.get("nodes") or []
             if isinstance(node, dict) and isinstance(node.get("config"), dict)
+        )
+    subagent_config = updated.get("subagent_config")
+    if isinstance(subagent_config, dict):
+        configs.extend(
+            subagent
+            for subagent in subagent_config.get("subagents") or []
+            if isinstance(subagent, dict)
         )
     changed = False
     for config in configs:

@@ -10,6 +10,8 @@
 //     edges remain within the transfer/attempt budget.
 // So topology comes from the session when one is live, prompts always from the definition.
 
+import { legacyGraphView } from "../../../static/handoff/inline-subagents.mjs";
+
 export const ENTRYPOINT_NODE_ID = "$entrypoint";
 
 const NODE_W = 168;
@@ -185,7 +187,9 @@ export function layoutGraph(nodes, edges, entry) {
   return nodes;
 }
 
-export function buildHandoffGraph({ definition = null, handoffState = null } = {}) {
+export function buildHandoffGraph({ definition: authored = null, handoffState = null } = {}) {
+  // Inline subagents draw as the equivalent handoff graph with combined stage prompts.
+  const definition = legacyGraphView(authored);
   const runtimeNodes = asArray(handoffState?.nodes);
   const runtimeEdges = asArray(handoffState?.edges);
   const authoredGraph = definition?.handoff;

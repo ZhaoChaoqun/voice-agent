@@ -204,10 +204,8 @@ class TemplateVersionCatalogTests(TemplateVersionFixture, unittest.TestCase):
             for path in root.rglob("agent.json"):
                 version = path.parent.relative_to(root).as_posix()
                 with self.subTest(template_id=template_id, version=version):
-                    self.assertEqual(
-                        json.loads(path.read_text(encoding="utf-8")),
-                        catalog.document(template_id, version),
-                    )
+                    expected = json.loads(path.read_text(encoding="utf-8"))
+                    self.assertEqual(expected, catalog.document(template_id, version))
 
     def test_finance_version_roots_and_models_remain_separate(self) -> None:
         catalog = template_portal.TemplateCatalog()
@@ -244,7 +242,16 @@ class TemplateVersionCatalogTests(TemplateVersionFixture, unittest.TestCase):
                     self.assertTrue(
                         turn_detection["type"].startswith("azure_semantic_vad"),
                     )
-                    self.assertEqual(400, turn_detection["silence_duration_ms"])
+                    # Examples 3-7 use Example 1's turn detection with 600 ms silence; their
+                    # backup versions keep the prior 400 ms.
+                    silence = 600 if not version["id"].startswith("backups/") and card["id"] in {
+                        "elevator-service-example",
+                        "frontdesk-receptionist-example",
+                        "customer-support-example",
+                        "appointment-setter-example",
+                        "receptionist-messaging-example",
+                    } else 400
+                    self.assertEqual(silence, turn_detection["silence_duration_ms"])
 
     def test_runtime_updated_backup_manifests_keep_exact_prior_sources(self) -> None:
         for manifest_path in template_portal.SAMPLES_DIR.glob("*/backups/**/manifest.json"):

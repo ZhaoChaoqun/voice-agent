@@ -48,18 +48,18 @@ class TestTemplatePersonas:
             names.append(persona)
             assert persona not in INHERITED_NAMES
             assert f"I'm {persona}" in definition["greeting"]["text"]
-            for node in definition["handoff"]["nodes"]:
-                instructions = node["config"].get("instructions", "")
-                if "You are " in instructions:
-                    assert f"You are {persona}," in instructions
-                    assert "Never announce internal steps" in instructions
+            # Every subagent inherits the persona from the shared top-level instructions.
+            assert "Never announce internal steps" in definition["instructions"]
+            for subagent in definition["subagent_config"]["subagents"]:
+                assert subagent["inherit_base_instructions"] is True
+                assert "You are " not in subagent.get("instructions", "")
         assert len(names) == len(set(names)) == TEMPLATE_COUNT
 
     def test_billing_email_confirmation_precedes_lookup(self) -> None:
         path = SAMPLES / "example5_customer_support" / "agent.json"
         definition = json.loads(path.read_text(encoding="utf-8"))["definition"]
-        node = next(node for node in definition["handoff"]["nodes"] if node["id"] == "account_billing")
-        instructions = node["config"]["instructions"]
+        subagents = definition["subagent_config"]["subagents"]
+        instructions = next(item for item in subagents if item["id"] == "account_billing")["instructions"]
         assert "say 'at' and 'dot'" in instructions
         assert "until an explicit confirmation in a later caller turn" in instructions
         assert "read the updated address back and wait for confirmation again" in instructions

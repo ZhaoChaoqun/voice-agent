@@ -2449,11 +2449,11 @@ test("Handoff Graph loads a Portal template, publishes it, and opens the runtime
   await expect(
     page.locator('[data-component-kind="stt"][data-component-value="mai-transcribe-2"]')
       .locator("xpath=ancestor::tr"),
-  ).toContainText("Public rate: $17 / 1M Voice Live speech-input tokens");
+  ).toContainText("Public rate: $17 / 1M Voice Agent speech-input tokens");
   await expect(
     page.locator('[data-component-kind="stt"][data-component-value="azure-speech"]')
       .locator("xpath=ancestor::tr"),
-  ).toContainText("Public rate: $17 / 1M Voice Live speech-input tokens");
+  ).toContainText("Public rate: $17 / 1M Voice Agent speech-input tokens");
   await expect(
     page.locator('[data-component-kind="stt"][data-component-value="whisper-1"]'),
   ).toBeEnabled();
@@ -2508,7 +2508,7 @@ test("Handoff Graph loads a Portal template, publishes it, and opens the runtime
   await expect(
     page.locator('[data-component-kind="voice"][data-component-value="en-US-Ava:DragonHDLatestNeural"]')
       .locator("xpath=ancestor::tr"),
-  ).toContainText("Public rate: $31 / 1M Voice Live speech-output tokens");
+  ).toContainText("Public rate: $31 / 1M Voice Agent speech-output tokens");
   await expect(page.locator(".component-provider", { hasText: "GPT native" }).first()).toBeVisible();
   await expect(page.locator(".component-provider", { hasText: "Azure Speech" }).first()).toBeVisible();
   await expect(page.locator(".component-table td:nth-child(4) .component-table-bar").first()).toBeVisible();

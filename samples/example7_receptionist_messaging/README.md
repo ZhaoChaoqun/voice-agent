@@ -94,7 +94,9 @@ so they cannot be connected in the shared Playground and stay on mock data
 there; use a Work IQ Toolbox in your own Foundry Project instead.
 
 The example uses `gpt-realtime` with `azure_semantic_vad`, `profile: normal`,
-`prefix_padding_ms: 800`, and `silence_duration_ms: 400`.
+`silence_duration_ms: 600`, Smart Turn end-of-utterance detection off
+(`end_of_utterance_detection: null`), explicit barge-in thresholds, and no server
+echo cancellation, matching Example 1's turn detection apart from the silence.
 
 ## Try these turns
 

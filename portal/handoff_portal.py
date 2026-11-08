@@ -12,6 +12,7 @@ STATIC_DIR = Path(__file__).resolve().parent / "static" / "handoff"
 HANDOFF_ASSETS = frozenset({
     "handoff-app.js",
     "handoff-core.mjs",
+    "inline-subagents.mjs",
     "js-yaml.mjs",
     "voice-picker.mjs",
     "voice-catalog.mjs",

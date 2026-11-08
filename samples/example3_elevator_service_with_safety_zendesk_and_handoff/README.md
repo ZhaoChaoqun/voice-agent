@@ -20,14 +20,18 @@ the preview `azure-ai-projects` unified Agents API. It demonstrates:
 
 The committed `agent.json` is portable. It contains no MCP URL, Project
 connection ID, bearer token, subscription ID, tenant ID, or real customer data.
-Its top-level `instructions` hold the shared safety, truthfulness, and
-conversational-response policy. Every handoff node enables
-`inherit_from_base_instructions`, so its `instructions` contain only the
+The graph is authored as inline subagents in `subagent_config`
+(`subagent_type: inline`): the first subagent is `$entrypoint`, and each
+subagent lists its outgoing routes in `handoff_conditions`. Its top-level
+`instructions` hold the shared safety, truthfulness, and
+conversational-response policy. Every subagent sets
+`inherit_base_instructions: true`, so its `instructions` contain only the
 current node's objective, actions, and completion condition.
-The sample and Portal publishers expand that inheritance at the publication
-boundary for Foundry service deployments that do not yet accept the inheritance
-field. The authored definition stays concise while the deployed Agent receives
-the same combined instructions.
+The sample and Portal publishers convert this to the equivalent
+`handoff.nodes` / `handoff.edges` graph with combined instructions at the
+publication boundary, for Foundry service deployments that do not yet accept
+inline subagents. The authored definition stays concise while the deployed
+Agent receives the same combined instructions.
 The default Portal Template uses the public no-auth `/mcp/elevator-service`
 endpoint. It requires no local MCP, Dev Tunnel, setup script, local E2E, or
 RemoteTool connection. The implementation in this repository's `shared_mcp`
@@ -41,6 +45,25 @@ scopes.
 
 Use Example 1 for a larger outbound Finance handoff graph. Use Example 2 for a
 flat MCP-only Finance Agent.
+
+## Audio settings
+
+The complete `audio` configuration and audio-only `output_modalities` match
+[Example 5: Customer Support](../example5_customer_support/agent.json):
+
+- Voice: `en-US-Emma:DragonHDOmniLatestNeural` (`azure-standard`).
+- VAD: Example 1's turn detection with `silence_duration_ms: 600`:
+  `azure_semantic_vad`, `profile: normal`, Smart Turn end-of-utterance
+  detection off (`end_of_utterance_detection: null`), and explicit barge-in
+  thresholds.
+- Transcription: `azure-speech`.
+- Echo cancellation: none.
+- Noise reduction: `azure_deep_noise_suppression`.
+- Input and output format: 24 kHz PCM.
+
+The elevator workflow, safety rules, tools, greeting, and `store: true`
+remain unchanged. Reload the Template and publish a new Agent version to apply
+these settings; existing published versions are not updated automatically.
 
 ## Workflow
 
@@ -58,8 +81,11 @@ open_call
   -> end
 ```
 
-The report path does not create a Zendesk ticket immediately after collecting
-an address. It first asks:
+The report edge first tells the caller that for safety requirements it will ask
+five brief safety questions one by one, and asks the first entrapment question
+immediately. The `report_issue` node then asks the remaining safety questions
+one at a time from `assess_safety` before collecting the address. It does not
+create a Zendesk ticket immediately after collecting an address; it first asks:
 
 ```text
 Please confirm: I will create a Zendesk ticket for [issue summary]
@@ -216,8 +242,13 @@ call-control tools in the active graph node.
 
 ## Template versions
 
-The root [`agent.json`](agent.json) is the only version: revised candidate-04,
-using `gpt-realtime` and 400 ms Semantic VAD, chosen because it performed best
-in hands-on use. Acknowledgement and waiting failures observed in candidate-03
-are not proven fixed, and live latency and listening have not been validated.
-Earlier versions were removed on 2026-10-21 and remain in Git history.
+- Default [`agent.json`](agent.json): aligns audio/VAD settings with
+  [Example 5: Customer Support](../example5_customer_support/agent.json),
+  adds an opening `transfer_message` on `entrypoint_to_open_call` to cover call
+  initialization, introduces the five-question safety check upfront on
+  `intent_router_to_report_issue` before asking each question one by one, and
+  includes specific emotional-cause uptake in the shared prompt while preserving
+  all node instructions unchanged.
+
+The prior default (`en-US-Ava:DragonHDLatestNeural`, `whisper-1`, 400 ms
+Semantic VAD) and earlier versions remain in Git history.

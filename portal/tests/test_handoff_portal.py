@@ -10,7 +10,7 @@ from urllib.parse import parse_qsl, urlsplit
 from aiohttp.test_utils import TestClient, TestServer
 
 import demo_server
-from template_portal import iter_mcp_tools
+from template_portal import iter_mcp_tools, legacy_graph_definition
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,7 +42,7 @@ class HandoffPortalRouteTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn(">Dashboard<", markup)
 
         for asset in (
-            "handoff-app.js", "handoff-core.mjs", "js-yaml.mjs", "voice-picker.mjs",
+            "handoff-app.js", "handoff-core.mjs", "inline-subagents.mjs", "js-yaml.mjs", "voice-picker.mjs",
             "transcription-languages.mjs", "anchored-popover.mjs", "handoff.css",
         ):
             with self.subTest(asset=asset):
@@ -104,11 +104,13 @@ class HandoffPortalRouteTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(200, response.status)
         detail = await response.json()
         self.assertEqual("voice", detail["definition"]["kind"])
-        self.assertGreater(
-            len(detail["definition"]["handoff"]["nodes"]),
-            1,
+        self.assertNotIn("handoff", detail["definition"])
+        self.assertEqual(
+            "inline", detail["definition"]["subagent_config"]["subagent_type"],
         )
-        for node in detail["definition"]["handoff"]["nodes"]:
+        graph = legacy_graph_definition(detail["definition"])["handoff"]
+        self.assertGreater(len(graph["nodes"]), 1)
+        for node in graph["nodes"]:
             config = node["config"]
             self.assertNotIn("inherit_from_base_instructions", config)
             self.assertTrue(config["instructions"].startswith("## GLOBAL POLICY\n"))

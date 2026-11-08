@@ -1471,7 +1471,7 @@ export function useVoiceSession() {
         }
         const message = (evt.error && evt.error.message) || "see log";
         if (code === "portal_bridge_error") sessionFailureRef.current = message;
-        logError("Voice Live error: " + JSON.stringify(evt.error || evt));
+        logError("Voice Agent error: " + JSON.stringify(evt.error || evt));
         setStatus({ text: "error: " + message, kind: "err" });
         break;
       }
@@ -1635,7 +1635,7 @@ export function useVoiceSession() {
     ws.onopen = () => {
       setIsConnected(true);
       setStatus({ text: "connected (waiting for session)", kind: "warn" });
-      logStatus("WebSocket open; backend connecting to Voice Live...");
+      logStatus("WebSocket open; backend connecting to Voice Agent...");
       // WebRTC transport: the rtc.call.sdp.create frame OPENS the call, so offer on ws.onopen —
       // not on session.updated (which arrives after the answer).
       if (transportRef.current === "webrtc") startWebRtcSession();

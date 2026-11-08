@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source": "Voice Live capabilities v1",
+  "source": "Voice Agent capabilities v1",
   "region": "westus2",
   "fetched_at": "2026-10-28",
   "voices": {

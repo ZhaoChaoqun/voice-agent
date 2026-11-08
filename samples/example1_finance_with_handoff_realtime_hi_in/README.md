@@ -8,8 +8,8 @@ the customer speaks and hears Hindi.
 
 The [Agent definition](agent.json) retains `gpt-realtime-regional`. It selects
 Azure Speech transcription with `language: hi-IN` instead of Whisper so that the
-input explicitly uses the India Hindi locale. Output uses Diya Hindi Dragon
-(`hi-IN-Diya:DragonLatestNeural`), inherited by all nodes.
+input explicitly uses the India Hindi locale. Output uses Diya Dragon HD
+(`en-IN-Diya:DragonHDLatestNeural`), inherited by all nodes.
 Every handoff node has the Hindi response policy. Fixed greetings, transfer
 messages, disclosures, and decision phrases are also Hindi.
 

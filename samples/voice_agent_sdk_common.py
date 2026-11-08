@@ -17,6 +17,7 @@ from urllib.parse import quote, urlparse, urlunparse
 
 from azure.ai.projects import AIProjectClient
 from azure.ai.projects.models import VoiceAgentDefinition
+from azure.core.exceptions import HttpResponseError
 from azure.identity import AzureCliCredential, DefaultAzureCredential
 from azure.identity.aio import (
     AzureCliCredential as AsyncAzureCliCredential,
@@ -25,7 +26,11 @@ from azure.identity.aio import (
 from dotenv import dotenv_values
 from websockets.asyncio.client import connect
 
-from voice_agent_definition import materialize_handoff_instruction_inheritance
+from voice_agent_definition import (
+    materialize_handoff_instruction_inheritance,
+    project_inline_subagents,
+    uses_inline_subagents,
+)
 
 
 TOKEN_SCOPE = "https://ai.azure.com/.default"
@@ -159,7 +164,8 @@ def _validate_mcp_settings(server_url: str, connection_id: str) -> None:
         or ">" in server_url
     ):
         raise ValueError("VOICE_AGENT_MCP_SERVER_URL must be a public HTTPS URL.")
-    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", connection_id):
+    # An empty connection means a no-auth MCP bound by direct server_url.
+    if connection_id and not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", connection_id):
         raise ValueError("VOICE_AGENT_MCP_CONNECTION_ID is invalid.")
 
 
@@ -301,20 +307,46 @@ def load_materialized_agent(
         definition["model"] = model
 
     mcp_server_url = _required(settings, "VOICE_AGENT_MCP_SERVER_URL")
-    mcp_connection_id = _required(settings, "VOICE_AGENT_MCP_CONNECTION_ID")
+    mcp_connection_id = settings.get("VOICE_AGENT_MCP_CONNECTION_ID", "").strip()
     _validate_mcp_settings(mcp_server_url, mcp_connection_id)
     mcp_tools = _walk_mcp_tools(definition)
     if not mcp_tools:
         raise RuntimeError("The Voice Agent definition contains no MCP tools.")
     for tool in mcp_tools:
         tool["server_url"] = mcp_server_url
-        tool["project_connection_id"] = mcp_connection_id
+        if mcp_connection_id:
+            tool["project_connection_id"] = mcp_connection_id
+        else:
+            tool.pop("project_connection_id", None)
         tool.pop("authorization", None)
         tool.pop("headers", None)
 
-    materialize_handoff_instruction_inheritance(definition)
+    # Inline subagents keep the shared prompt once in the top-level instructions;
+    # the service prepends it to every subagent with inherit_base_instructions.
+    materialize_handoff_instruction_inheritance(definition, project_inline=False)
     description = str(document.get("description") or "").strip()
     return agent_name, description, definition
+
+
+def _expanded_graph_fallback(definition: dict[str, Any], error: Exception) -> dict[str, Any] | None:
+    """The equivalent legacy graph for a service version that rejects inline subagents."""
+    if not uses_inline_subagents(definition) or getattr(error, "status_code", None) != 400:
+        return None
+    if "subagent" not in str(error).lower():
+        return None
+    return materialize_handoff_instruction_inheritance(
+        project_inline_subagents(copy.deepcopy(definition))
+    )
+
+
+def _subagent_prompts(definition: Any) -> list[tuple[Any, Any, Any]]:
+    config = definition.get("subagent_config") if isinstance(definition, dict) else None
+    subagents = config.get("subagents") if isinstance(config, dict) else None
+    return [
+        (item.get("id"), item.get("inherit_base_instructions"), item.get("instructions"))
+        for item in subagents or []
+        if isinstance(item, dict)
+    ]
 
 
 def _latest_version_id(agent: Any) -> str:
@@ -345,15 +377,23 @@ def _validate_readback(
             "Published version model type does not match the requested model type: "
             f"{observed.get('model_type')!r} != {expected.get('model_type')!r}."
         )
-    if require_handoff and not isinstance(observed.get("handoff"), dict):
-        raise RuntimeError("Published Finance version lost its handoff graph.")
+    if uses_inline_subagents(expected):
+        if (
+            observed.get("instructions") != expected.get("instructions")
+            or _subagent_prompts(observed) != _subagent_prompts(expected)
+        ):
+            raise RuntimeError(
+                "Published version did not keep the shared prompt and inline subagents."
+            )
+    elif require_handoff and not isinstance(observed.get("handoff"), dict):
+        raise RuntimeError("Published version lost its handoff graph.")
 
     expected_connections = {
-        str(tool.get("project_connection_id"))
+        str(tool.get("project_connection_id") or "")
         for tool in _walk_mcp_tools(expected)
     }
     observed_connections = {
-        str(tool.get("project_connection_id"))
+        str(tool.get("project_connection_id") or "")
         for tool in _walk_mcp_tools(observed)
     }
     if expected_connections != observed_connections:
@@ -394,20 +434,33 @@ def publish_agent(
             agent = client.agents.get(agent_name)
             version_id = _latest_version_id(agent)
         else:
-            if mode == "typed":
-                created = client.agents.create_version(
-                    agent_name=agent_name,
-                    definition=VoiceAgentDefinition(definition),
-                    description=description,
-                )
-            else:
-                created = client.agents.create_version(
+            def create(payload: dict[str, Any]) -> Any:
+                if mode == "typed":
+                    return client.agents.create_version(
+                        agent_name=agent_name,
+                        definition=VoiceAgentDefinition(payload),
+                        description=description,
+                    )
+                return client.agents.create_version(
                     agent_name,
                     {
-                        "definition": definition,
+                        "definition": payload,
                         "description": description,
                     },
                 )
+
+            try:
+                created = create(definition)
+            except HttpResponseError as error:
+                fallback = _expanded_graph_fallback(definition, error)
+                if fallback is None:
+                    raise
+                print(
+                    "The service rejected inline subagents; publishing the "
+                    "equivalent handoff graph with the shared prompt copied into each node."
+                )
+                definition = fallback
+                created = create(definition)
             version_id = str(_field(created, "version"))
             if not version_id or version_id == "None":
                 raise RuntimeError("The SDK create_version response had no version.")
@@ -430,11 +483,12 @@ def publish_agent(
         "model": observed.get("model"),
         "mcp_connections": sorted(
             {
-                str(tool.get("project_connection_id"))
+                str(tool.get("project_connection_id") or "")
                 for tool in _walk_mcp_tools(observed)
             }
         ),
         "handoff_present": isinstance(observed.get("handoff"), dict),
+        "inline_subagents": len(_subagent_prompts(observed)),
         "requested_sha256": _fingerprint(_canonical_definition(definition)),
         "readback_sha256": _fingerprint(_canonical_definition(observed)),
     }
@@ -593,6 +647,10 @@ async def _receive_until(
     timeout_seconds: float,
     wait_for_session: bool = False,
 ) -> dict[str, Any]:
+    # A handoff's transfer message is a complete response of its own; the turn
+    # ends only with a response the target node created after the handoff.
+    handoff_pending = False
+    target_responses: set[str] | None = None
     while True:
         try:
             raw = await asyncio.wait_for(websocket.recv(), timeout=timeout_seconds)
@@ -614,6 +672,18 @@ async def _receive_until(
         if wait_for_session and kind == "session.updated":
             printer.finish_line()
             return event
+        if kind == "session.handoff.started":
+            handoff_pending = True
+        elif kind == "session.handoff.completed":
+            handoff_pending = False
+            target_responses = set()
+        elif kind == "session.handoff.aborted":
+            handoff_pending = False
+            target_responses = None
+        elif kind == "response.created" and target_responses is not None:
+            created = event.get("response")
+            if isinstance(created, dict) and created.get("id"):
+                target_responses.add(str(created["id"]))
         if not wait_for_session and kind == "response.done":
             printer.finish_line()
             response = event.get("response")
@@ -625,6 +695,10 @@ async def _receive_until(
                     f"{response.get('status_details')!r}"
                 )
             if _response_output_types(event) & {"function_call", "mcp_call"}:
+                continue
+            if handoff_pending:
+                continue
+            if target_responses is not None and str(response.get("id")) not in target_responses:
                 continue
             return event
 

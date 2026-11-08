@@ -28,7 +28,7 @@ export const KIND = "voice";
  * behind a checkbox that does not say what it does. */
 export const MODEL_TYPE_OPTIONS = [
   { value: "", label: "Omit — service resolves (managed + default model)" },
-  { value: "managed", label: "managed — Voice Live-hosted model" },
+  { value: "managed", label: "managed — Voice Agent-hosted model" },
   { value: "self_deployed", label: "self_deployed — your own deployment" },
 ];
 

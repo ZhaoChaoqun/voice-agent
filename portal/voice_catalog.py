@@ -1,5 +1,5 @@
 # Copyright (c) Microsoft. All rights reserved.
-"""Voice Live metadata plus a reproducible Azure Speech reference catalog."""
+"""Voice Agent metadata plus a reproducible Azure Speech reference catalog."""
 from __future__ import annotations
 
 import argparse
@@ -60,7 +60,7 @@ def build_voice_catalog(
     capabilities: Any, reference: dict[str, Any], configured_voices: list[str] | None = None,
 ) -> dict[str, Any]:
     if not isinstance(capabilities, dict) or not isinstance(capabilities.get("voices"), dict):
-        raise ValueError("Voice Live capabilities did not return a voices map.")
+        raise ValueError("Voice Agent capabilities did not return a voices map.")
     if reference.get("schema_version") != 1 or not reference.get("voices"):
         raise ValueError("The Azure Speech reference catalog is invalid.")
     voices = {item["id"]: dict(item) for item in reference["voices"]}
@@ -74,11 +74,11 @@ def build_voice_catalog(
     for voice_type in ("openai", "azure-realtime-native"):
         entries = capabilities["voices"].get(voice_type)
         if not isinstance(entries, list):
-            raise ValueError(f"Voice Live capabilities is missing {voice_type} voices.")
+            raise ValueError(f"Voice Agent capabilities is missing {voice_type} voices.")
         for item in entries:
             metadata = {"name": item} if isinstance(item, str) else item
             if not isinstance(metadata, dict) or not isinstance(metadata.get("name"), str):
-                raise ValueError("Voice Live returned invalid voice metadata.")
+                raise ValueError("Voice Agent returned invalid voice metadata.")
             name = metadata["name"]
             locales = str(metadata.get("locale") or "").split(" / ")
             voices[name] = {
@@ -92,7 +92,7 @@ def build_voice_catalog(
         "source": "live",
         "voices": list(voices.values()),
         "sources": {
-            "native": "Voice Live capabilities v1 (current project)",
+            "native": "Voice Agent capabilities v1 (current project)",
             "azureSpeech": {
                 "region": reference["region"],
                 "fetchedAt": reference["fetched_at"],

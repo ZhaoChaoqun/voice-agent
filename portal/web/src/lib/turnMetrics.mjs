@@ -716,7 +716,7 @@ function expandServerTimingPhases(phases, serverTiming) {
         endLabel: detail.label,
         calculation: detail.boundaryAdjustmentMs
           ? `${detail.label} reported as ${detail.reportedDurationMs} ms; adjusted ${detail.boundaryAdjustmentMs} ms to match the rounded client-observed envelope`
-          : `${detail.label} reported by Voice Live server timing`,
+          : `${detail.label} reported by Voice Agent server timing`,
       });
     }
     const residualMs = phase.durationMs - serverTotal;
@@ -1003,7 +1003,7 @@ const ALL_TURN_SUBSYSTEM_COLUMNS = [
     tone: "vad",
     categories: ["endpointing_eou", "endpoint_candidate", "eou_inference", "eou_hold"],
     description: "Critical-path input speech endpointing and end-of-utterance decision time.",
-    owner: "Voice Live turn detection",
+    owner: "Voice Agent turn detection",
     interpretation: "A high value points to VAD silence policy, Smart EOU inference, or EOU hold behavior.",
     actions: [
       "Candidate wait high: tune VAD profile/silence duration, while monitoring false endpoints and user truncation.",
@@ -1021,7 +1021,7 @@ const ALL_TURN_SUBSYSTEM_COLUMNS = [
     tone: "other",
     categories: ["idle_timeout_wait"],
     description: "Configured silence-policy wait before an automatic timeout continuation.",
-    owner: "Voice Live idle policy",
+    owner: "Voice Agent idle policy",
     interpretation: "A high value is normally the configured timeout duration, not slow inference.",
     actions: ["Review the configured idle timeout only if the product should prompt sooner."],
     caveats: [
@@ -1034,9 +1034,9 @@ const ALL_TURN_SUBSYSTEM_COLUMNS = [
     label: "Orchestration",
     tone: "orchestrator",
     categories: ["endpoint_delivery", "commit_dispatch", "response_schedule"],
-    description: "Voice Live-owned endpoint delivery, audio commit, and response scheduling time.",
-    owner: "Voice Live orchestration",
-    interpretation: "A high value points to Voice Live queueing, commit handling, response ownership, or waiting for the previous response.",
+    description: "Voice Agent-owned endpoint delivery, audio commit, and response scheduling time.",
+    owner: "Voice Agent orchestration",
+    interpretation: "A high value points to Voice Agent queueing, commit handling, response ownership, or waiting for the previous response.",
     actions: [
       "Endpoint delivery high: inspect audio-pipeline backlog and event-loop starvation.",
       "Commit dispatch high: inspect audio draining, upstream write backpressure, and commit serialization.",
@@ -1106,7 +1106,7 @@ const ALL_TURN_SUBSYSTEM_COLUMNS = [
     tone: "tts",
     categories: ["other_speech", "silence"],
     description: "Text-to-audio speech pipeline time and leading silence in returned audio.",
-    owner: "Voice Live speech output and TTS provider",
+    owner: "Voice Agent speech output and TTS provider",
     interpretation: "A high value points to sentence segmentation, TTS startup, speech transport, or generated leading silence.",
     actions: [
       "Inspect text segmentation/flush timing and TTS request-to-first-byte latency.",
@@ -1115,7 +1115,7 @@ const ALL_TURN_SUBSYSTEM_COLUMNS = [
     ],
     caveats: [
       "The browser does not receive separate TTS request and first-byte timestamps.",
-      "This category can include transport between Voice Live and the browser.",
+      "This category can include transport between Voice Agent and the browser.",
     ],
   },
   {

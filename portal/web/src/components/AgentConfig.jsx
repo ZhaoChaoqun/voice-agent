@@ -56,7 +56,7 @@ export function AgentConfig({ cfg, draft, update, disabled, structuredInputConfi
       </div>
       {hosted ? (
         <>
-          <Field label="Target hosted agent" hint="An existing, Voice Live-compatible hosted agent in this project.">
+          <Field label="Target hosted agent" hint="An existing, Voice Agent-compatible hosted agent in this project.">
             <input type="text" value={draft.targetAgentName} placeholder="existing-hosted-agent"
               disabled={disabled} onChange={(event) => update("targetAgentName", event.target.value)} />
           </Field>
@@ -71,7 +71,7 @@ export function AgentConfig({ cfg, draft, update, disabled, structuredInputConfi
             <span className="subtle-badge">{isCascaded(cfg, draft.model) ? "Cascaded" : "Realtime"}</span>
             <span>{draft.inferenceMode === "deployment"
               ? "Uses your Foundry deployment."
-              : "Hosted and managed by Voice Live."}</span>
+              : "Hosted and managed by Voice Agent."}</span>
           </div>
           <Field label="Instructions" optional hint={draft.handoffEnabled
             ? "Leave blank to use the customer-care routing prompt. Custom instructions take precedence."

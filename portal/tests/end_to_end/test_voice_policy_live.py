@@ -1,4 +1,4 @@
-"""Opt-in real catalogs, project region discovery, and audible Voice Live output."""
+"""Opt-in real catalogs, project region discovery, and audible Voice Agent output."""
 
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ async def receive_audio(cfg: AgentsConfig, name: str) -> int:
             if message.type != aiohttp.WSMsgType.TEXT:
                 continue
             event = json.loads(message.data)
-            assert event["type"] != "error", event.get("error", {}).get("code", "Voice Live error")
+            assert event["type"] != "error", event.get("error", {}).get("code", "Voice Agent error")
             if event["type"] in {"response.output_audio.delta", "response.audio.delta"}:
                 return len(base64.b64decode(event["delta"]))
     raise AssertionError("Voice session closed without audio")

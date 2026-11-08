@@ -115,7 +115,7 @@ export function transcriptionLanguageError(model, language) {
       ? !code.includes("-") && value.split("-")[0] === code.toLowerCase()
       : value.split("-")[0] === code.split("-")[0].toLowerCase())
   )));
-  if (invalid) return `${invalid} is not in the published Voice Live input language list for ${model}. Select a listed language or Auto.`;
+  if (invalid) return `${invalid} is not in the published Voice Agent input language list for ${model}. Select a listed language or Auto.`;
   const bases = codes.map((code) => code.split("-")[0].toLowerCase());
   if (new Set(bases).size !== bases.length) return "Select only one locale per language; for example, en-IN or en-US, not both.";
   return "";

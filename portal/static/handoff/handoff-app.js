@@ -30,7 +30,7 @@ import {
   uniqueId,
   validateDefinition,
   publicationDefinition,
-} from "./handoff-core.mjs?v=20261028-yaml-import";
+} from "./handoff-core.mjs?v=20261104-inline-subagents";
 import { resolveVoiceSelection, voiceSelectionNotice } from "/static/demo/voice-selection.mjs";
 import { createToolConnectRequest } from "/static/demo/tool-connection.mjs";
 import { filterVoiceGroups, voiceMatchCount } from "./voice-picker.mjs?v=20261027-voice-search";
@@ -550,6 +550,15 @@ function nodeConfig(id) {
   return state.definition?.handoff?.nodes?.find((node) => node.id === id)?.config || {};
 }
 
+// Inline subagents keep the shared prompt in definition.instructions; the entrypoint's own prompt and
+// flags live in handoff.entrypoint. A node without the flag carries its complete instructions.
+function inheritsSharedInstructions(id) {
+  if (id === ENTRYPOINT_ID) {
+    return state.definition?.handoff?.entrypoint?.inherit_base_instructions ?? true;
+  }
+  return nodeConfig(id).inherit_base_instructions ?? false;
+}
+
 function defaultNodeIcon(id) {
   const normalized = id.toLowerCase();
   if (id === ENTRYPOINT_ID) return "home";
@@ -729,13 +738,9 @@ async function loadPipelineAvailability() {
   }
 }
 
-// Hide choices the hosted policy rejects or the probe found unavailable; unknown stays visible.
+// Hide choices the probe found unavailable; unknown stays visible.
 function pipelineChoiceAvailable(kind, id) {
   if (kind === "voice") return true;
-  if (
-    kind === "model" && state.cfg?.playground && Array.isArray(state.cfg.models)
-    && !state.cfg.models.includes(id)
-  ) return false;
   const key = { model: "models", stt: "stt", voice: "voices" }[kind];
   return state.pipelineAvailability?.[key]?.[id]?.available !== false;
 }
@@ -1816,6 +1821,8 @@ function addNode() {
       description: "",
       config: {
         instructions: "",
+        // Stages of an inline-subagent Agent share its top-level instructions by default.
+        inherit_base_instructions: Boolean(definition.handoff.entrypoint),
         model: DEFAULT_NODE_PRESET.model.id,
         voice: DEFAULT_NODE_PRESET.voice.id,
         tools: [],
@@ -3032,7 +3039,7 @@ function animateMetricElement(element, from, to, formatter) {
 function componentDescription(kind, id) {
   const descriptions = {
     "mai-transcribe-2": "High-accuracy managed transcription with detailed speech features.",
-    "mai-transcribe": "Managed MAI transcription alias resolved by Voice Live.",
+    "mai-transcribe": "Managed MAI transcription alias resolved by Voice Agent.",
     "mai-transcribe-2-streaming": "Preview streaming MAI transcription.",
     "azure-speech": "Managed Azure Speech transcription for broad language and enterprise scenarios.",
     "whisper-1": "Whisper transcription; lifecycle and availability remain region dependent.",
@@ -3263,7 +3270,7 @@ function renderNodeComponentPanel() {
       <div class="component-advanced">
         <h4>Generation settings</h4>
         <div class="detail-row"><span>Scope</span><strong>${escapeHtml(state.selected.id)}</strong></div>
-        <div class="detail-row"><span>Provider</span><strong>Voice Live managed</strong></div>
+        <div class="detail-row"><span>Provider</span><strong>Voice Agent managed</strong></div>
         <div class="empty-config-state">
           ${pipelineIcon("sliders")}
           <strong>Advanced model controls</strong>
@@ -3567,7 +3574,7 @@ function renderAgentRuntimeSettings(definition) {
               </div>
               <p id="component-stt-language-hint">${INPUT_LANGUAGE_HINT}</p>
               <p id="component-stt-language-error" role="alert"${languageError ? "" : " hidden"}>${escapeHtml(languageError)}</p>
-              <a href="${INPUT_LANGUAGE_SOURCE}" target="_blank" rel="noopener noreferrer">Voice Live supported input languages</a>
+              <a href="${INPUT_LANGUAGE_SOURCE}" target="_blank" rel="noopener noreferrer">Voice Agent supported input languages</a>
             </div>
             ${settingsToggle("phrase-list", "Phrase list", Array.isArray(phraseList),
               phraseListSupported ? "Help recognize product names and domain terms." : "This transcript model does not support phrase lists.",
@@ -3610,7 +3617,7 @@ function renderAgentRuntimeSettings(definition) {
             ${runtimeSelect("definition", "model_type", "Model serving", definition.model_type || "managed", [
               { value: "managed", label: "Managed" },
               { value: "self_deployed", label: "Self-deployed" },
-            ], "Specifies who hosts the selected language model. Managed uses a Voice Live-managed model; Self-deployed refers to a model deployment you provide. The model identifier must match the chosen serving mode and be accessible to the project.\n\nThis is separate from Realtime versus cascaded audio processing: changing serving mode does not automatically change the model, deployment, or voice. Keep Managed for the supplied managed-model templates; choose Self-deployed only when you have configured the corresponding deployment.")}
+            ], "Specifies who hosts the selected language model. Managed uses a Voice Agent-managed model; Self-deployed refers to a model deployment you provide. The model identifier must match the chosen serving mode and be accessible to the project.\n\nThis is separate from Realtime versus cascaded audio processing: changing serving mode does not automatically change the model, deployment, or voice. Keep Managed for the supplied managed-model templates; choose Self-deployed only when you have configured the corresponding deployment.")}
             ${runtimeSelect("definition", "output_modalities", "Output modalities", modalities, [
               { value: "audio", label: "Audio" },
               { value: "text", label: "Text only" },
@@ -4204,13 +4211,29 @@ function renderNodeEditor() {
         </div>
       </div>
       ${nodeFieldLabel(
-        "Instructions",
+        entry ? "Shared instructions" : "Instructions",
         "node-editor-instructions",
         "The prompt that defines this node's role, speaking style, permitted actions, and workflow. State what information to collect, which tools to use, what must be verified, and when to hand off or finish. For example, require an account lookup before giving a balance, and prohibit inventing a tool result.\n\nThese instructions configure the entrypoint or selected specialist, not every specialist's overrides. They do not themselves create tools, change speech recognition, or publish the Agent. Save the working copy and publish a new version when you are ready to use the changes.",
       )}
       <textarea id="node-editor-instructions" data-node-editor-field="instructions"
         rows="12" placeholder="Define this node's focused behavior…">${escapeHtml(config.instructions || "")}</textarea>
       ${fieldError("instructions")}
+      ${entry ? `${nodeFieldLabel(
+        "Entrypoint instructions",
+        "node-editor-entrypoint-instructions",
+        "Instructions only the entrypoint uses, published as the $entrypoint subagent's instructions. The Shared instructions above are the Agent's top-level instructions; every stage that inherits them runs the shared text first, followed by its own.",
+      )}
+      <textarea id="node-editor-entrypoint-instructions" data-node-editor-field="entrypoint_instructions"
+        rows="6" placeholder="Optional entrypoint-only behavior…">${escapeHtml(state.definition.handoff.entrypoint?.instructions || "")}</textarea>` : ""}
+      ${nodeFieldLabel(
+        "Inherit shared instructions",
+        "node-editor-inherit",
+        "Yes runs the Agent's shared instructions first and then this stage's instructions. No runs only this stage's instructions, so they must be complete on their own.",
+      )}
+      <select id="node-editor-inherit" data-node-editor-field="inherit_base_instructions">
+        <option value="true" ${inheritsSharedInstructions(id) ? "selected" : ""}>Yes: shared instructions, then this stage's</option>
+        <option value="false" ${inheritsSharedInstructions(id) ? "" : "selected"}>No: this stage's instructions only</option>
+      </select>
     </section>
     ${renderInterimResponseSettings(config, entry ? "definition" : "node")}
     <section class="tool-config-section">
@@ -4443,6 +4466,17 @@ function applyNodeFieldChange(field, value) {
     const config = entry ? definition : (node.config ||= {});
     if (field === "description") {
       node.description = value;
+    } else if (field === "entrypoint_instructions") {
+      definition.handoff.entrypoint ||= {};
+      if (value) definition.handoff.entrypoint.instructions = value;
+      else delete definition.handoff.entrypoint.instructions;
+    } else if (field === "inherit_base_instructions") {
+      if (entry) {
+        definition.handoff.entrypoint ||= {};
+        definition.handoff.entrypoint.inherit_base_instructions = value === "true";
+      } else {
+        config.inherit_base_instructions = value === "true";
+      }
     } else if (field === "tools") {
       config.tools = parseJsonArray(value, "tools");
     } else if (field === "voice") {
@@ -4577,9 +4611,10 @@ function renderDefinition() {
   if ($("#definition-drawer").hidden) return;
   let value = "No Agent definition loaded. Choose Import from agent to import a working copy.";
   if (state.definition) {
+    const exported = publicationDefinition(state.definition);
     value = state.format === "json"
-      ? `${stableJson(state.definition, 2)}\n`
-      : deterministicYaml(state.definition);
+      ? `${stableJson(exported, 2)}\n`
+      : deterministicYaml(exported);
   }
   $("#definition-output").textContent = value;
   $("#export-format-label").textContent = state.format.toUpperCase();

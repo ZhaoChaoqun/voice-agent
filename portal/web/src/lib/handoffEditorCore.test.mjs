@@ -37,6 +37,7 @@ import {
   validateDefinition,
   voiceLocale,
 } from "../../../static/handoff/handoff-core.mjs";
+import { legacyGraphView } from "../../../static/handoff/inline-subagents.mjs";
 
 test("blank Agents explicitly select a managed model before any settings are saved", () => {
   const definition = createBlankDefinition();
@@ -91,9 +92,18 @@ test("blank Agents contain a runnable entrypoint-to-end graph that survives publ
   assert.equal(edge.target_response, "auto");
   assert.equal(edge.cancel_on_interruption, true);
   assert.deepEqual(validateDefinition(definition), []);
-  assert.deepEqual(publicationDefinition(definition), definition);
-  assert.deepEqual(parseAgentJson(stableJson(definition)).definition, definition);
-  assert.match(deterministicYaml(definition), /name: "end_conversation"/);
+  const published = publicationDefinition(definition);
+  assert.equal(Object.hasOwn(published, "handoff"), false);
+  assert.equal(published.subagent_config.subagent_type, "inline");
+  assert.deepEqual(
+    published.subagent_config.subagents.map((subagent) => subagent.id),
+    [ENTRYPOINT_ID, "end"],
+  );
+  assert.deepEqual(legacyGraphView(published), definition);
+  const reimported = parseAgentJson(stableJson(published));
+  assert.deepEqual(reimported.problems.filter((item) => item.severity === "error"), []);
+  assert.deepEqual(publicationDefinition(reimported.definition), published);
+  assert.match(deterministicYaml(published), /name: "end_conversation"/);
 });
 
 test("blank Agents do not share mutable node, route or tool defaults", () => {
@@ -124,7 +134,10 @@ test("publishes imported flat Agents without sending an empty editable handoff g
 
 test("publication preserves real and incomplete graphs instead of dropping configuration", () => {
   const definition = createSampleDefinition();
-  assert.deepEqual(publicationDefinition(definition), definition);
+  const published = publicationDefinition(definition);
+  assert.equal(published.subagent_config.subagent_type, "inline");
+  assert.deepEqual(legacyGraphView(published), definition);
+  // Graphs the inline form cannot express are published unchanged.
   for (const handoff of [
     { nodes: [{ id: "support" }], edges: [] },
     { nodes: [], edges: [{ source: ENTRYPOINT_ID, target: "support" }] },
@@ -393,7 +406,7 @@ test("uses a discovered voice catalog without limiting choices to the static sho
   assert.equal(groupVoicesByLocale(options)[0].locale, "hi-IN");
 });
 
-test("offers current cascaded models and Voice Live transcription choices", () => {
+test("offers current cascaded models and Voice Agent transcription choices", () => {
   const cascadedModels = pipelineComponentOptions("model")
     .filter((item) => item.architecture === "cascaded")
     .map((item) => item.id);
@@ -446,7 +459,7 @@ test("separates verified speech meters from unverified auxiliary transcription a
   }
   assert.equal(
     realtimeStt.find((item) => item.id === "mai-transcribe-2-streaming").publicRateLabel,
-    "$17 / 1M Voice Live speech-input tokens",
+    "$17 / 1M Voice Agent speech-input tokens",
   );
   assert.equal(
     realtimeStt.find((item) => item.id === "mai-transcribe-2").costPerMinute,
@@ -976,7 +989,7 @@ test("model indicators identify catalog estimates and unknown values honestly", 
   assert.deepEqual(modelEstimate("gpt-realtime-mini"), {
     latency: "Low",
     cost: "Low",
-    source: "Estimated from Voice Live guidance and public retail tier",
+    source: "Estimated from Voice Agent guidance and public retail tier",
     available: true,
   });
   assert.deepEqual(modelEstimate("custom-deployment"), {

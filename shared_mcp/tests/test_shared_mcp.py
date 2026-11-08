@@ -200,35 +200,22 @@ class SharedMcpTests(unittest.TestCase):
         elevator_definition = json.loads(
             ELEVATOR_AGENT.read_text(encoding="utf-8")
         )["definition"]
-        elevator_nodes = {
-            node["id"]: node
-            for node in elevator_definition["handoff"]["nodes"]
+        elevator_subagents = {
+            subagent["id"]: subagent
+            for subagent in elevator_definition["subagent_config"]["subagents"]
         }
-        elevator_edges = {
-            edge["id"]: edge
-            for edge in elevator_definition["handoff"]["edges"]
+        elevator_conditions = {
+            condition["id"]: condition
+            for subagent in elevator_subagents.values()
+            for condition in subagent.get("handoff_conditions", [])
         }
-        report_instructions = elevator_nodes["report_issue"]["config"][
-            "instructions"
-        ]
-        open_call_instructions = elevator_nodes["open_call"]["config"][
-            "instructions"
-        ]
-        intent_router_instructions = elevator_nodes["intent_router"]["config"][
-            "instructions"
-        ]
-        query_instructions = elevator_nodes["query_issue"]["config"][
-            "instructions"
-        ]
-        next_request_instructions = elevator_nodes["next_request"]["config"][
-            "instructions"
-        ]
-        finalize_instructions = elevator_nodes["finalize"]["config"][
-            "instructions"
-        ]
-        human_handoff_instructions = elevator_nodes["human_handoff"]["config"][
-            "instructions"
-        ]
+        report_instructions = elevator_subagents["report_issue"]["instructions"]
+        open_call_instructions = elevator_subagents["open_call"]["instructions"]
+        intent_router_instructions = elevator_subagents["intent_router"]["instructions"]
+        query_instructions = elevator_subagents["query_issue"]["instructions"]
+        next_request_instructions = elevator_subagents["next_request"]["instructions"]
+        finalize_instructions = elevator_subagents["finalize"]["instructions"]
+        human_handoff_instructions = elevator_subagents["human_handoff"]["instructions"]
         elevator_agent_tools = expected_tools_from_agent(ELEVATOR_AGENT)
         handoff_agent_tools = expected_tools_from_agent(HANDOFF_AGENT)
         otp_agent_tools = expected_tools_from_agent(OTP_AGENT)
@@ -263,7 +250,7 @@ class SharedMcpTests(unittest.TestCase):
         self.assertNotEqual(handoff_inventory, otp_inventory)
         self.assertNotEqual(elevator_inventory, handoff_inventory)
         self.assertEqual(
-            elevator_nodes["end"]["config"]["tool_choice"],
+            elevator_subagents["end"]["tool_choice"],
             "required",
         )
         self.assertIn(
@@ -322,17 +309,16 @@ class SharedMcpTests(unittest.TestCase):
             "Thank you for calling the fictional elevator service. Goodbye."
         )
         self.assertEqual(
-            elevator_edges["query_issue_to_finalize"]["transfer_message"],
+            elevator_conditions["query_issue_to_finalize"]["transfer_message"],
             goodbye,
         )
         self.assertEqual(
-            elevator_edges["next_request_to_finalize"]["transfer_message"],
+            elevator_conditions["next_request_to_finalize"]["transfer_message"],
             goodbye,
         )
-        self.assertTrue(
-            elevator_edges["intent_router_to_report_issue"]["transfer_message"].startswith(
-                "First, is anyone trapped or unable to exit safely?"
-            )
+        self.assertIn(
+            "First, is anyone trapped or unable to exit safely?",
+            elevator_conditions["intent_router_to_report_issue"]["transfer_message"],
         )
         self.assertIn("exact browser notice", human_handoff_instructions)
         self.assertIn("human_finalize", human_handoff_instructions)

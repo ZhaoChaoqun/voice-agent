@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import copy
 import io
 import json
 import os
@@ -11,16 +12,32 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from voice_agent_definition import materialize_handoff_instruction_inheritance
+from voice_agent_definition import (
+    materialize_handoff_instruction_inheritance,
+    project_inline_subagents,
+    uses_inline_subagents,
+)
 from voice_agent_sdk_common import (
     EventPrinter,
     _canonical_definition,
+    _expanded_graph_fallback,
     _load_settings,
     _realtime_url,
     _validate_agent_name,
     _validate_project_endpoint,
     load_materialized_agent,
 )
+
+
+def _graph_view(test: unittest.TestCase, published: dict) -> dict:
+    """Check the shared prompt is published once, then return the equivalent node graph."""
+    test.assertNotIn("handoff", published)
+    test.assertTrue(uses_inline_subagents(published))
+    shared = published["instructions"]
+    for subagent in published["subagent_config"]["subagents"]:
+        test.assertIs(subagent["inherit_base_instructions"], True)
+        test.assertNotIn(shared, subagent.get("instructions") or "")
+    return project_inline_subagents(copy.deepcopy(published))
 
 
 class VoiceAgentSdkCommonTests(unittest.TestCase):
@@ -59,6 +76,139 @@ class VoiceAgentSdkCommonTests(unittest.TestCase):
         self.assertEqual("Handle support.", support["instructions"])
         self.assertNotIn("inherit_from_base_instructions", billing)
         self.assertNotIn("inherit_from_base_instructions", support)
+
+    def test_projects_inline_subagents_to_legacy_graph_for_publish(self) -> None:
+        definition = {
+            "instructions": "Shared policy.",
+            "tool_choice": "required",
+            "subagent_config": {
+                "subagent_type": "inline",
+                "subagents": [
+                    {
+                        "id": "$entrypoint",
+                        "source": "inline",
+                        "interface": "voice",
+                        "description": "Router",
+                        "inherit_base_instructions": True,
+                        "instructions": "Route the first turn.",
+                        "tool_choice": "required",
+                        "handoff_conditions": [
+                            {
+                                "id": "entry_to_billing",
+                                "target": "billing",
+                                "condition": "Always.",
+                                "target_response": "auto",
+                            }
+                        ],
+                    },
+                    {
+                        "id": "billing",
+                        "source": "inline",
+                        "interface": "voice",
+                        "description": "Billing",
+                        "inherit_base_instructions": True,
+                        "instructions": "Handle billing.",
+                        "tools": [],
+                        "handoff_conditions": [
+                            {
+                                "id": "billing_to_end",
+                                "target": "end",
+                                "condition": "Done.",
+                                "transfer_message": "Goodbye.",
+                            }
+                        ],
+                    },
+                    {
+                        "id": "end",
+                        "source": "inline",
+                        "interface": "voice",
+                        "description": "Close",
+                        "inherit_base_instructions": False,
+                        "instructions": "Close the call.",
+                    },
+                ],
+                "handoff_policy": {"max_transfers": 4, "max_attempts": 5},
+            },
+        }
+
+        materialize_handoff_instruction_inheritance(definition)
+
+        self.assertNotIn("subagent_config", definition)
+        self.assertEqual(
+            "Shared policy.\n\nRoute the first turn.", definition["instructions"]
+        )
+        self.assertEqual("required", definition["tool_choice"])
+        self.assertEqual(
+            {
+                "max_transfers": 4,
+                "max_attempts": 5,
+                "nodes": [
+                    {
+                        "id": "billing",
+                        "description": "Billing",
+                        "config": {
+                            "instructions": "Shared policy.\n\nHandle billing.",
+                            "tools": [],
+                        },
+                    },
+                    {
+                        "id": "end",
+                        "description": "Close",
+                        "config": {"instructions": "Close the call."},
+                    },
+                ],
+                "edges": [
+                    {
+                        "id": "entry_to_billing",
+                        "source": "$entrypoint",
+                        "target": "billing",
+                        "description": "Always.",
+                        "target_response": "auto",
+                    },
+                    {
+                        "id": "billing_to_end",
+                        "source": "billing",
+                        "target": "end",
+                        "description": "Done.",
+                        "transfer_message": "Goodbye.",
+                    },
+                ],
+            },
+            definition["handoff"],
+        )
+
+    def test_falls_back_to_expanded_graph_only_when_inline_is_rejected(self) -> None:
+        definition = {
+            "instructions": "Shared policy.",
+            "subagent_config": {
+                "subagent_type": "inline",
+                "subagents": [
+                    {"id": "$entrypoint", "inherit_base_instructions": True,
+                     "instructions": "Route.", "handoff_conditions": [
+                         {"id": "to_billing", "target": "billing", "condition": "Billing."}]},
+                    {"id": "billing", "inherit_base_instructions": True,
+                     "instructions": "Handle billing."},
+                ],
+            },
+        }
+
+        class Rejected(Exception):
+            def __init__(self, status_code: int, message: str) -> None:
+                super().__init__(message)
+                self.status_code = status_code
+
+        original = copy.deepcopy(definition)
+        fallback = _expanded_graph_fallback(
+            definition, Rejected(400, "subagent_config is not supported"))
+        self.assertEqual(original, definition)
+        self.assertNotIn("subagent_config", fallback)
+        self.assertEqual("Shared policy.\n\nRoute.", fallback["instructions"])
+        self.assertEqual(
+            "Shared policy.\n\nHandle billing.",
+            fallback["handoff"]["nodes"][0]["config"]["instructions"],
+        )
+        self.assertIsNone(_expanded_graph_fallback(definition, Rejected(400, "bad model")))
+        self.assertIsNone(_expanded_graph_fallback(definition, Rejected(500, "subagent")))
 
     def test_validates_project_endpoint_and_agent_name(self) -> None:
         endpoint = "https://account.services.ai.azure.com/api/projects/project"
@@ -288,6 +438,8 @@ class VoiceAgentSdkCommonTests(unittest.TestCase):
                 "VOICE_AGENT_MCP_CONNECTION_ID": "elevator-service-connection",
             },
         )
+        finance = _graph_view(self, finance)
+        elevator_service = _graph_view(self, elevator_service)
 
 
         self.assertEqual(finance["model_type"], "managed")
@@ -313,7 +465,7 @@ class VoiceAgentSdkCommonTests(unittest.TestCase):
         self.assertEqual(elevator_service["model_type"], "managed")
         self.assertEqual(elevator_service["model"], "gpt-realtime")
         self.assertEqual(
-            "en-US-Ava:DragonHDLatestNeural",
+            "en-US-Emma:DragonHDOmniLatestNeural",
             elevator_service["audio"]["output"]["voice"]["name"],
         )
         self.assertEqual(
@@ -332,7 +484,7 @@ class VoiceAgentSdkCommonTests(unittest.TestCase):
         shared_instructions = source_definition["instructions"]
         self.assertIn("## CONVERSATIONAL RESPONSE", shared_instructions)
         self.assertIn(
-            "Match an explicitly stated emotion with restrained empathy.",
+            "When the caller explicitly names an emotion, the bridge must name that emotion",
             shared_instructions,
         )
         self.assertIn(
@@ -340,18 +492,21 @@ class VoiceAgentSdkCommonTests(unittest.TestCase):
             shared_instructions,
         )
         self.assertIn(
-            "Never invent or\nintensify an emotion",
+            "Never invent or intensify an emotion",
             shared_instructions,
         )
         self.assertNotIn("## CURRENT NODE", shared_instructions)
-        for source_node, materialized_node in zip(
-            source_definition["handoff"]["nodes"],
+        self.assertNotIn("handoff", source_definition)
+        source_subagents = source_definition["subagent_config"]["subagents"]
+        self.assertEqual("$entrypoint", source_subagents[0]["id"])
+        for source_config, materialized_node in zip(
+            source_subagents[1:],
             elevator_service["handoff"]["nodes"],
             strict=True,
         ):
-            source_config = source_node["config"]
             materialized_config = materialized_node["config"]
-            self.assertIs(source_config["inherit_from_base_instructions"], True)
+            self.assertEqual(source_config["id"], materialized_node["id"])
+            self.assertIs(source_config["inherit_base_instructions"], True)
             self.assertTrue(
                 source_config["instructions"].startswith("## CURRENT NODE\n")
             )
@@ -441,6 +596,8 @@ class VoiceAgentSdkCommonTests(unittest.TestCase):
                 settings,
                 prefer_document_name=True,
             )
+        realtime = _graph_view(self, realtime)
+        cascade = _graph_view(self, cascade)
 
         self.assertEqual("finance-example-realtime", realtime_name)
         self.assertEqual("finance-example-cascade-luna", cascade_name)

@@ -225,10 +225,10 @@ export function ToolsConfig({ cfg, disabled, onChange }) {
       <ToolCard title="End conversation" icon="phone" enabled={endConversationOn} onChange={setEndConversationOn}
         disabled={disabled} description="Let your agent end a session when its work is done.">
         <Field label="End-conversation instructions" optional
-          hint="Tell the model to say any farewell before calling end_conversation. Voice Live closes the session.">
+          hint="Tell the model to say any farewell before calling end_conversation. Voice Agent closes the session.">
           <textarea rows={4} value={endConversationDescription} disabled={disabled}
             onChange={(event) => setEndConversationDescription(event.target.value)}
-            placeholder="Leave blank to use Voice Live’s default guidance." />
+            placeholder="Leave blank to use Voice Agent’s default guidance." />
         </Field>
       </ToolCard>
       <p className="field-hint">Tools are saved with the agent version and shared by Configure and Generate. Edit the saved YAML to update them or add further tool definitions.</p>

@@ -220,7 +220,7 @@ _HANDOFF_ASSET_FILENAMES = (
     "handoff/handoff-core.mjs", "handoff/handoff.css",
     "handoff/transcription-languages.mjs",
     "handoff/anchored-popover.mjs",
-    "handoff/voice-picker.mjs", "handoff/voice-catalog.mjs",
+    "handoff/voice-picker.mjs", "handoff/voice-catalog.mjs", "handoff/inline-subagents.mjs",
 )
 
 
@@ -528,7 +528,7 @@ async def config(request: web.Request) -> web.Response:
         # same-project hosted agent referenced through target_agent.
         "inferenceModes": [
             {"value": "deployment", "label": "BYOM — your Foundry deployment"},
-            {"value": "model", "label": "Direct — Voice Live-hosted model"},
+            {"value": "model", "label": "Direct — Voice Agent-hosted model"},
             {"value": "hosted_agent", "label": "Hosted agent"},
         ],
         "defaultInferenceMode": "model",

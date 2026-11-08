@@ -1,0 +1,115 @@
+{
+  "snapshot_at": "2026-10-28T06:59:20.751298+00:00",
+  "event_timezone": "America/Los_Angeles",
+  "sources": {
+    "robots": {
+      "url": "https://ignite.microsoft.com/robots.txt",
+      "retrieved_at": "2026-10-28T06:59:12.831778+00:00",
+      "http_status": 200,
+      "content_type": "text/plain",
+      "response_bytes": 72,
+      "response_sha256": "45def0c3af0e81addabda7d6e2f6f803bdc31453597cc9ab99d5ff9b14b211f8"
+    },
+    "sitemap": {
+      "url": "https://ignite.microsoft.com/sitemap.xml",
+      "retrieved_at": "2026-10-28T06:59:15.764708+00:00",
+      "http_status": 200,
+      "content_type": "application/xml",
+      "response_bytes": 320610,
+      "response_sha256": "e768e393c4eb2fb4ad59235100bbae5e7641d073ca003e7a77cf7b3807ec70c5"
+    },
+    "sessions": {
+      "url": "https://ignite.microsoft.com/api/session/all/en-US",
+      "retrieved_at": "2026-10-28T06:59:20.751298+00:00",
+      "http_status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "response_bytes": 6862594,
+      "response_sha256": "bb4425cc71942368816df7163d2bf034638d7cac0f470b76ec1761b1643816c8"
+    },
+    "speakers": {
+      "url": "https://ignite.microsoft.com/api/speaker/all/en-US",
+      "retrieved_at": "2026-10-28T06:59:25.079418+00:00",
+      "http_status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "response_bytes": 3286562,
+      "response_sha256": "96e50650595fae2a3b013f2f84ee3d939d5078d63cbe1e12ccaa9238145bb975"
+    },
+    "home": {
+      "url": "https://ignite.microsoft.com/en-US/home",
+      "retrieved_at": "2026-10-28T06:59:26.920347+00:00",
+      "http_status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "response_bytes": 910916,
+      "response_sha256": "4a67086fd86584c7b950765a8680d32091c873a7031fb69f3a4c93546b4c572d"
+    }
+  },
+  "quality": {
+    "session_instances": 1469,
+    "distinct_session_codes": 1307,
+    "scheduled_instances": 1338,
+    "unscheduled_instances": 131,
+    "unscheduled_by_type": {
+      "Pre-recorded": 104,
+      "Digital Lab": 27
+    },
+    "instances_without_location": 131,
+    "instances_without_speaker_names": 124,
+    "speaker_records": 1590,
+    "distinct_speaker_ids": 1571,
+    "duplicate_speaker_ids": {
+      "177730559163ignite27-1751988242885001yU34": 2,
+      "177730559163ignite27-1751988675299001wNDN": 2,
+      "177730559163ignite27-1765362664415001iCOs": 2,
+      "177730559163ignite27-1766088342011001fScZ": 2,
+      "177730559163ignite27-1768863485693001rWZx": 2,
+      "177730559163ignite27-1770416655216001oKWp": 2,
+      "177730559163ignite27-1775250608194001nMeL": 2,
+      "177730559163ignite27-1777301033617001HzTw": 2,
+      "177730559163ignite27-1789658515759001KsU6": 2,
+      "177730559163ignite27-1790080629433001DukE": 2,
+      "177730559163ignite27-1790179804255001w4Xa": 2,
+      "177730559163ignite27-1790954202669001bDaD": 2,
+      "177730559163ignite27-1791139087284001GnBJ": 2,
+      "177730559163ignite27-1791139328789001d7Fq": 2,
+      "177730559163ignite27-1791165784660001NPxW": 2,
+      "177730559163ignite27-1791226294162001Bn3q": 2,
+      "177730559163ignite27-1791228499665001Qxg2": 2,
+      "177730559163ignite27-1791244280517001NDu5": 2,
+      "177730559163ignite27-1791318961293001lA9S": 2
+    },
+    "referenced_speaker_ids": 1589,
+    "unresolved_speaker_ids": [
+      "177730559163ignite27-1743621358965001cDgL",
+      "177730559163ignite27-1751495886259001hCdx",
+      "177730559163ignite27-1765877011142001uw4l",
+      "177730559163ignite27-1778597522119001d1Fp",
+      "177730559163ignite27-1788902552664001JDBj",
+      "177730559163ignite27-1790182016754001kdl6",
+      "177730559163ignite27-1790205070604001INuA",
+      "177730559163ignite27-1790361549544001TVqA",
+      "177730559163ignite27-1790368433068001gJmp",
+      "177730559163ignite27-1790628279030001WgXx",
+      "177730559163ignite27-1790713625493001YUr2",
+      "177730559163ignite27-1790719247549001sfLg",
+      "177730559163ignite27-1790721498305001BQjx",
+      "177730559163ignite27-1790739808810001TUAV",
+      "177730559163ignite27-1790742060846001DK4C",
+      "177730559163ignite27-1790794439994001md5k",
+      "177730559163ignite27-1790807198380001sc0i",
+      "177730559163ignite27-1790818853805001mBiI",
+      "177730559163ignite27-1790885305742001Rbzt"
+    ],
+    "instances_with_unresolved_speaker_ids": 26,
+    "sitemap_session_entries": 1469,
+    "sitemap_distinct_session_urls": 1307,
+    "catalog_session_ids_match_sitemap": true
+  },
+  "notes": [
+    "Public factual metadata only; no abstracts, biographies or attendee lists.",
+    "Website endpoints are not a documented third-party API contract.",
+    "Null timestamps and duplicate speaker IDs are preserved, not repaired.",
+    "Speaker names text is not split or assumed to align positionally with IDs.",
+    "Snapshot is not live occupancy, registration or reservation data.",
+    "Homepage agenda blocks and individual sessions may have different end times."
+  ]
+}

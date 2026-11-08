@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#01033b">
+  <title>Microsoft Ignite 2026 — Voice session planner</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.mjs"></script>
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Microsoft Ignite home"><span class="ms-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><strong>Microsoft <span>Ignite</span></strong><em class="brand-chip">2026</em></a>
+    <nav aria-label="Main navigation"><button id="sessions-tab" class="nav-link active" aria-pressed="true">Sessions</button><button id="export-agenda" class="nav-link export-link" type="button" title="Download your agenda as a calendar file (.ics) for Outlook, Google or Apple Calendar"><span class="export-glyph" aria-hidden="true">↓</span><span class="export-text">Export my agenda</span> <span id="agenda-count">0</span></button></nav>
+    <div class="theme-picker"><button id="theme-toggle" class="theme-toggle" type="button" aria-expanded="false" aria-controls="theme-menu"><i aria-hidden="true"></i><span>Theme</span></button><div id="theme-menu" class="theme-menu" role="group" aria-label="Colour themes" hidden><span class="eyebrow">PAGE THEME</span><div id="theme-options" class="theme-options"></div><span class="eyebrow">CALENDAR COLOURS</span><div id="calendar-options" class="theme-options"></div></div></div>
+    <a class="official-link" href="https://ignite.microsoft.com/" target="_blank" rel="noopener noreferrer">Official event ↗<span class="sr-only"> (new tab)</span></a>
+    <button id="guide-launcher" class="guide-launcher" aria-expanded="false" aria-controls="assistant-panel"><canvas id="launcher-orb" class="launcher-orb" aria-hidden="true"></canvas><span class="launcher-text"><strong>Ask Ignite</strong><small>Voice agent · live</small></span></button>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <canvas id="hero-art" class="hero-art" aria-hidden="true"></canvas>
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="live-dot"></span>SAN FRANCISCO · NOVEMBER 17–20, 2026</p>
+        <h1 id="hero-title">Make Ignite <em>your own.</em></h1>
+        <p class="hero-description">Meet the speakers. Explore the ideas. Build your week — by hand, or just by talking to the Ignite voice agent. It ranks the catalog for you and drives this page while it talks.</p>
+        <div class="hero-actions"><button id="open-guide-inline" class="cta"><span class="cta-orb" aria-hidden="true"></span>Talk to Ignite</button><span class="hero-hint">Try “I build voice agents — what should I see on Thursday?”</span></div>
+      </div>
+    </section>
+    <section id="program" class="program planner-layout" aria-labelledby="section-title">
+      <div class="session-column">
+        <div class="section-top"><div><p class="eyebrow">THE PROGRAM / PEOPLE &amp; POSSIBILITIES</p><h2 id="section-title">Find your next breakthrough.</h2></div><span id="session-count" class="session-total">Loading sessions</span></div>
+        <label class="catalog-search-label" for="catalog-search"><span class="search-caption">FIND A SESSION OR SPEAKER</span><span class="search-shell"><span class="search-icon" aria-hidden="true">⌕</span><input id="catalog-search" type="search" maxlength="160" placeholder="Try voice, Foundry, a speaker, or BRK244…"><span id="agent-query" class="agent-query" aria-live="polite" hidden><span class="agent-query-badge">AGENT</span><span id="agent-query-text" class="agent-query-text"></span><span id="agent-query-filters" class="agent-query-filters"></span><span id="agent-query-result" class="agent-query-result"></span></span></span></label>
+        <div class="program-toolbar"><div class="day-filters" aria-label="Filter by day"><button class="day-filter active" data-day="all" aria-pressed="true">All <span id="all-count"></span></button><button class="day-filter" data-day="16" aria-pressed="false">Mon 16</button><button class="day-filter" data-day="17" aria-pressed="false">Tue 17</button><button class="day-filter" data-day="18" aria-pressed="false">Wed 18</button><button class="day-filter" data-day="19" aria-pressed="false">Thu 19</button><button class="day-filter" data-day="20" aria-pressed="false">Fri 20</button><button class="day-filter" data-day="untimed" aria-pressed="false">On-demand</button></div><span class="snapshot">OCT 28 SNAPSHOT</span></div>
+        <div id="speaker-choice" class="speaker-choice" hidden><div class="speaker-choice-head"><div><span id="speaker-choice-eyebrow" class="eyebrow">DID YOU MEAN…?</span><p id="speaker-choice-heard" class="speaker-choice-heard"></p></div><button id="speaker-choice-dismiss" type="button" class="ghost-button">Dismiss</button></div><div id="speaker-choice-list" class="speaker-choice-list"></div></div>
+        <div id="ranking-banner" class="ranking-banner" hidden><span id="ranking-glyph" class="ranking-glyph" aria-hidden="true">✦</span><div><span id="ranking-eyebrow" class="eyebrow">RANKED FOR YOU BY THE VOICE AGENT</span><p id="ranking-interests" class="ranking-interests"></p></div><button id="clear-ranking" type="button" class="ghost-button">Show all sessions</button></div>
+        <div class="catalog-results"><span id="result-count" role="status" aria-live="polite"></span><button id="load-more" type="button" class="text-link">Load more sessions ↓</button></div>
+        <p class="remove-hint" aria-hidden="true"><b>Drop here to remove it from your agenda</b></p>
+        <div id="sessions" class="session-grid" role="feed" aria-label="Conference sessions" aria-busy="false"></div>
+        <div id="scroll-sentinel" class="scroll-sentinel"><span aria-hidden="true">↓</span><p id="scroll-status">More sessions load as you scroll.</p></div>
+      </div>
+      <aside id="agenda-view" class="calendar-sidebar" aria-label="Your conference calendar">
+        <div class="calendar-heading"><div><span class="eyebrow">YOUR PERSONAL AGENDA</span><h2>Your Ignite week.</h2></div><span id="calendar-count" class="calendar-count">0 saved</span></div>
+        <div class="calendar-month"><strong>November 2026</strong><span>Pacific time · PST</span></div>
+        <div class="calendar-legend"><span><i class="legend-amc"></i>Other venues</span><span><i class="legend-moscone"></i>Moscone</span><span><i class="legend-overlap"></i>Overlap</span><span class="week-view-label">Week view</span></div>
+        <div class="calendar-days"><span></span><div>Mon<button class="day-free" type="button" data-free-date="2026-11-16" title="Find sessions for your free time on Mon 16">16</button></div><div>Tue<button class="day-free" type="button" data-free-date="2026-11-17" title="Find sessions for your free time on Tue 17">17</button></div><div>Wed<button class="day-free" type="button" data-free-date="2026-11-18" title="Find sessions for your free time on Wed 18">18</button></div><div>Thu<button class="day-free" type="button" data-free-date="2026-11-19" title="Find sessions for your free time on Thu 19">19</button></div><div>Fri<button class="day-free" type="button" data-free-date="2026-11-20" title="Find sessions for your free time on Fri 20">20</button></div></div>
+        <p class="calendar-tip">Tip: click a date to fill your free time that day.</p>
+        <div id="calendar-grid" class="calendar-grid" aria-label="November 16 to 20, 8 AM to 8 PM">
+          <div id="calendar-hours" class="calendar-hours"></div>
+          <div class="calendar-columns" aria-hidden="true"><div></div><div></div><div></div><div></div><div></div></div>
+          <div id="calendar-events" class="calendar-events"></div>
+          <p id="empty-agenda" class="calendar-empty">Your week starts here.<br>Drag a session here, add it from the list,<br>or ask Ignite for a suggestion.</p>
+          <p class="drop-hint" aria-hidden="true"><b>Drop to add</b><span>It snaps to its scheduled time</span></p>
+        </div>
+        <div class="saved-heading"><span class="eyebrow">SAVED SESSIONS &amp; TRANSFERS</span><button id="browse-sessions" class="text-link">Browse ↖</button></div>
+        <div id="agenda-list"></div>
+        <p class="agenda-disclaimer">Demo agenda · This tab only · No seat reservations.<br>Transfer windows are time gaps, not verified walking times.</p>
+      </aside>
+    </section>
+    <footer><span>Microsoft Ignite · Public catalog snapshot, not live availability</span><span>Facts and selected editorial introductions, not full abstracts. <a href="https://ignite.microsoft.com/en-US/sessions" target="_blank" rel="noopener noreferrer">See official abstracts ↗</a></span></footer>
+  </main>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <!-- Voice agent island: drops down under the header and floats over the page it drives. The
+       spoken words appear as one large live caption; the conversation itself is kept only for
+       screen readers (#transcript) and in the downloadable log. -->
+  <section id="assistant-panel" class="assistant-panel" role="dialog" aria-modal="false" aria-labelledby="assistant-title" hidden>
+    <div class="island">
+      <canvas id="agent-orb" class="agent-orb" aria-hidden="true"></canvas>
+      <div class="island-title"><span id="agent-live" class="live-pill" data-live="false">OFFLINE</span><h2 id="assistant-title">Ask Ignite</h2><span id="agent-state" class="agent-state" data-state="offline">OFFLINE</span><p id="last-action" class="last-action" hidden></p></div>
+      <div class="voice-controls"><button id="connect" class="button button-primary" disabled>Start voice ↗</button><label class="mic-option" title="Use microphone"><input id="use-mic" type="checkbox" checked><span class="switch" aria-hidden="true"></span>Mic</label><button id="type-toggle" class="icon-button" type="button" aria-expanded="false" aria-controls="message-form" aria-label="Type to the agent" title="Type instead of talking">⌨</button><button id="test-speaker" class="icon-button" type="button" aria-label="Test speaker" title="Play a local test tone">♪</button><button id="close-guide" class="icon-button close-guide" type="button" aria-label="Close session guide" title="End the conversation and close">×</button></div>
+      <p id="live-caption" class="live-caption" aria-hidden="true" data-hint="Try “I’m building AI agents. What should I attend on Thursday?”"></p>
+      <div class="island-foot">
+        <p id="voice-status" class="voice-status" role="status">Opening the guide starts your conversation…</p>
+        <button id="more-toggle" class="island-stats" type="button" aria-expanded="false" aria-controls="island-more" title="Agent functions, actions and connection"><span><b id="stat-sessions">1,469</b> sessions</span><span><b>4</b> days + pre-day</span><span><b id="function-count">14</b> functions</span><span id="transport-label">Browser ⇄ Azure</span><i aria-hidden="true">▾</i></button>
+      </div>
+      <form id="message-form" class="message-form" hidden><label class="sr-only" for="message">Message the session guide</label><input id="message" maxlength="1000" placeholder="Type to the agent…" autocomplete="off" disabled><button id="send" type="submit" aria-label="Send message" disabled>↑</button></form>
+      <p id="error" class="error" role="alert" hidden></p>
+    </div>
+    <div id="island-more" class="island-more" hidden>
+      <section class="function-list" aria-labelledby="functions-title"><div class="activity-head"><span id="functions-title" class="eyebrow">AGENT FUNCTIONS</span><button id="open-how" type="button" class="text-link">How it works ↗</button><span id="functions-total" class="activity-count">14</span></div><p class="more-note">Every function runs in this page. The knowledge functions are the Python version's MCP tools, ported to the browser. ▶ runs one with example arguments, the same way the Agent calls it; open a row to see what the Agent is told.</p><div id="function-groups"></div></section>
+      <section class="activity" aria-label="Agent actions on this page"><div class="activity-head"><span class="eyebrow">AGENT ACTIONS ON THIS PAGE</span><span id="action-count" class="activity-count">0</span></div><ol id="tool-log" aria-label="Session searches and page actions"></ol></section>
+      <section class="connection-details" aria-label="Connection and privacy"><span class="eyebrow">CONNECTION &amp; PRIVACY</span><p id="knowledge-mode" class="knowledge-mode"></p><p id="voice-name"></p><p id="conversation-log" hidden></p><p id="audio-status">Waiting for the welcome message.</p><div class="connection-actions"><button id="test-greeting" type="button" class="text-link" disabled>Hear another greeting ↗</button><button id="download-log" type="button" class="text-link">Download conversation log ↓</button></div><p class="privacy-note">Opening the guide gets a short-lived Azure token from this computer's local server, connects this page directly to Azure and requests microphone permission. Text and tool calls stay in this tab until you download them; raw microphone audio is not recorded. You can interrupt at any time. Closing the guide ends the call and releases the microphone.</p></section>
+    </div>
+    <div id="transcript" class="sr-only" aria-label="Conversation" aria-live="polite"></div>
+  </section>
+  <div id="detail-layer" class="detail-layer" hidden>
+    <div class="detail-backdrop" data-close-detail></div>
+    <article id="detail-sheet" class="detail-sheet" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+      <header class="detail-head"><div id="detail-chips" class="detail-chips"></div><button id="close-detail" class="detail-close" type="button" aria-label="Close session details">×</button></header>
+      <p class="detail-code"><span id="detail-code"></span><span id="detail-focus" class="discussion-label" hidden>◉ IN FOCUS</span></p>
+      <h2 id="detail-title"></h2>
+      <div class="detail-grid">
+        <section class="detail-card"><span class="eyebrow">WHEN &amp; WHERE</span><p id="detail-time" class="detail-time"></p><p id="detail-venue" class="detail-venue"></p><div id="detail-delivery" class="detail-delivery"></div></section>
+        <section class="detail-card"><span class="eyebrow">YOUR AGENDA</span><div id="detail-plan" class="detail-plan"></div></section>
+      </div>
+      <section class="detail-section"><span class="eyebrow">ABOUT</span><p id="detail-summary" class="detail-summary"></p><p id="detail-takeaway" class="detail-takeaway"></p><p id="detail-note" class="detail-note"></p></section>
+      <section class="detail-section"><span class="eyebrow">SPEAKERS</span><div id="detail-speakers" class="detail-speakers"></div></section>
+      <div class="detail-grid">
+        <section class="detail-section"><span class="eyebrow">OTHER TIMES</span><div id="detail-other" class="detail-links"></div></section>
+        <section class="detail-section"><span class="eyebrow">RELATED SESSIONS</span><div id="detail-related" class="detail-links"></div></section>
+      </div>
+      <footer class="detail-actions"><button id="detail-add" class="button button-primary" type="button"></button><button id="detail-ask" class="ghost-button" type="button">◉ Ask Ignite about this</button><a id="detail-source" class="text-link" target="_blank" rel="noopener noreferrer">Official session page ↗<span class="sr-only"> (new tab)</span></a></footer>
+    </article>
+  </div>
+  <div id="compare-layer" class="detail-layer compare-layer" hidden>
+    <div class="detail-backdrop" data-close-compare></div>
+    <article id="compare-sheet" class="detail-sheet compare-sheet" role="dialog" aria-modal="true" aria-labelledby="compare-title">
+      <header class="detail-head"><div><span class="eyebrow">SIDE BY SIDE</span><h2 id="compare-title">Compare sessions</h2></div><button id="close-compare" class="detail-close" type="button" aria-label="Close comparison">×</button></header>
+      <p id="compare-note" class="compare-note" hidden></p>
+      <div id="compare-grid" class="compare-grid" role="table" aria-label="Session comparison"></div>
+    </article>
+  </div>
+  <!-- How the voice agent drives this page: hidden at the right until the Agent (or "How it works") opens it. -->
+  <aside id="how-board" class="how-board" aria-labelledby="how-title" hidden>
+    <header class="how-head"><div><span class="eyebrow">HOW THE VOICE AGENT DRIVES THIS PAGE</span><h2 id="how-title">One page, two drivers.</h2></div><button class="how-close icon-button" type="button" aria-label="Close the explanation">×</button></header>
+    <div class="how-dots" role="group" aria-label="Explanation steps"></div>
+    <p class="how-caption" aria-live="polite"></p>
+    <svg class="how-diagram" viewBox="0 0 600 380" role="img" aria-label="You, this page with its functions, and the Foundry Voice Agent, connected by voice, function calls and results"></svg>
+    <section class="how-trace-box"><div class="activity-head"><span class="eyebrow">LIVE FUNCTION CALLS</span><span class="how-hint">the Agent's calls and your clicks</span></div><ol class="how-trace"></ol></section>
+  </aside>
+  <div id="compare-tray" class="compare-tray" hidden><span id="compare-tray-text"></span><button id="compare-go" class="button button-primary" type="button">Compare ⇄</button><button id="compare-cancel" class="ghost-button" type="button">Cancel</button></div>
+  <template id="session-template"><article class="session-card"><span class="rank-badge" hidden></span><div class="card-top"><span class="session-code"></span><span class="discussion-label" hidden>◉ IN FOCUS</span><span class="session-format">BREAKOUT / 45 MIN</span></div><div class="interest-chips" hidden></div><div class="card-tags"></div><h3><button class="session-title"></button></h3><p class="session-summary"></p><div class="session-speakers"><div class="speaker-avatars" aria-hidden="true"></div><div><span class="speaker-label">SPEAKERS</span><p class="speaker-names"></p></div></div><p class="session-takeaway"></p><div class="session-facts"><span class="session-time"></span><span class="session-location"></span></div><div class="card-actions"><button class="add-session">Add to agenda <span aria-hidden="true">+</span></button><button class="compare-toggle" type="button" aria-pressed="false" title="Compare with another session">⇄</button><a class="session-source" target="_blank" rel="noopener noreferrer">Official session ↗<span class="sr-only"> (new tab)</span></a></div></article></template>
+</body>
+</html>

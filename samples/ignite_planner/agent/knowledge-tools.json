@@ -1,0 +1,255 @@
+[
+  {
+    "type": "function",
+    "name": "ignite_search_sessions",
+    "description": "Search the public Ignite snapshot using English keywords/phrases or session codes.\n\n    Keywords match any indexed term in the code, title, topics, speakers and the official\n    description. Date is YYYY-MM-DD; time bounds are HH:MM in America/Los_Angeles. Empty\n    keywords browse chronologically. Excludes unscheduled content by default. Returns at\n    least 5 different sessions when possible: if keywords match fewer, sessions matching\n    related_terms are added with match \"related\" (direct ones have match \"keyword\"). Returns\n    instance IDs, facts, the official description, matched terms and lexical scores, NOT\n    confidence. Use returned IDs with browser actions. No live seats or attendee data.\n    ",
+    "parameters": {
+      "properties": {
+        "keywords": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Keywords",
+          "type": "array"
+        },
+        "related_terms": {
+          "items": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "maxItems": 12,
+          "default": [],
+          "title": "Related Terms",
+          "type": "array",
+          "description": "3 to 6 broader or adjacent English words for the request (for \"movie\": video, media, streaming). Used only to fill the list up to 5 sessions when direct matches are fewer."
+        },
+        "date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Date"
+        },
+        "start_after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start After"
+        },
+        "end_before": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Before"
+        },
+        "speaker": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Speaker"
+        },
+        "delivery": {
+          "anyOf": [
+            {
+              "enum": [
+                "In-person",
+                "Online"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Delivery"
+        },
+        "scheduled_only": {
+          "default": true,
+          "title": "Scheduled Only",
+          "type": "boolean"
+        },
+        "limit": {
+          "default": 5,
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "offset": {
+          "default": 0,
+          "maximum": 10000,
+          "minimum": 0,
+          "title": "Offset",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "keywords"
+      ],
+      "title": "ignite_search_sessionsArguments",
+      "type": "object"
+    }
+  },
+  {
+    "type": "function",
+    "name": "ignite_validate_agenda",
+    "description": "Review the calendar AFTER additions, or when the attendee asks for a review.\n\n    Submit current agenda.instance_ids from the browser. Reports all time-overlap\n    counts and venue-transfer gaps; detailed findings are bounded and explicitly\n    marked if truncated. This never blocks adding, removes meetings, changes\n    state, or connects to an external personal calendar. Walking times are not verified.\n    ",
+    "parameters": {
+      "properties": {
+        "instance_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2000,
+          "title": "Instance Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "instance_ids"
+      ],
+      "title": "ignite_validate_agendaArguments",
+      "type": "object"
+    }
+  },
+  {
+    "type": "function",
+    "name": "ignite_get_session",
+    "description": "Get factual details and the full official description for one exact instance ID previously returned by search.",
+    "parameters": {
+      "properties": {
+        "instance_id": {
+          "maxLength": 150,
+          "minLength": 1,
+          "title": "Instance Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "instance_id"
+      ],
+      "title": "ignite_get_sessionArguments",
+      "type": "object"
+    }
+  },
+  {
+    "type": "function",
+    "name": "ignite_rank_sessions",
+    "description": "Rank the public Ignite snapshot by the attendee's interests and return a shortlist, best first.\n\n    Give 1 to 8 short English interest phrases in priority order, 3 to 6 related_terms, plus\n    optional Pacific date (YYYY-MM-DD), time window (HH:MM) and delivery filters. Titles, topics,\n    speakers and official descriptions are searched. Each session code appears once. Always\n    returns at least 5 sessions when anything is related: direct matches have match \"strong\";\n    if there are fewer than 5, looser ones are added with match \"partial\" (shares a word) or\n    \"related\" (matches a related term). Returns rank, exact instance IDs, a description excerpt,\n    matched interests and a relative match_score (not a probability). Then call\n    show_ranked_sessions with the IDs in the same order.\n    ",
+    "parameters": {
+      "properties": {
+        "interests": {
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "minItems": 1,
+          "maxItems": 8,
+          "title": "Interests",
+          "type": "array"
+        },
+        "related_terms": {
+          "items": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "maxItems": 12,
+          "default": [],
+          "title": "Related Terms",
+          "type": "array",
+          "description": "3 to 6 broader or adjacent English words for the request (for \"movie\": video, media, streaming). Used only to fill the list up to 5 sessions when direct matches are fewer."
+        },
+        "date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Date"
+        },
+        "start_after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start After"
+        },
+        "end_before": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End Before"
+        },
+        "delivery": {
+          "anyOf": [
+            {
+              "enum": [
+                "In-person",
+                "Online"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Delivery"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Limit",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "interests"
+      ],
+      "title": "ignite_rank_sessionsArguments",
+      "type": "object"
+    }
+  }
+]

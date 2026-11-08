@@ -5,10 +5,17 @@ import json
 from pathlib import Path
 import unittest
 
+from voice_agent_definition import materialize_handoff_instruction_inheritance
 from voice_agent_sdk_common import load_materialized_agent
 
 
 ROOT = Path(__file__).resolve().parent
+
+
+def _effective(document):
+    """Compare effective node prompts, not where the shared base is authored."""
+    materialize_handoff_instruction_inheritance(document["definition"])
+    return document
 
 
 class HindiFinanceSampleTests(unittest.TestCase):
@@ -17,8 +24,8 @@ class HindiFinanceSampleTests(unittest.TestCase):
             with self.subTest(pipeline=pipeline):
                 original_dir = ROOT / f"example1_finance_with_handoff_{pipeline}"
                 hindi_dir = ROOT / f"example1_finance_with_handoff_{pipeline}_hi_in"
-                original = json.loads((original_dir / "agent.json").read_text())
-                document = json.loads((hindi_dir / "agent.json").read_text())
+                original = _effective(json.loads((original_dir / "agent.json").read_text()))
+                document = _effective(json.loads((hindi_dir / "agent.json").read_text()))
                 self.assertNotEqual(original["name"], document["name"])
                 definition = document["definition"]
                 self.assertEqual(
@@ -26,7 +33,7 @@ class HindiFinanceSampleTests(unittest.TestCase):
                     definition["audio"]["input"]["transcription"],
                 )
                 self.assertEqual(
-                    "hi-IN-SwaraNeural", definition["audio"]["output"]["voice"]["name"]
+                    "en-IN-Diya:DragonHDLatestNeural", definition["audio"]["output"]["voice"]["name"]
                 )
                 configs = [
                     definition,
@@ -71,7 +78,7 @@ class HindiFinanceSampleTests(unittest.TestCase):
             })
             self.assertEqual(f"finance-example-{pipeline}-hi-in", name)
             self.assertEqual("hi-IN", definition["audio"]["input"]["transcription"]["language"])
-            self.assertEqual("hi-IN-SwaraNeural", definition["audio"]["output"]["voice"]["name"])
+            self.assertEqual("en-IN-Diya:DragonHDLatestNeural", definition["audio"]["output"]["voice"]["name"])
 
 
 if __name__ == "__main__":

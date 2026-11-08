@@ -34,7 +34,7 @@ test("recognizes raw and SDK-shaped WebRTC avatar fields", () => {
   assert.equal(isWebRtcAvatar(null), false);
 });
 
-test("normalizes Voice Live ICE servers without exposing unrelated avatar fields", () => {
+test("normalizes Voice Agent ICE servers without exposing unrelated avatar fields", () => {
   assert.deepEqual(toRtcIceServers({
     ice_servers: [
       {
