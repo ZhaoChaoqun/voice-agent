@@ -81,6 +81,10 @@ SHARED_MCP_TEMPLATES = list(MCP_TEMPLATES)
 MOCK_TOOL_TEMPLATE_IDS = [template_id for template_id, *_ in MOCK_TOOL_TEMPLATES]
 MCP_TEMPLATES = [*SHARED_MCP_TEMPLATES, *MOCK_TOOL_TEMPLATE_IDS]
 EXPECTED_TEMPLATES = [*SHARED_MCP_TEMPLATES, *MOCK_TOOL_TEMPLATE_IDS]
+# Caller-verification showcase on the public no-auth ex35-auth-ladder route.
+OTP_SHOWCASE_TEMPLATE = "multi-stage-otp-verification-showcase"
+EXPECTED_TEMPLATES.append(OTP_SHOWCASE_TEMPLATE)
+MCP_TEMPLATES.append(OTP_SHOWCASE_TEMPLATE)
 HINDI_TEMPLATE_IDS = [
     "finance-example-realtime-hi-in",
     "finance-example-cascade-hi-in",
@@ -118,6 +122,7 @@ MCP_ROUTES = {
     "frontdesk-receptionist-example": "/mcp/frontdesk",
     **{template_id: "/mcp/mock-tool-call" for template_id in MOCK_TOOL_TEMPLATE_IDS},
     CONFERENCE_TEMPLATE: "/mcp/conference",
+    OTP_SHOWCASE_TEMPLATE: "/mcp/ex35-auth-ladder",
 }
 MOCK_TOOL_PREFIX = "mock_tool_call_"
 

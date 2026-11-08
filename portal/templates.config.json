@@ -559,6 +559,21 @@
       }
     },
     {
+      "id": "multi-stage-otp-verification-showcase",
+      "folder": "../samples/example36_multi_stage_otp_verification_showcase",
+      "name": "Example 36: Multi-Stage OTP Verification Showcase",
+      "target_locale": "en-US",
+      "category": "Financial services",
+      "summary": "Caller-verification demo: a hub lets the caller try identity (phonetic name search over 20K customers, then birthday), KBA, a one-time code from a web page, or an SMS code; each pass names the verified customer and resets.",
+      "accent_color": "#3a6ea5",
+      "mcp": {
+        "connection_mode": "public",
+        "server_url": "https://voice-agent-noauth-mcp.lemonsky-36682081.westus2.azurecontainerapps.io/mcp/ex35-auth-ladder",
+        "source_label": "Public no-auth MCP",
+        "source_reference": "VoiceAgent/shared_mcp"
+      }
+    },
+    {
       "id": "finance-example-realtime-hi-in",
       "folder": "../samples/example1_finance_with_handoff_realtime_hi_in",
       "name": "Example 1: Finance with Handoff - Realtime (Hindi, hi-IN)",

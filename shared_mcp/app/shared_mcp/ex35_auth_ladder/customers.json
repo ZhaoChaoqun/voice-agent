@@ -1,0 +1,857 @@
+{
+  "fixture": "fictional",
+  "notice": "Names and dates of birth come from otp_candidates.json, a copy of the /otp console directory (docs/voice_agent/project3_umw/v1/data/otp_candidates.json). The banking fields below are fictional fixture values.",
+  "reserved_access_codes": {
+    "12345678": "cand-you-meng",
+    "87654321": "cand-jeremy-downer"
+  },
+  "reserved_sms_code": "246810",
+  "accounts": {
+    "cand-you-meng": {
+      "phone_masked": "+1 (425) ***-4821",
+      "account_type": "Premier Checking",
+      "account_masked": "****-****-7302",
+      "products": [
+        "Premier Checking",
+        "High-Yield Savings",
+        "Contoso Rewards Visa"
+      ],
+      "home_branch": "Seattle Downtown",
+      "balances_usd": {
+        "checking": 18452.37,
+        "savings": 64210.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Fabrikam Grocery",
+          "amount_usd": -86.42
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Northwind Electric",
+          "amount_usd": -142.1
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Payroll deposit",
+          "amount_usd": 6250.0
+        },
+        {
+          "date": "2026-11-02",
+          "merchant": "Contoso Coffee",
+          "amount_usd": -6.75
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Adventure Works Outfitters",
+          "amount_usd": -219.99
+        }
+      ]
+    },
+    "cand-jeremy-downer": {
+      "phone_masked": "+1 (248) ***-9012",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-5518",
+      "products": [
+        "Everyday Checking",
+        "Contoso Cash Back Mastercard"
+      ],
+      "home_branch": "Detroit Midtown",
+      "balances_usd": {
+        "checking": 7310.58,
+        "savings": 12900.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Tailspin Airlines",
+          "amount_usd": -412.3
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Wide World Importers",
+          "amount_usd": -58.0
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Transfer from savings",
+          "amount_usd": 500.0
+        },
+        {
+          "date": "2026-11-02",
+          "merchant": "Fourth Coffee",
+          "amount_usd": -4.95
+        },
+        {
+          "date": "2026-10-31",
+          "merchant": "Litware Fitness",
+          "amount_usd": -39.0
+        }
+      ]
+    },
+    "cand-sheng-zhao": {
+      "phone_masked": "+1 (206) ***-3349",
+      "account_type": "Private Banking",
+      "account_masked": "****-****-9047",
+      "products": [
+        "Private Banking Checking",
+        "Money Market"
+      ],
+      "home_branch": "Bellevue Square",
+      "balances_usd": {
+        "checking": 52300.12,
+        "savings": 210000.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Blue Yonder Airlines",
+          "amount_usd": -1280.0
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Dividend credit",
+          "amount_usd": 842.55
+        },
+        {
+          "date": "2026-11-02",
+          "merchant": "Coho Winery",
+          "amount_usd": -96.4
+        }
+      ]
+    },
+    "cand-yulin-li": {
+      "phone_masked": "+1 (650) ***-2088",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-6631",
+      "products": [
+        "Everyday Checking",
+        "High-Yield Savings"
+      ],
+      "home_branch": "Palo Alto University Ave",
+      "balances_usd": {
+        "checking": 4120.09,
+        "savings": 23500.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-04",
+          "merchant": "Proseware Books",
+          "amount_usd": -32.18
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Payroll deposit",
+          "amount_usd": 3980.0
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Margie's Travel",
+          "amount_usd": -615.0
+        }
+      ]
+    },
+    "cand-zheng-niu": {
+      "phone_masked": "+1 (512) ***-4298",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-6731",
+      "products": [
+        "Everyday Checking",
+        "High-Yield Savings"
+      ],
+      "home_branch": "Austin Main Street",
+      "balances_usd": {
+        "checking": 13095.5,
+        "savings": 84560.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Adventure Works Outfitters",
+          "amount_usd": -105.56
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Northwind Electric",
+          "amount_usd": -113.22
+        },
+        {
+          "date": "2026-11-02",
+          "merchant": "Payroll deposit",
+          "amount_usd": 5333.33
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Litware Fitness",
+          "amount_usd": -42.48
+        },
+        {
+          "date": "2026-10-31",
+          "merchant": "Fabrikam Grocery",
+          "amount_usd": -75.95
+        }
+      ]
+    },
+    "cand-joseph-obarzanek": {
+      "phone_masked": "+1 (312) ***-1360",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-2472",
+      "products": [
+        "Everyday Checking",
+        "High-Yield Savings"
+      ],
+      "home_branch": "Chicago Main Street",
+      "balances_usd": {
+        "checking": 24940.72,
+        "savings": 12920.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Proseware Books",
+          "amount_usd": -32.21
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Payroll deposit",
+          "amount_usd": 11166.67
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Wide World Importers",
+          "amount_usd": -89.68
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Fabrikam Grocery",
+          "amount_usd": -63.36
+        },
+        {
+          "date": "2026-10-30",
+          "merchant": "Contoso Coffee",
+          "amount_usd": -10.73
+        }
+      ]
+    },
+    "cand-alec-wayne": {
+      "phone_masked": "+1 (303) ***-7626",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-8220",
+      "products": [
+        "Everyday Checking",
+        "High-Yield Savings"
+      ],
+      "home_branch": "Denver Main Street",
+      "balances_usd": {
+        "checking": 15013.13,
+        "savings": 57270.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Contoso Coffee",
+          "amount_usd": -9.52
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Northwind Electric",
+          "amount_usd": -149.29
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Payroll deposit",
+          "amount_usd": 8541.67
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Northwind Electric",
+          "amount_usd": -89.34
+        },
+        {
+          "date": "2026-10-31",
+          "merchant": "Adventure Works Outfitters",
+          "amount_usd": -112.0
+        }
+      ]
+    },
+    "cand-prem-patel": {
+      "phone_masked": "+1 (973) ***-8821",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-8145",
+      "products": [
+        "Everyday Checking",
+        "High-Yield Savings"
+      ],
+      "home_branch": "Newark Main Street",
+      "balances_usd": {
+        "checking": 15647.88,
+        "savings": 101110.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Proseware Books",
+          "amount_usd": -18.56
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Payroll deposit",
+          "amount_usd": 10291.67
+        },
+        {
+          "date": "2026-11-02",
+          "merchant": "Northwind Electric",
+          "amount_usd": -141.48
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Fourth Coffee",
+          "amount_usd": -4.98
+        },
+        {
+          "date": "2026-10-31",
+          "merchant": "Fabrikam Grocery",
+          "amount_usd": -143.1
+        }
+      ]
+    },
+    "cand-adam-hurwitz": {
+      "phone_masked": "+1 (617) ***-7732",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-6304",
+      "products": [
+        "Everyday Checking",
+        "High-Yield Savings"
+      ],
+      "home_branch": "Boston Main Street",
+      "balances_usd": {
+        "checking": 19653.01,
+        "savings": 112860.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Wide World Importers",
+          "amount_usd": -90.2
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Tailspin Airlines",
+          "amount_usd": -220.44
+        },
+        {
+          "date": "2026-11-02",
+          "merchant": "Northwind Electric",
+          "amount_usd": -155.72
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Payroll deposit",
+          "amount_usd": 9666.67
+        },
+        {
+          "date": "2026-10-31",
+          "merchant": "Litware Fitness",
+          "amount_usd": -41.75
+        }
+      ]
+    },
+    "cand-yiwen-rong": {
+      "phone_masked": "+1 (408) ***-8862",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-6452",
+      "products": [
+        "Everyday Checking",
+        "High-Yield Savings"
+      ],
+      "home_branch": "San Jose Main Street",
+      "balances_usd": {
+        "checking": 32270.55,
+        "savings": 59010.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Coho Winery",
+          "amount_usd": -37.82
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Payroll deposit",
+          "amount_usd": 7333.33
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Wide World Importers",
+          "amount_usd": -99.94
+        },
+        {
+          "date": "2026-11-02",
+          "merchant": "Northwind Electric",
+          "amount_usd": -210.24
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Tailspin Airlines",
+          "amount_usd": -416.64
+        }
+      ]
+    },
+    "cand-maria-gonzalez": {
+      "phone_masked": "+1 (480) ***-1719",
+      "account_type": "Premier Checking",
+      "account_masked": "****-****-3714",
+      "products": [
+        "Premier Checking",
+        "High-Yield Savings",
+        "Contoso Rewards Visa"
+      ],
+      "home_branch": "Phoenix Main Street",
+      "balances_usd": {
+        "checking": 6863.09,
+        "savings": 89120.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Contoso Coffee",
+          "amount_usd": -10.12
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Coho Winery",
+          "amount_usd": -121.39
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Payroll deposit",
+          "amount_usd": 4916.67
+        },
+        {
+          "date": "2026-11-02",
+          "merchant": "Litware Fitness",
+          "amount_usd": -53.6
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Fourth Coffee",
+          "amount_usd": -4.76
+        }
+      ]
+    },
+    "cand-fatima-khan": {
+      "phone_masked": "+1 (703) ***-3181",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-7820",
+      "products": [
+        "Everyday Checking",
+        "Contoso Cash Back Mastercard"
+      ],
+      "home_branch": "Arlington Main Street",
+      "balances_usd": {
+        "checking": 37006.66,
+        "savings": 98010.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Adventure Works Outfitters",
+          "amount_usd": -215.83
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Coho Winery",
+          "amount_usd": -55.04
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Adventure Works Outfitters",
+          "amount_usd": -143.14
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Payroll deposit",
+          "amount_usd": 6291.67
+        },
+        {
+          "date": "2026-10-30",
+          "merchant": "Wide World Importers",
+          "amount_usd": -58.44
+        }
+      ]
+    },
+    "cand-daniel-okafor": {
+      "phone_masked": "+1 (503) ***-3143",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-9406",
+      "products": [
+        "Everyday Checking",
+        "Contoso Cash Back Mastercard"
+      ],
+      "home_branch": "Portland Main Street",
+      "balances_usd": {
+        "checking": 12724.77,
+        "savings": 105130.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Coho Winery",
+          "amount_usd": -33.98
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Litware Fitness",
+          "amount_usd": -33.84
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Payroll deposit",
+          "amount_usd": 4000.0
+        },
+        {
+          "date": "2026-11-02",
+          "merchant": "Contoso Coffee",
+          "amount_usd": -6.81
+        },
+        {
+          "date": "2026-10-31",
+          "merchant": "Tailspin Airlines",
+          "amount_usd": -316.48
+        }
+      ]
+    },
+    "cand-siobhan-murphy": {
+      "phone_masked": "+1 (248) ***-5390",
+      "account_type": "Premier Checking",
+      "account_masked": "****-****-9253",
+      "products": [
+        "Premier Checking",
+        "High-Yield Savings",
+        "Contoso Rewards Visa"
+      ],
+      "home_branch": "Detroit Main Street",
+      "balances_usd": {
+        "checking": 37051.14,
+        "savings": 111540.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Tailspin Airlines",
+          "amount_usd": -187.37
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Wide World Importers",
+          "amount_usd": -48.25
+        },
+        {
+          "date": "2026-11-02",
+          "merchant": "Tailspin Airlines",
+          "amount_usd": -412.1
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Payroll deposit",
+          "amount_usd": 4541.67
+        },
+        {
+          "date": "2026-10-31",
+          "merchant": "Litware Fitness",
+          "amount_usd": -41.7
+        }
+      ]
+    },
+    "cand-carlos-mendoza": {
+      "phone_masked": "+1 (512) ***-5414",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-1679",
+      "products": [
+        "Everyday Checking",
+        "Contoso Cash Back Mastercard"
+      ],
+      "home_branch": "Austin Main Street",
+      "balances_usd": {
+        "checking": 37134.35,
+        "savings": 6790.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Adventure Works Outfitters",
+          "amount_usd": -103.28
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Fourth Coffee",
+          "amount_usd": -4.73
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Coho Winery",
+          "amount_usd": -129.2
+        },
+        {
+          "date": "2026-11-02",
+          "merchant": "Tailspin Airlines",
+          "amount_usd": -345.66
+        },
+        {
+          "date": "2026-10-31",
+          "merchant": "Payroll deposit",
+          "amount_usd": 3666.67
+        }
+      ]
+    },
+    "cand-priya-raghavan": {
+      "phone_masked": "+1 (208) ***-5617",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-5312",
+      "products": [
+        "Everyday Checking",
+        "Contoso Cash Back Mastercard"
+      ],
+      "home_branch": "Boise Main Street",
+      "balances_usd": {
+        "checking": 8389.06,
+        "savings": 41310.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Northwind Electric",
+          "amount_usd": -106.73
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Proseware Books",
+          "amount_usd": -36.35
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Payroll deposit",
+          "amount_usd": 7041.67
+        },
+        {
+          "date": "2026-11-02",
+          "merchant": "Tailspin Airlines",
+          "amount_usd": -390.71
+        },
+        {
+          "date": "2026-10-31",
+          "merchant": "Coho Winery",
+          "amount_usd": -68.08
+        }
+      ]
+    },
+    "cand-michael-brennan": {
+      "phone_masked": "+1 (614) ***-3687",
+      "account_type": "Premier Checking",
+      "account_masked": "****-****-7556",
+      "products": [
+        "Premier Checking",
+        "High-Yield Savings",
+        "Contoso Rewards Visa"
+      ],
+      "home_branch": "Columbus Main Street",
+      "balances_usd": {
+        "checking": 33569.37,
+        "savings": 28980.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Coho Winery",
+          "amount_usd": -70.95
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Coho Winery",
+          "amount_usd": -70.6
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Fabrikam Grocery",
+          "amount_usd": -67.2
+        },
+        {
+          "date": "2026-10-30",
+          "merchant": "Payroll deposit",
+          "amount_usd": 4791.67
+        },
+        {
+          "date": "2026-10-28",
+          "merchant": "Wide World Importers",
+          "amount_usd": -96.38
+        }
+      ]
+    },
+    "cand-sarah-whitfield": {
+      "phone_masked": "+1 (512) ***-4559",
+      "account_type": "Premier Checking",
+      "account_masked": "****-****-8241",
+      "products": [
+        "Premier Checking",
+        "High-Yield Savings",
+        "Contoso Rewards Visa"
+      ],
+      "home_branch": "Austin Main Street",
+      "balances_usd": {
+        "checking": 24750.28,
+        "savings": 49720.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Fabrikam Grocery",
+          "amount_usd": -49.49
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Northwind Electric",
+          "amount_usd": -85.79
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Litware Fitness",
+          "amount_usd": -49.17
+        },
+        {
+          "date": "2026-10-30",
+          "merchant": "Payroll deposit",
+          "amount_usd": 3000.0
+        },
+        {
+          "date": "2026-10-28",
+          "merchant": "Contoso Coffee",
+          "amount_usd": -5.77
+        }
+      ]
+    },
+    "cand-nguyen-tran": {
+      "phone_masked": "+1 (404) ***-3299",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-6488",
+      "products": [
+        "Everyday Checking",
+        "Contoso Cash Back Mastercard"
+      ],
+      "home_branch": "Atlanta Main Street",
+      "balances_usd": {
+        "checking": 37112.49,
+        "savings": 105450.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Proseware Books",
+          "amount_usd": -58.57
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Payroll deposit",
+          "amount_usd": 5666.67
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Proseware Books",
+          "amount_usd": -29.74
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Proseware Books",
+          "amount_usd": -16.8
+        },
+        {
+          "date": "2026-10-31",
+          "merchant": "Proseware Books",
+          "amount_usd": -25.88
+        }
+      ]
+    },
+    "cand-emma-thompson": {
+      "phone_masked": "+1 (704) ***-1980",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-1263",
+      "products": [
+        "Everyday Checking",
+        "High-Yield Savings"
+      ],
+      "home_branch": "Charlotte Main Street",
+      "balances_usd": {
+        "checking": 29270.42,
+        "savings": 61430.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Fourth Coffee",
+          "amount_usd": -5.92
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Tailspin Airlines",
+          "amount_usd": -354.06
+        },
+        {
+          "date": "2026-11-02",
+          "merchant": "Wide World Importers",
+          "amount_usd": -77.05
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Payroll deposit",
+          "amount_usd": 3833.33
+        },
+        {
+          "date": "2026-10-31",
+          "merchant": "Wide World Importers",
+          "amount_usd": -54.59
+        }
+      ]
+    },
+    "cand-omar-al-rashid": {
+      "phone_masked": "+1 (305) ***-5678",
+      "account_type": "Everyday Checking",
+      "account_masked": "****-****-5913",
+      "products": [
+        "Everyday Checking",
+        "High-Yield Savings"
+      ],
+      "home_branch": "Miami Main Street",
+      "balances_usd": {
+        "checking": 22357.97,
+        "savings": 9650.0
+      },
+      "recent_transactions": [
+        {
+          "date": "2026-11-05",
+          "merchant": "Fabrikam Grocery",
+          "amount_usd": -111.82
+        },
+        {
+          "date": "2026-11-04",
+          "merchant": "Fourth Coffee",
+          "amount_usd": -4.42
+        },
+        {
+          "date": "2026-11-03",
+          "merchant": "Tailspin Airlines",
+          "amount_usd": -606.58
+        },
+        {
+          "date": "2026-11-02",
+          "merchant": "Wide World Importers",
+          "amount_usd": -85.97
+        },
+        {
+          "date": "2026-11-01",
+          "merchant": "Payroll deposit",
+          "amount_usd": 6583.33
+        }
+      ]
+    }
+  }
+}
