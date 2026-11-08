@@ -55,8 +55,10 @@ function request(port, path, { method = "GET", headers = {} } = {}) {
       let body = "";
       response.setEncoding("utf8");
       response.on("data", (chunk) => (body += chunk));
+      response.on("error", reject);
       response.on("end", () => resolve({ status: response.statusCode, type: response.headers["content-type"], body }));
     });
+    outgoing.setTimeout(5000, () => outgoing.destroy(new Error("Request timed out")));
     outgoing.on("error", reject);
     outgoing.end();
   });
@@ -70,6 +72,32 @@ const ownPage = (port, host = "localhost") => ({
 });
 
 describe("HTTP surface", () => {
+  it("rejects malformed targets without losing subsequent page, config, or token requests", () =>
+    withServer({}, async ({ running: { port }, scopes }) => {
+      for (const target of ["//[", "//%zz", "http://[", "http://localhost:bad/"]) {
+        for (const method of ["GET", "POST"]) {
+          const bad = await request(port, target, { method });
+          assert.equal(bad.status, 400, `${method} ${target}`);
+          assert.equal(bad.body, "Bad request");
+          assert.equal(bad.type, "text/plain");
+          assert.equal((await request(port, "/?value=%5B%20%25")).status, 200);
+          const config = await request(port, "/config?value=%5B%20%25");
+          assert.equal(config.status, 200);
+          assert.equal(JSON.parse(config.body).endpoint, ENDPOINT);
+        }
+      }
+      assert.deepEqual(scopes, []);
+      for (const path of ["/missing%20file", "/%63onfig"]) {
+        assert.equal((await request(port, path)).status, 404, path);
+      }
+      assert.equal((await request(port, "/token", { method: "POST" })).status, 403);
+      assert.deepEqual(scopes, []);
+      const token = await request(port, "/token?value=%5B%20%25", { method: "POST", headers: ownPage(port) });
+      assert.equal(token.status, 200);
+      assert.equal(JSON.parse(token.body).token, "offline-test-token");
+      assert.deepEqual(scopes, [TOKEN_SCOPE]);
+    }));
+
   it("serves the page, the bundled page script, and the agent configuration", async () => {
     const { running, project } = await start();
     const { port } = running;

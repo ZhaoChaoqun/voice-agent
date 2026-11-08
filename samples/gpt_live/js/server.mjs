@@ -74,11 +74,18 @@ function describeTokenFailure(error) {
  */
 export function createServer({ credential, agent, endpoint, keepAgent = true, log = () => {} }) {
   const server = http.createServer(async (request, response) => {
-    const { pathname } = new URL(request.url, "http://localhost");
     const send = (status, type, body) => {
       response.writeHead(status, { "content-type": type, "cache-control": "no-store" });
       response.end(body);
     };
+    let pathname;
+    try {
+      pathname = new URL(request.url, "http://localhost").pathname;
+    } catch (error) {
+      if (error.code !== "ERR_INVALID_URL") throw error;
+      send(400, "text/plain", "Bad request");
+      return;
+    }
     if (request.method === "GET" && pathname === "/config") {
       send(
         200,

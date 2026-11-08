@@ -128,6 +128,9 @@ only and answers `POST /token` only when the request's `Host` and `Origin` are i
 `localhost` or `127.0.0.1` address, so other websites, including ones that rebind their DNS name
 to `127.0.0.1`, cannot get a token. This suits a local development sample; a hosted app would
 sign users in with their own identity, for example with MSAL.js.
+Request targets that cannot be parsed as URLs receive HTTP 400 without stopping
+the server or requesting a token. Later valid requests still work, and token
+requests must still pass the same-origin checks.
 
 #### Why the sample supplies its own WebSocket transport
 
@@ -157,6 +160,8 @@ Run the offline tests (no Azure resources, browser, or audio devices). They driv
 Projects SDK client: the server's agent calls go to an in-memory HTTP client, and the page's
 Live sessions talk to a scripted WebSocket transport. The browser transport runs on Node.js's
 built-in WebSocket against a local `ws` server.
+HTTP regressions cover malformed request targets followed by valid page,
+configuration, and same-origin token requests.
 
 ```powershell
 npm test

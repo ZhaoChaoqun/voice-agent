@@ -7,7 +7,14 @@ const mime = { html: "text/html", css: "text/css", mjs: "text/javascript", json:
 const port = Number(process.env.PORT || 8095);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("PORT must be an integer from 1 to 65535.");
 const server = createServer(async (req, res) => {
-  const path = new URL(req.url, "http://localhost").pathname;
+  let path;
+  try {
+    path = new URL(req.url, "http://localhost").pathname;
+  } catch (error) {
+    if (error.code !== "ERR_INVALID_URL") throw error;
+    res.writeHead(400, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" }).end("Bad request");
+    return;
+  }
   const file = path === "/" ? "index.html" : path.slice(1);
   if (!["GET", "HEAD"].includes(req.method) || !allowed.has(file)) {
     res.writeHead(404).end("Not found");

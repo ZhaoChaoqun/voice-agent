@@ -22,6 +22,8 @@ Open **http://127.0.0.1:8095**. To change the port, set `$env:PORT = "8096"`
 before running the command. The server listens only on the loopback interface.
 Stop it with Ctrl+C. Opening `index.html` as `file://` will not work because
 the page loads modules and the local price snapshot.
+Request targets that cannot be parsed as URLs receive HTTP 400 without stopping
+the local server; later valid requests are still served.
 
 Choose hosting, pipeline, and model; change call assumptions or deployment
 rates. The tool shows per-call, per-minute, call-volume list prices, component costs, and
@@ -210,5 +212,8 @@ captured.
 ## Checks
 
 ```powershell
-node --test tools\cost_calculator\calculator.test.mjs
+node --test tools\cost_calculator\calculator.test.mjs tools\cost_calculator\server.test.mjs
 ```
+
+The server regression test starts the actual local Node process, checks malformed
+request rejection and subsequent asset requests, then stops the process.
