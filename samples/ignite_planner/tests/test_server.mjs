@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {request} from 'node:http';
 import {after, before, test} from 'node:test';
 import {AzureCliToken, agentDefinition, agentInstructions, agentName, ensureAgent, validateEndpoint, websocketUrl} from '../agent/agent.mjs';
-import {createApp, settingsFromEnv} from '../server.mjs';
+import {ASSETS, createApp, settingsFromEnv} from '../server.mjs';
 import {buildSessionDetails, cleanSpeakerName} from '../data/session-details.mjs';
 
 const ENDPOINT = 'https://example-resource.services.ai.azure.com/api/projects/demo';
@@ -63,6 +63,44 @@ test('config gives the page the direct Azure WebSocket and never a credential', 
     'wss://example-resource.services.ai.azure.com/api/projects/demo/agents/ignite-web-demo-js-test/endpoint/protocols/voice?api-version=2025-11-15-preview');
   assert.doesNotMatch(JSON.stringify(config), /token/i);
   assert.equal(JSON.parse((await fetchRaw(preview.port, '/api/config')).body).voice_available, false);
+});
+
+test('inherited asset names return 404 and leave the server available', async () => {
+  for (const name of Object.getOwnPropertyNames(Object.prototype)) {
+    const result = await fetchRaw(preview.port, `/${name}`);
+    assert.equal(result.status, 404, name);
+    assert.equal(result.body, 'Not found.');
+    assert.equal((await fetchRaw(preview.port, '/')).status, 200);
+  }
+});
+
+test('malformed URLs return 400 and leave the server available', async () => {
+  for (const [path, headers] of [['//[', {}], ['http://[', {}], ['/', {host: 'localhost:invalid'}]]) {
+    const result = await fetchRaw(preview.port, path, {headers});
+    assert.equal(result.status, 400, path);
+    assert.equal(result.body, 'Bad request.');
+    assert.equal(result.headers['cache-control'], 'no-store');
+    assert.equal((await fetchRaw(preview.port, '/api/config')).status, 200);
+  }
+});
+
+test('asset read failures are logged and contained without exposing filesystem details', async t => {
+  const errors = [];
+  const server = await listen(createApp({settings: settingsFromEnv({}, true), log: (...args) => errors.push(args)}));
+  t.after(() => server.app.close());
+  const original = ASSETS['index.html'];
+  t.after(() => { ASSETS['index.html'] = original; });
+  ASSETS['index.html'] = new URL('./missing-page.html', import.meta.url);
+  const result = await fetchRaw(server.port, '/');
+  assert.equal(result.status, 500);
+  assert.equal(result.body, 'Unable to serve request. See server log.');
+  assert.equal(result.headers['cache-control'], 'no-store');
+  assert.equal(errors.length, 1);
+  assert.equal(errors[0][0], 'Planner request failed:');
+  assert.equal(errors[0][1].code, 'ENOENT');
+  assert.equal((await fetchRaw(server.port, '/api/config')).status, 200);
+  ASSETS['index.html'] = original;
+  assert.equal((await fetchRaw(server.port, '/')).status, 200);
 });
 
 test('the Agent keeps client-owned turns and exposes fourteen page-executed functions', () => {

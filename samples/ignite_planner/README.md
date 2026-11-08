@@ -31,8 +31,11 @@ ignite_planner/
 
 The page uses flat URLs (`/app.mjs`, `/catalog.json`, `/tools.json`). The server
 maps each allowed URL to one file in `web/`, `agent/` or `data/` and returns 404
-for anything else. All page paths are relative, so the same page can also be
-served under a sub-path by another host (see [Hosting the page elsewhere](#hosting-the-page-elsewhere)).
+for anything else, including inherited JavaScript property names. Malformed
+URLs return 400; unexpected request or file-read failures are logged locally
+and return a generic 500 without stopping the server. All page paths are
+relative, so the same page can also be served under a sub-path by another host
+(see [Hosting the page elsewhere](#hosting-the-page-elsewhere)).
 
 ## Architecture
 

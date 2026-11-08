@@ -49,11 +49,17 @@ export function createApp({settings, agent = null, tokens = new AzureCliToken(),
     response.writeHead(status, {...headers, 'Content-Type': type});
     response.end(body);
   };
-  return createServer(async (request, response) => {
+  const handleRequest = async (request, response) => {
     const host = request.headers.host || '';
     const hostname = host.startsWith('[') ? host.slice(0, host.indexOf(']') + 1) : host.split(':')[0];
     if (!LOOPBACK.has(hostname)) return reply(response, 403, 'This prototype accepts loopback Host only.');
-    const {pathname} = new URL(request.url, `http://${host}`);
+    let pathname;
+    try {
+      pathname = new URL(request.url, `http://${host}`).pathname;
+    } catch (error) {
+      if (error.code !== 'ERR_INVALID_URL') throw error;
+      return reply(response, 400, 'Bad request.');
+    }
     if (request.method === 'POST' && pathname === '/api/token') {
       // Only this page may receive the developer's token: same loopback origin, never another site.
       if (request.headers.origin !== `http://${host}`) return reply(response, 403, 'A same-origin page is required.');
@@ -82,9 +88,17 @@ export function createApp({settings, agent = null, tokens = new AzureCliToken(),
       details ??= JSON.stringify(buildSessionDetails());
       return reply(response, 200, details, TYPES['.json']);
     }
-    const file = ASSETS[pathname === '/' ? 'index.html' : pathname.slice(1)];
-    if (!file) return reply(response, 404, 'Not found.');
+    const name = pathname === '/' ? 'index.html' : pathname.slice(1);
+    if (!Object.hasOwn(ASSETS, name)) return reply(response, 404, 'Not found.');
+    const file = ASSETS[name];
     return reply(response, 200, readFileSync(file), TYPES[pathname === '/' ? '.html' : pathname.slice(pathname.lastIndexOf('.'))]);
+  };
+  return createServer((request, response) => {
+    handleRequest(request, response).catch(error => {
+      log('Planner request failed:', error);
+      if (response.headersSent) response.destroy();
+      else reply(response, 500, 'Unable to serve request. See server log.');
+    });
   });
 }
 
