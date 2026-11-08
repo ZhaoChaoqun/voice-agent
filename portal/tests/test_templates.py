@@ -378,7 +378,8 @@ class TemplateCatalogTests(unittest.TestCase):
         instructions = authored["instructions"]
         mentioned = set(re.findall(r"(?:conference|mock_tool_call)_[a-z_]+", instructions))
         self.assertTrue(mentioned <= set(CONFERENCE_TOOLS), mentioned - set(CONFERENCE_TOOLS))
-        for text in ("language of that message", "no official data", "### Dev mode", "BRK244", "end_conversation"):
+        for text in ("language of that message", "no official data", "### Dev mode", "BRK244", "end_conversation",
+                     "Never read a full web address aloud"):
             self.assertIn(text, instructions)
         self.assertNotIn("sample data", instructions.lower())
         server_url = MCP_BASE_URL + MCP_ROUTES[CONFERENCE_TEMPLATE]

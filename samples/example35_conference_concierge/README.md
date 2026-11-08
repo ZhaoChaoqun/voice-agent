@@ -119,6 +119,38 @@ the real date. Try these turns:
 - "请问周四下午有关于语音智能体的分会吗？" → answer in Chinese; the next English turn is answered in English
 - "Show me how you're built." → dev mode, recommends BRK244
 
+## Call it by phone (Twilio)
+
+The Foundry Agent Service answers phone calls for a published Agent itself, so no extra
+server is needed. A Twilio **telephony binding** routes calls on one Twilio number to the Agent.
+When the binding is created, the service sets that number's Voice webhook to the Agent's
+`incoming_call_url`. Twilio streams G.711 μ-law audio at 8 kHz. The service converts it,
+and the same `agent.json` serves both browser and phone callers.
+
+You need:
+
+- A Twilio account with a voice-capable number. One number routes to one Agent at a time.
+  Creating the binding replaces the number's current Voice webhook.
+- A Foundry connection in the Agent's Project with category **Twilio** and auth type **API key**.
+  Its target is the Account SID, and its key is the Auth Token.
+- A published Agent, for example one created with **Try it now** above.
+
+From the repository root, after `az login`:
+
+```powershell
+$env:PROJECT_ENDPOINT = "https://<account>.services.ai.azure.com/api/projects/<project>"
+python samples\example35_conference_concierge\bind_phone.py bind --agent-name <agent> --connection <twilio-connection> --phone-number +15551234567
+```
+
+Then call the number. Emma greets the caller, and the conversation works as in the browser.
+Each spoken turn is short, and the Agent never reads web addresses aloud.
+`bind_phone.py show` lists the binding, `calls` lists recent calls with their status
+and end reason, and `unbind --binding-id twilio:<digits> --yes` stops routing the number.
+`unbind` keeps the Agent, the connection, and the Twilio number. `--dry-run` prints the
+binding request without signing in.
+
+Callers outside the US can dial a US number at their own carrier's international rates.
+
 ## Generalize to another event
 
 Add `shared_mcp/app/shared_mcp/conference/data/<event>/` with `event.json`,
