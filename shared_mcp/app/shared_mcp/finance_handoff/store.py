@@ -5,6 +5,7 @@ import threading
 from pathlib import Path
 from typing import Any
 
+from ..session_paths import session_path
 from .domain import CallEvent, CallSession
 
 
@@ -84,23 +85,23 @@ class CallStore:
             state_dir.mkdir(parents=True, exist_ok=True)
 
     def _path(self, call_id: str) -> Path | None:
-        if self._state_dir is None:
-            return None
-        return self._state_dir / f"{call_id}.json"
+        return session_path(self._state_dir, call_id)
 
     def create(self, session: CallSession) -> None:
         with self._lock:
+            self._persist(session)
             self._calls[session.call_id] = session
             self._operations.setdefault(session.call_id, {})
-            self._persist(session)
 
     def get(self, call_id: str) -> CallSession | None:
         with self._lock:
+            path = self._path(call_id)
             if call_id in self._calls:
                 return self._calls[call_id]
-            path = self._path(call_id)
             if path is not None and path.exists():
                 session = session_from_dict(json.loads(path.read_text("utf-8")))
+                if session.call_id != call_id:
+                    raise ValueError("session_identifier_mismatch")
                 self._calls[call_id] = session
                 self._operations.setdefault(call_id, {})
                 return session
@@ -108,17 +109,19 @@ class CallStore:
 
     def save(self, session: CallSession) -> None:
         with self._lock:
-            self._calls[session.call_id] = session
             self._persist(session)
+            self._calls[session.call_id] = session
 
     def cached_operation(self, call_id: str, operation_id: str) -> dict[str, Any] | None:
         with self._lock:
+            self._path(call_id)
             return self._operations.get(call_id, {}).get(operation_id)
 
     def remember_operation(
         self, call_id: str, operation_id: str, result: dict[str, Any]
     ) -> None:
         with self._lock:
+            self._path(call_id)
             self._operations.setdefault(call_id, {})[operation_id] = result
 
     def _persist(self, session: CallSession) -> None:
