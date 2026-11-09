@@ -111,10 +111,11 @@ export const live = {
 /**
  * A scripted Live endpoint for the SDK's webSocketFactory: sends session.started after the
  * upgrade and the remaining events once the client is ready, records client commands, and
- * answers session.close with session.closed.
+ * answers session.close with session.closed. respond(command) returns any events to send back.
  */
 export class ScriptedLive {
-  constructor(events = [], { delayMs = 20 } = {}) {
+  constructor(events = [], { delayMs = 20, respond = () => [] } = {}) {
+    this.respond = respond;
     this.events = events;
     this.delayMs = delayMs;
     this.connects = [];
@@ -149,6 +150,7 @@ export class ScriptedLive {
       send: async (data) => {
         const command = JSON.parse(data);
         this.received.push(command);
+        setImmediate(() => play(this.respond(command)));
         if (command.type === "session.close" && !closed) {
           play([live.closed("close_requested")]);
           finish(1000);

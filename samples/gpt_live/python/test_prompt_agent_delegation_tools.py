@@ -1,4 +1,4 @@
-"""Offline tool/lifecycle/SDK tests; no Azure resources or physical audio devices."""
+"""Offline tool/lifecycle/SDK tests for all GPT Live samples; no Azure or audio devices."""
 
 import asyncio
 import base64
@@ -19,14 +19,26 @@ from azure.ai.projects.models import PromptAgentDefinition, VoiceAgentLiveDefini
 from azure.core.credentials import AccessToken
 from azure.core.pipeline.transport import AsyncHttpResponse, AsyncHttpTransport
 from azure.core.utils import case_insensitive_dict
+from rich.console import Console
 from websockets.asyncio.server import serve
 
+import client_delegation as client
 import prompt_agent_delegation as managed
 import prompt_agent_delegation_tools as sample
 import response_delegation as direct
 from response_delegation import DemoError, converse
+from transcript_common import TranscriptDisplay
 
 PROJECT_ENDPOINT = "https://sample.services.ai.azure.com/api/projects/test"
+LESSON = {"learner_name": direct.DEFAULT_LEARNER_NAME, "level": direct.DEFAULT_LEVEL}
+
+
+def mock_transcript():
+    """A recording transcript with the real stop event and typed-message queue converse() uses."""
+    transcript = MagicMock()
+    transcript.stop_requested = asyncio.Event()
+    transcript.typed_messages = asyncio.Queue()
+    return transcript
 
 
 def function_call(call_id="call-1", **overrides):
@@ -321,6 +333,33 @@ class ToolHandlerTests(unittest.IsolatedAsyncioTestCase):
             await self.done()
 
 
+class ClientExecutorTests(unittest.TestCase):
+    NOW = datetime(2026, 11, 9, 4, 5, 6, tzinfo=timezone.utc)
+
+    def test_finds_the_last_addition_in_digits_or_words(self):
+        for said, expected in (
+            ("What is seventeen plus twenty-five?", (17, 25)),
+            ("what's 17 + 25", (17, 25)),
+            ("Can you add one hundred and five to 20?", (105, 20)),
+            ("The sum of 3 and 4, please.", (3, 4)),
+            ("One plus one. No wait, what is 2,000 plus 30?", (2000, 30)),
+            ("I goed to school.", None),
+            ("", None),
+        ):
+            with self.subTest(said=said):
+                self.assertEqual(client.find_addition(said), expected)
+
+    def test_answers_time_and_addition_from_one_clock_reading(self):
+        answer, facts = client.answer_locally("What is 2 plus 3, and what time is it?", self.NOW)
+        clock = client.current_datetime(self.NOW)
+        self.assertEqual(answer, f"2 plus 3 is 5. On this computer it's {clock['spoken']}.")
+        self.assertIn("UTC 2026-11-09T04:05:06+00:00", facts)
+        self.assertEqual(datetime.fromisoformat(clock["local_datetime"]), self.NOW)
+
+    def test_falls_back_without_facts(self):
+        self.assertEqual(client.answer_locally("Let's talk about my weekend.", self.NOW), (client.FALLBACK, None))
+
+
 class OfflineCredential:
     async def get_token(self, *scopes, **kwargs):
         return AccessToken("offline-test-token", 4102444800)
@@ -418,19 +457,18 @@ class OfflineProject(AsyncHttpTransport):
 class LifecycleTests(unittest.IsolatedAsyncioTestCase):
     async def run_main(
         self, module, main_function, *, project=None, session_events=None,
-        environment=None, **kwargs,
+        exchange=None, environment=None, **kwargs,
     ):
         """Run a sample's main through the real Projects SDK against an offline project.
 
-        With session_events, the SDK's Live client talks to a local WebSocket server
-        that plays them; otherwise any Live handshake fails the test.
+        With session_events (or a custom exchange), the SDK's Live client talks to a local
+        WebSocket server that plays them; otherwise any Live handshake fails the test.
         """
         self.project = project or OfflineProject()
         self.received = []
         self.handshakes = []
         audio_factory = MagicMock(side_effect=AssertionError("Opened physical audio"))
-        self.transcript = MagicMock()
-        self.transcript.stop_requested = asyncio.Event()
+        self.transcript = mock_transcript()
         self.transcript.__aenter__.return_value = self.transcript
 
         def project_client(**client_kwargs):
@@ -438,7 +476,7 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
 
         output = io.StringIO()
         async with contextlib.AsyncExitStack() as stack:
-            if session_events is None:
+            if session_events is None and exchange is None:
                 stack.enter_context(patch.object(
                     aiohttp.ClientSession, "ws_connect",
                     side_effect=AssertionError("Opened a real Live session"),
@@ -447,7 +485,7 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
                 self.audio = OfflineAudio()
                 audio_factory = MagicMock(return_value=contextlib.nullcontext(self.audio))
                 self.handshakes = await stack.enter_async_context(
-                    live_server(play(session_events, self.received))
+                    live_server(exchange or play(session_events, self.received))
                 )
             stack.enter_context(patch.dict(os.environ, {
                 "FOUNDRY_PROJECT_ENDPOINT": PROJECT_ENDPOINT,
@@ -466,18 +504,45 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
             finally:
                 self.output = output.getvalue()
 
-    def assert_live_handshake(self, agent_name, version):
+    def assert_live_handshake(self, agent_name, version, structured_inputs=LESSON):
         (url, kwargs), = self.handshakes
         self.assertEqual(
             url, f"wss://sample.services.ai.azure.com/api/projects/test/agents/{agent_name}"
             "/endpoint/protocols/voice/live/sessions",
         )
-        self.assertEqual(kwargs["params"]["x-agent-version-override"], version)
+        self.assertEqual(kwargs["params"]["agent_version_override"], version)
+        # The SDK sends the session's structured inputs as JSON in the handshake query.
+        if structured_inputs is None:
+            self.assertNotIn("structured_inputs", kwargs["params"])
+        else:
+            self.assertEqual(json.loads(kwargs["params"]["structured_inputs"]), structured_inputs)
         self.assertEqual(kwargs["headers"]["Authorization"], "Bearer offline-test-token")
         self.assertEqual(kwargs["headers"]["Foundry-Features"], "VoiceAgents=V1Preview")
 
     def sent_commands(self):
         return [command["type"] for command in self.received]
+
+    def assert_lesson_personalization(self, definition):
+        """Every sample's voice agent declares the lesson inputs and a template greeting."""
+        self.assertEqual(definition["model_type"], "self_deployed")
+        self.assertEqual(definition["greeting"], {"type": "template", "text": direct.GREETING})
+        self.assertIn("{{learner_name}}", definition["greeting"]["text"])
+        self.assertIn("{{learner_name}}", definition["instructions"])
+        self.assertIn("{{level}}", definition["instructions"])
+        self.assertEqual(
+            definition["structured_inputs"],
+            {
+                "learner_name": {
+                    "description": "What the teacher calls the learner.",
+                    "default_value": "friend",
+                },
+                "level": {
+                    "description": "The learner's English level.",
+                    "default_value": "intermediate",
+                    "schema": {"type": "string", "enum": ["beginner", "intermediate", "advanced"]},
+                },
+            },
+        )
 
     async def run_managed(
         self, main_function=sample.main, *, project=None, session_events=None,
@@ -497,6 +562,7 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
             voice["definition"]["delegation"],
             {"type": "foundry_managed_agent", "agent_name": prompt["name"], "agent_version": "7"},
         )
+        self.assert_lesson_personalization(voice["definition"])
         self.assertEqual([request.method for request in self.project.requests[:2]], ["GET", "GET"])
         self.assertEqual(self.project.deployment_checks(), ["live-model", "text-model"])
         create = next(request for request in self.project.requests if request.method == "POST")
@@ -599,8 +665,10 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
             },
         )
         self.assertTrue(definition["store"])
+        self.assert_lesson_personalization(definition)
         self.assertEqual(self.project.deployment_checks(), ["live-model", "text-model"])
         self.assert_live_handshake(agent["name"], "3")
+        self.assertIn("Structured inputs: learner_name=Alex, level=intermediate", self.output)
         # The sample passes raw PCM; the SDK sends it base64-encoded.
         self.assertIn(
             {"type": "session.input_audio.append", "audio": base64.b64encode(bytes(48)).decode()},
@@ -623,7 +691,9 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.project.created, [])
         self.assertEqual(self.project.deleted, [])
         self.assertEqual(self.project.deployment_checks(), ["saved-live", "saved-text"])
-        self.assert_live_handshake("teacher", "5")
+        # The saved agent declares no structured inputs, so the session sends none.
+        self.assert_live_handshake("teacher", "5", structured_inputs=None)
+        self.assertIn("Structured inputs: none", self.output)
 
     async def test_responses_sample_rejects_missing_or_realtime_agents(self):
         realtime = {"kind": "voice", "model": "realtime-model"}
@@ -636,6 +706,86 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
                     )
                 self.assertEqual(self.handshakes, [])
                 self.assertEqual(self.project.deleted, [])
+
+    async def run_client(self, learner_said, **lesson):
+        received = []
+        await self.run_main(
+            direct, client.main, exchange=client_session(received, learner_said),
+            environment={"AGENT_NAME": "teacher"}, auto_delete=True, **lesson,
+        )
+        return [command for command in received if command["type"] != "session.input_audio.append"]
+
+    async def test_client_sample_answers_its_delegation_on_the_same_session(self):
+        commands = await self.run_client(
+            "What is seventeen plus twenty five?", learner_name="Mei", level="beginner",
+        )
+        # AGENT_NAME is ignored: the sample always creates a client-delegation agent.
+        (agent,) = self.project.created
+        definition = agent["definition"]
+        self.assertEqual(definition["delegation"], {"type": "client"})
+        self.assertIn("always delegate before answering", definition["instructions"])
+        self.assert_lesson_personalization(definition)
+        self.assertEqual(self.project.deployment_checks(), ["live-model"])
+        self.assert_live_handshake(agent["name"], "3", {"learner_name": "Mei", "level": "beginner"})
+        # Unspoken facts first, then the spoken answer, both tied to the delegation.
+        self.assertEqual(
+            commands,
+            [
+                {
+                    "type": "session.thinking.append",
+                    "content": "The client app computed 17 + 25 = 42.",
+                    "delegation_id": "delegation-client",
+                },
+                {
+                    "type": "session.commentary.append",
+                    "content": "17 plus 25 is 42.",
+                    "delegation_id": "delegation-client",
+                },
+            ],
+        )
+        activity = self.transcript.update_agent_activity.call_args
+        self.assertEqual(activity.kwargs["title"], "Client delegation → this app")
+        self.assertEqual(activity.kwargs["delta"], "17 plus 25 is 42.")
+        self.assertIn("Conversation id: conversation-client", self.output)
+        self.assertEqual(self.project.deleted, [agent["name"]])
+
+    async def test_client_sample_falls_back_when_it_cannot_answer(self):
+        commands = await self.run_client("Please correct my English: I goed to school.")
+        self.assertEqual(
+            commands,
+            [{"type": "session.commentary.append", "content": client.FALLBACK, "delegation_id": "delegation-client"}],
+        )
+        self.assert_live_handshake(self.project.created[0]["name"], "3")
+
+
+def client_session(received, learner_said):
+    """A client-delegation session: greet, hear the learner, delegate, and close once answered."""
+
+    async def exchange(socket):
+        async def send(kind, **fields):
+            await socket.send(json.dumps({"type": kind, **fields}))
+
+        await send("session.started", conversation_id="conversation-client", session={
+            "id": "session-client",
+            "audio": {"format": {"type": "audio/pcm", "rate": 24000}},
+            "delegation": {"type": "client"},
+        })
+        # Foundry speaks the filled-in greeting as commentary before the learner talks.
+        await send("session.commentary.appended", start_ms=0, end_ms=900)
+        await send("session.output_transcript.delta", delta="Hi Mei!", start_ms=0, end_ms=900)
+        await send("session.input_transcript.delta", delta=learner_said, start_ms=1000, end_ms=2000)
+        await send(
+            "session.delegation.created",
+            offset_ms=2100,
+            delegation={"id": "delegation-client", "type": "delegation", "target": "client"},
+        )
+        async for raw in socket:
+            command = json.loads(raw)
+            received.append(command)
+            if command["type"] == "session.commentary.append":
+                await send("session.closed", reason="close_requested", usage={"seconds": 1})
+
+    return exchange
 
 
 class OfflineAudio:
@@ -722,8 +872,7 @@ class SDKLoopbackTests(unittest.IsolatedAsyncioTestCase):
             await send("session.closed", reason="close_requested", usage={"seconds": 1})
 
         audio = OfflineAudio()
-        transcript = MagicMock()
-        transcript.stop_requested = asyncio.Event()
+        transcript = mock_transcript()
         async with sdk_live_connection(exchange) as connection:
             async with asyncio.timeout(10):
                 conversation_id = await converse(
@@ -765,8 +914,7 @@ class SDKLoopbackTests(unittest.IsolatedAsyncioTestCase):
             async for raw in socket:
                 received.append(json.loads(raw))
 
-        transcript = MagicMock()
-        transcript.stop_requested = asyncio.Event()
+        transcript = mock_transcript()
         try:
             async with sdk_live_connection(exchange) as connection:
                 async with asyncio.timeout(10):
@@ -800,3 +948,156 @@ class SDKLoopbackTests(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TypedInputTests(unittest.IsolatedAsyncioTestCase):
+    """Typed messages go to the session's backend with response.item.create and response.create."""
+
+    async def converse_with(self, exchange, *, delegation, typed_input=True, typed=None, **options):
+        self.output = io.StringIO()
+        transcript = TranscriptDisplay(console=Console(file=self.output, markup=False, highlight=False))
+
+        async def type_when_ready():
+            while not transcript.typing_enabled:
+                await asyncio.sleep(0.01)
+            for text in typed or []:
+                self.assertTrue(transcript.submit_typed(text))
+
+        async with sdk_live_connection(exchange) as connection:
+            async with asyncio.timeout(10):
+                typist = asyncio.create_task(type_when_ready()) if typed else None
+                await converse(
+                    connection, OfflineAudio(), transcript, "text-model",
+                    managed_delegation=delegation == "foundry_managed_agent",
+                    typed_input=typed_input, **options,
+                )
+                if typist:
+                    await typist
+        return transcript
+
+    @staticmethod
+    def started(delegation):
+        session = {"id": "session-typed", "audio": {"format": {"type": "audio/pcm", "rate": 24000}}}
+        return {"type": "session.started", "conversation_id": "conversation-typed", "session": {**session, "delegation": {"type": delegation}}}
+
+    async def test_typed_message_is_a_user_item_then_response_create_for_each_backend(self):
+        for delegation in ("responses", "foundry_managed_agent"):
+            with self.subTest(delegation=delegation):
+                received = []
+
+                async def exchange(socket):
+                    await socket.send(json.dumps(self.started(delegation)))
+                    async for raw in socket:
+                        command = json.loads(raw)
+                        received.append(command)
+                        if command["type"] == "response.create":
+                            # The backend's delegation names the response.create that started it.
+                            await socket.send(json.dumps({
+                                "type": "session.delegation.created", "client_event_id": command["event_id"],
+                                "offset_ms": 0, "delegation": {"id": "delegation-typed", "type": "delegation", "target": delegation},
+                            }))
+                            await socket.send(json.dumps({
+                                "type": "response.event", "delegation_id": "delegation-typed",
+                                "event": {"type": "response.completed", "response": {"id": "response-typed"}},
+                            }))
+                            await socket.send(json.dumps({
+                                "type": "session.output_transcript.delta", "delta": 'Say "I went."', "start_ms": 0, "end_ms": 100,
+                            }))
+                            await socket.send(json.dumps({"type": "session.closed", "reason": "close_requested", "usage": {"seconds": 1}}))
+
+                transcript = await self.converse_with(exchange, delegation=delegation, typed=["I goed to school."])
+                item, run = [command for command in received if command["type"].startswith("response.")]
+                self.assertEqual(item["type"], "response.item.create")
+                self.assertEqual(
+                    item["item"],
+                    {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "I goed to school."}]},
+                )
+                self.assertEqual(run["type"], "response.create")
+                self.assertRegex(item["event_id"], r"^typed-[0-9a-f]{12}$")
+                self.assertRegex(run["event_id"], r"^typed-run-[0-9a-f]{12}$")
+                self.assertIn("[typed] I goed to school.", transcript.user_text)
+                self.assertEqual(transcript.agent_text, 'Say "I went."')
+                self.assertTrue(transcript.agent_activities["delegation-typed"].title.endswith("(typed message)"))
+                self.assertFalse(transcript.typing_enabled)
+
+    async def test_a_rejected_typed_message_is_reported_without_ending_the_session(self):
+        received = []
+
+        async def exchange(socket):
+            await socket.send(json.dumps(self.started("foundry_managed_agent")))
+            async for raw in socket:
+                command = json.loads(raw)
+                received.append(command)
+                if command["type"] == "response.item.create":
+                    await socket.send(json.dumps({
+                        "type": "error", "event_id": "evt_managed_1",
+                        "error": {
+                            "type": "invalid_request_error", "code": "typed_input_too_large",
+                            "message": "The typed message exceeds the size limit.", "client_event_id": command["event_id"],
+                        },
+                    }))
+                    await socket.send(json.dumps({"type": "session.output_transcript.delta", "delta": "Still here.", "start_ms": 0, "end_ms": 1}))
+                    await socket.send(json.dumps({"type": "session.closed", "reason": "close_requested", "usage": {"seconds": 1}}))
+
+        transcript = await self.converse_with(exchange, delegation="foundry_managed_agent", typed=["x" * 50])
+        self.assertIn("Typed message not accepted: typed_input_too_large", self.output.getvalue())
+        self.assertEqual(transcript.agent_text, "Still here.")
+
+    async def test_uncorrelated_errors_still_end_the_session(self):
+        async def exchange(socket):
+            await socket.send(json.dumps(self.started("responses")))
+            await socket.send(json.dumps({
+                "type": "error", "event_id": "evt_1",
+                "error": {"type": "server_error", "code": "boom", "message": "Something failed."},
+            }))
+            async for raw in socket:
+                if json.loads(raw)["type"] == "session.close":
+                    await socket.send(json.dumps({"type": "session.closed", "reason": "close_requested", "usage": {"seconds": 1}}))
+
+        with self.assertRaisesRegex(DemoError, "Something failed"):
+            await self.converse_with(exchange, delegation="responses")
+
+    async def test_client_delegation_keeps_the_text_box_disabled(self):
+        received = []
+        states = []
+
+        async def exchange(socket):
+            await socket.send(json.dumps(self.started("client")))
+            await asyncio.sleep(0.05)
+            await socket.send(json.dumps({"type": "session.closed", "reason": "close_requested", "usage": {"seconds": 1}}))
+            async for raw in socket:
+                received.append(json.loads(raw))
+
+        transcript = TranscriptDisplay(console=Console(file=io.StringIO()))
+        original = transcript.enable_typing
+        transcript.enable_typing = lambda enabled, hint: (states.append((enabled, hint)), original(enabled, hint))
+        async with sdk_live_connection(exchange) as connection:
+            async with asyncio.timeout(10):
+                await converse(connection, OfflineAudio(), transcript, "client", typed_input=False)
+        self.assertFalse(states[0][0])
+        self.assertIn("client delegation", states[0][1])
+        self.assertFalse(transcript.submit_typed("hello"))
+        self.assertFalse(any(command["type"].startswith("response.") for command in received))
+
+    async def test_text_box_queues_messages_only_while_typing_is_enabled(self):
+        from textual.widgets import Input
+
+        from transcript_common import TranscriptApp
+
+        transcript = TranscriptDisplay(console=Console(file=io.StringIO()))
+        app = TranscriptApp(transcript)
+        async with app.run_test(size=(120, 30)) as pilot:
+            box = app.query_one("#typed", Input)
+            self.assertTrue(box.disabled)
+            transcript.enable_typing(True, "Type a message and press Enter.")
+            await pilot.pause(0.3)
+            self.assertFalse(box.disabled)
+            box.focus()
+            await pilot.press(*"I goed to school.", "enter", "enter")
+            await pilot.pause(0.1)
+            self.assertEqual(transcript.typed_messages.get_nowait(), "I goed to school.")
+            self.assertTrue(transcript.typed_messages.empty())
+            self.assertEqual(box.value, "")
+            transcript.enable_typing(False, "The lesson has ended.")
+            await pilot.pause(0.3)
+            self.assertTrue(box.disabled)

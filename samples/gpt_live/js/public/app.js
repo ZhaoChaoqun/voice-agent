@@ -1,6 +1,7 @@
 // Page side of the GPT Live sample: microphone in, teacher audio out, three text panes.
-// The page opens the GPT Live session itself with the Projects SDK. The local server only
-// creates the agents and returns an access token from your az login session.
+// The page opens the GPT Live session itself with the Projects SDK, sending the learner's name
+// and level as structured inputs. The local server only creates the agents and returns an
+// access token from your az login session.
 import { LiveSession } from "./live-session.js";
 import { openLiveSession } from "./live-transport.js";
 import { PcmAudio } from "./pcm-audio.js";
@@ -12,6 +13,11 @@ const statusLine = $("status");
 const downloadHint = $("download");
 const panes = { teacher: $("teacher"), user: $("user") };
 const delegationPane = $("delegation");
+const nameInput = $("learner-name");
+const levelSelect = $("level");
+const typedForm = $("typed-form");
+const typedInput = $("typed");
+const sendButton = $("send");
 const delegations = new Map();
 let config;
 let session;
@@ -27,6 +33,13 @@ const loaded = fetch("/config")
     $("agent").textContent =
       `Agent ${config.agent.name}, version ${config.agent.version} · ` +
       `${config.delegation} delegation → ${config.agent.backendModel}`;
+    for (const level of config.levels) levelSelect.add(new Option(level, level, false, level === config.defaultLevel));
+    // An AGENT_NAME agent may declare no structured inputs; then there is nothing to send.
+    nameInput.disabled = !config.agent.inputs.includes("learner_name");
+    levelSelect.disabled = !config.agent.inputs.includes("level");
+    if (config.agent.clientDelegation || config.agent.managedDelegation) {
+      $("hint").textContent = "Try: “What is 17 plus 25?” or “What is the current date and time?”";
+    }
   })
   .catch(() => {
     $("agent").textContent = "Could not read the agent configuration from the server.";
@@ -35,6 +48,22 @@ const loaded = fetch("/config")
 function setStatus(text, error = false) {
   statusLine.textContent = text;
   statusLine.classList.toggle("error", error);
+}
+
+/** Enables the text box while a session whose backend answers typed messages is ready. */
+function setTyping(enabled, placeholder) {
+  typedInput.disabled = sendButton.disabled = !enabled;
+  typedInput.placeholder = placeholder;
+}
+
+/** Shows a typed message in the You pane as its own paragraph. */
+function appendTyped(text) {
+  const paragraph = document.createElement("p");
+  paragraph.className = "typed";
+  paragraph.textContent = `[typed] ${text}`;
+  panes.user.append(paragraph);
+  lastRole = "typed";
+  scrollToEnd(panes.user);
 }
 
 function scrollToEnd(element) {
@@ -76,6 +105,13 @@ function updateDelegation({ id, title, status, delta }) {
   scrollToEnd(delegationPane);
 }
 
+/** The learner's name and level, for the inputs the agent declares. */
+function structuredInputs() {
+  const values = { learner_name: nameInput.value.trim() || "friend", level: levelSelect.value };
+  const declared = Object.entries(values).filter(([name]) => config.agent.inputs.includes(name));
+  return declared.length ? Object.fromEntries(declared) : undefined;
+}
+
 /** The shared Python downloader's command; shown only for agents the server keeps. */
 function showDownloadCommand(conversationId) {
   if (!config.downloader || !conversationId) return;
@@ -91,7 +127,15 @@ async function handle(message) {
       if (!failed) setStatus(message.text);
       break;
     case "ready":
-      setStatus("Ready. Speak into your microphone; click Stop to end the lesson.");
+      setStatus(
+        `Ready. Speak into your microphone${session.acceptsText ? " or type below" : ""}; click Stop to end the lesson.`,
+      );
+      setTyping(
+        session.acceptsText,
+        session.acceptsText
+          ? "Type a message; the backend answers and GPT Live speaks the reply."
+          : "Typed input needs a Responses or Foundry-managed agent backend; this agent uses client delegation.",
+      );
       await audio.startCapture(microphone, (chunk) => session?.sendAudio(chunk));
       break;
     case "audio":
@@ -140,12 +184,14 @@ startButton.addEventListener("click", async () => {
   try {
     await loaded;
     if (!config) throw new Error("The agent configuration is unavailable; check the server console.");
+    // Foundry fills these into the agent's instructions and greeting for this session.
+    const inputs = structuredInputs();
     setStatus("Waiting for microphone permission…");
     microphone = await navigator.mediaDevices.getUserMedia({
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     });
     session = new LiveSession({
-      openLive: (agent) => openLiveSession({ endpoint: config.endpoint }, agent),
+      openLive: (agent) => openLiveSession({ endpoint: config.endpoint, structuredInputs: inputs }, agent),
       agent: config.agent,
       onMessage: (message) =>
         handle(message).catch((error) => {
@@ -162,13 +208,27 @@ startButton.addEventListener("click", async () => {
     setStatus(error.message, true);
   }
   releaseMicrophone();
+  setTyping(false, "Start a lesson to type a message.");
   session = undefined;
   startButton.disabled = false;
   stopButton.disabled = true;
 });
 
+typedForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const text = typedInput.value.trim();
+  if (!text || !session?.acceptsText) return;
+  typedInput.value = "";
+  appendTyped(text);
+  session
+    .sendText(text)
+    .then(() => setStatus("Typed message sent; the backend is answering."))
+    .catch((error) => setStatus(`Could not send the typed message: ${error.message}`, true));
+});
+
 stopButton.addEventListener("click", () => {
   stopButton.disabled = true;
+  setTyping(false, "Start a lesson to type a message.");
   releaseMicrophone();
   session?.stop();
 });

@@ -1,4 +1,4 @@
-"""Scrollable GPT Live, delegation, and user transcripts; no protocol handling."""
+"""Scrollable GPT Live, delegation, and user transcripts, plus a typed-message box; no protocol handling."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from rich.text import Text
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
-from textual.widgets import Static
+from textual.widgets import Input, Static
 
 # Display model/user text literally; never let embedded control codes move the cursor.
 # Preserve tabs and newlines. The accumulated transcript itself remains unchanged.
@@ -53,7 +53,7 @@ class TranscriptPane(VerticalScroll, can_focus=True):
 
 
 class TranscriptApp(App[None]):
-    """Agent on the left (GPT Live above Delegation), User on the right."""
+    """Agent on the left (GPT Live above Delegation), User on the right, a text box below."""
 
     ENABLE_COMMAND_PALETTE = False
     BINDINGS = [
@@ -115,6 +115,10 @@ class TranscriptApp(App[None]):
     #gpt-live:focus, #user:focus, #delegation-panel:focus-within {
         border: double $accent;
     }
+    #typed {
+        height: 3;
+        margin: 0 1;
+    }
     #scroll-help {
         height: 1;
         padding: 0 1;
@@ -144,13 +148,14 @@ class TranscriptApp(App[None]):
                     yield Static(id="delegation-id", markup=False)
                     yield TranscriptPane("", id="delegation")
             yield TranscriptPane("User", id="user")
+        yield Input(placeholder=self.transcript.typing_hint, id="typed", disabled=True)
         yield Static(
             "Mouse wheel / arrows / PgUp / PgDn: scroll | Home: start",
             id="scroll-help",
             markup=False,
         )
         yield Static(
-            "Tab/Shift+Tab: pane | End: follow | Ctrl+C: end lesson",
+            "Tab/Shift+Tab: pane or text box | Enter: send typed message | End: follow | Ctrl+C: end lesson",
             id="shortcuts",
             markup=False,
         )
@@ -163,6 +168,7 @@ class TranscriptApp(App[None]):
         self._delegation_panel = self.query_one("#delegation-panel")
         self._delegation_id = self.query_one("#delegation-id", Static)
         self._status_line = self.query_one("#status", Static)
+        self._typed = self.query_one("#typed", Input)
         self.query_one("#agent").border_title = "Agent"
         self._delegation_panel.border_title = "Delegation"
         self.refresh_transcripts()
@@ -211,6 +217,14 @@ class TranscriptApp(App[None]):
         if self._rendered_status != model.status:
             self._status_line.update(literal(model.status))
             self._rendered_status = model.status
+        if self._typed.is_attached and self._typed.disabled == model.typing_enabled:
+            self._typed.disabled = not model.typing_enabled
+        if self._typed.is_attached and self._typed.placeholder != model.typing_hint:
+            self._typed.placeholder = model.typing_hint
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        if self.transcript.submit_typed(event.value):
+            event.input.value = ""
 
     def action_stop_conversation(self) -> None:
         # Keep the UI alive while the caller closes the session and drains audio.
@@ -229,6 +243,10 @@ class TranscriptDisplay:
         self._latest_activity: str | None = None
         self.status = "Waiting for the Live session..."
         self.stop_requested = asyncio.Event()
+        # Messages typed in the text box, for the conversation loop to send.
+        self.typed_messages: asyncio.Queue[str] = asyncio.Queue()
+        self.typing_enabled = False
+        self.typing_hint = "Typed messages are available once the session is ready."
         self._versions = {"gpt-live": 0, "delegation": 0, "user": 0}
         self._app: TranscriptApp | None = None
         self._ui_task: asyncio.Task | None = None
@@ -240,6 +258,23 @@ class TranscriptDisplay:
     def append_user(self, delta: str):
         self.user_text += delta
         self._versions["user"] += 1
+
+    def enable_typing(self, enabled: bool, hint: str):
+        self.typing_enabled = enabled
+        self.typing_hint = hint
+
+    def submit_typed(self, text: str) -> bool:
+        """Queue a typed message; returns False when typing is unavailable or the text is blank."""
+        text = text.strip()
+        if not text or not self.typing_enabled:
+            return False
+        self.typed_messages.put_nowait(text)
+        return True
+
+    def append_typed(self, text: str):
+        """Show a typed message in the User pane on its own line."""
+        separator = "\n" if self.user_text and not self.user_text.endswith("\n") else ""
+        self.append_user(f"{separator}[typed] {text}\n")
 
     def set_status(self, message: str):
         self.status = message

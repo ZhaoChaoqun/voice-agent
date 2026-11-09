@@ -4,9 +4,12 @@ import { describe, it } from "node:test";
 
 import {
   BACKEND_INSTRUCTIONS,
+  GREETING,
+  clientAgentDefinition,
   createProject,
   deleteAgents,
   managedVoiceAgentDefinition,
+  prepareClientAgent,
   prepareManagedAgents,
   prepareResponsesAgent,
   promptAgentDefinition,
@@ -15,6 +18,23 @@ import {
 import { ENDPOINT, ENV, OfflineProject, credential } from "./offline.mjs";
 
 const quiet = () => {};
+const LESSON_INPUTS = {
+  learner_name: { description: "What the teacher calls the learner.", default_value: "friend" },
+  level: {
+    description: "The learner's English level.",
+    default_value: "intermediate",
+    schema: { type: "string", enum: ["beginner", "intermediate", "advanced"] },
+  },
+};
+
+/** Every sample's voice agent declares the lesson inputs and a template greeting that uses them. */
+function assertLessonPersonalization(definition) {
+  assert.equal(definition.model_type, "self_deployed");
+  assert.deepEqual(definition.greeting, { type: "template", text: GREETING });
+  assert.match(definition.greeting.text, /\{\{learner_name\}\}/);
+  assert.match(definition.instructions, /\{\{learner_name\}\}.*\{\{level\}\}/);
+  assert.deepEqual(definition.structured_inputs, LESSON_INPUTS);
+}
 
 function client(project) {
   return createProject(ENDPOINT, credential, { httpClient: project });
@@ -32,12 +52,22 @@ describe("agent definitions", () => {
       responses: { model: "text-model", instructions: BACKEND_INSTRUCTIONS },
     });
     assert.deepEqual(definition.audio, { format: { type: "audio/pcm", rate: 24000 }, output: { voice: "marin" } });
+    assertLessonPersonalization(definition);
+  });
+
+  it("defines a client-delegation agent that delegates the time and addition to the page", () => {
+    const definition = clientAgentDefinition(ENV);
+    assert.deepEqual(definition.delegation, { type: "client" });
+    assert.equal(definition.model, "live-model");
+    assert.match(definition.instructions, /always delegate before answering/);
+    assertLessonPersonalization(definition);
   });
 
   it("pins the managed prompt agent version with plain-text output", () => {
     const voice = managedVoiceAgentDefinition("live", "prompt", 7);
     assert.deepEqual(voice.delegation, { type: "foundry_managed_agent", agent_name: "prompt", agent_version: "7" });
     assert.equal(voice.store, true);
+    assertLessonPersonalization(voice);
     const prompt = promptAgentDefinition("text");
     assert.deepEqual(prompt.text, { format: { type: "text" } });
     assert.match(prompt.instructions, /\[commentary\]/);
@@ -55,7 +85,8 @@ describe("prepareResponsesAgent", () => {
     assert.equal(project.created[0].features, "VoiceAgents=V1Preview");
     assert.deepEqual(created, [agent.name]);
     assert.deepEqual(agent, {
-      name: project.created[0].name, version: "3", managedDelegation: false, backendModel: "text-model",
+      name: project.created[0].name, version: "3", managedDelegation: false, clientDelegation: false,
+      backendModel: "text-model", inputs: ["learner_name", "level"],
     });
   });
 
@@ -70,7 +101,11 @@ describe("prepareResponsesAgent", () => {
     assert.deepEqual(project.created, []);
     assert.deepEqual(created, []);
     assert.deepEqual(project.deploymentChecks(), ["saved-live"]);
-    assert.deepEqual(agent, { name: "teacher", version: "5", managedDelegation: true, backendModel: "saved-prompt:2" });
+    // The saved agent declares no structured inputs, so the page sends none.
+    assert.deepEqual(agent, {
+      name: "teacher", version: "5", managedDelegation: true, clientDelegation: false,
+      backendModel: "saved-prompt:2", inputs: [],
+    });
   });
 
   it("rejects a missing or Realtime agent", async () => {
@@ -79,6 +114,21 @@ describe("prepareResponsesAgent", () => {
       const project = new OfflineProject(agents);
       await assert.rejects(prepareResponsesAgent(client(project), { ...ENV, AGENT_NAME: "teacher" }, quiet, []), message);
     }
+  });
+});
+
+describe("prepareClientAgent", () => {
+  it("ignores AGENT_NAME, checks only the GPT Live deployment, and creates a client agent", async () => {
+    const project = new OfflineProject({ teacher: { version: "5", definition: {} } });
+    const created = [];
+    const agent = await prepareClientAgent(client(project), { ...ENV, AGENT_NAME: "teacher" }, quiet, created);
+    assert.deepEqual(project.deploymentChecks(), ["live-model"]);
+    assert.deepEqual(project.created.map(({ definition }) => definition.delegation), [{ type: "client" }]);
+    assert.deepEqual(created, [agent.name]);
+    assert.deepEqual(agent, {
+      name: project.created[0].name, version: "3", managedDelegation: false, clientDelegation: true,
+      backendModel: "this page", inputs: ["learner_name", "level"],
+    });
   });
 });
 
@@ -96,8 +146,10 @@ describe("prepareManagedAgents", () => {
     assert.deepEqual(project.deploymentChecks(), ["live-model", "text-model"]);
     assert.deepEqual(created, [prompt.name, voice.name]);
     assert.deepEqual(agent, {
-      name: voice.name, version: "3", managedDelegation: true, backendModel: `${prompt.name}:7`,
+      name: voice.name, version: "3", managedDelegation: true, clientDelegation: false,
+      backendModel: `${prompt.name}:7`, inputs: ["learner_name", "level"],
     });
+    assertLessonPersonalization(voice.definition);
   });
 
   it("records only the prompt agent when voice-agent creation fails", async () => {

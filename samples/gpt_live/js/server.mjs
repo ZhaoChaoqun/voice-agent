@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Browser GPT Live English teacher. The Node server creates or reuses the agents with the
 // Azure AI Projects SDK, serves the page, and gives the page an access token from your az login
-// session. The page connects to GPT Live directly with the SDK's Live client; no audio or Live
+// session. The page connects to GPT Live directly with the SDK's Live client, sends the learner's
+// name and level as structured inputs, and answers client delegations itself; no audio or Live
 // events pass through this server.
 import { config } from "dotenv";
 import { realpathSync } from "node:fs";
@@ -11,9 +12,12 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
 import {
+  DEFAULT_LEVEL,
   DemoError,
+  LEVELS,
   createProject,
   deleteAgents,
+  prepareClientAgent,
   prepareManagedAgents,
   prepareResponsesAgent,
   projectCredential,
@@ -22,12 +26,15 @@ import {
 import { browserBundle } from "./browser_bundle.mjs";
 import { toolsPromptAgentDefinition, toolsVoiceAgentDefinition } from "./tools.mjs";
 
-const USAGE = `Usage: node server.mjs [--managed] [--auto-delete] [--port 8080]
+const USAGE = `Usage: node server.mjs [--managed | --client] [--auto-delete] [--port 8080]
 
   (default)      Create an English-teacher GPT Live agent with Responses delegation,
                  or reuse AGENT_NAME from samples/gpt_live/.env.
   --managed      Create a prompt agent with an MCP calculator and a local date/time function,
                  and a GPT Live agent pinned to it (Foundry-managed delegation).
+                 Ignores AGENT_NAME.
+  --client       Create a GPT Live agent whose delegations the page answers itself: the
+                 current time and adding two whole numbers (client delegation).
                  Ignores AGENT_NAME.
   --auto-delete  Delete only the agents created by this run when the server stops.
   --port         Local port (default 8080). The server listens on 127.0.0.1 only.`;
@@ -96,13 +103,19 @@ export function createServer({ credential, agent, endpoint, keepAgent = true, lo
             name: agent.name,
             version: agent.version,
             managedDelegation: agent.managedDelegation,
+            clientDelegation: agent.clientDelegation,
             backendModel: agent.backendModel,
+            inputs: agent.inputs,
           },
           delegation: agent.tools
             ? "Foundry-managed prompt agent (MCP calculator, local date/time function)"
             : agent.managedDelegation
               ? "Foundry-managed prompt agent"
-              : "Responses",
+              : agent.clientDelegation
+                ? "Client (this page answers the time and addition)"
+                : "Responses",
+          levels: LEVELS,
+          defaultLevel: DEFAULT_LEVEL,
           downloader: keepAgent ? DOWNLOADER : null,
         }),
       );
@@ -156,6 +169,7 @@ export async function main({ argv = [], env = process.env, credential, clientOpt
     args: argv,
     options: {
       managed: { type: "boolean", default: false },
+      client: { type: "boolean", default: false },
       "auto-delete": { type: "boolean", default: false },
       port: { type: "string", default: "8080" },
       help: { type: "boolean", default: false },
@@ -166,6 +180,7 @@ export async function main({ argv = [], env = process.env, credential, clientOpt
     log(USAGE);
     return undefined;
   }
+  if (values.managed && values.client) throw new DemoError("Choose either --managed or --client.");
   const port = Number(values.port);
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new DemoError("--port must be 0-65535.");
   const autoDelete = values["auto-delete"];
@@ -190,7 +205,9 @@ export async function main({ argv = [], env = process.env, credential, clientOpt
           })),
           tools: true,
         }
-      : await prepareResponsesAgent(project, env, log, created);
+      : values.client
+        ? await prepareClientAgent(project, env, log, created)
+        : await prepareResponsesAgent(project, env, log, created);
     await browserBundle();
     app = createServer({ credential, agent, endpoint, keepAgent: !autoDelete || !created.includes(agent.name), log });
     listening = await app.listen(port);

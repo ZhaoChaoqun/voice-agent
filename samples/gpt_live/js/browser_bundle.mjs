@@ -1,12 +1,13 @@
-// Bundles the page's modules and the Projects SDK into one browser script with esbuild.
-// The preview SDK package targets Node.js. The page only uses its Live client, so the Node-only
-// modules the package also imports (its ws transport, proxy agent, and file helpers) become
-// empty stubs; the page always passes its own transport (public/live-transport.js).
+// Bundles the page's modules and the Projects SDK into one browser script with esbuild, using the
+// SDK package's browser build. The page uses only the SDK's Live client. The package's entry point
+// also re-exports AIProjectClient, which imports the OpenAI SDK for its Responses helpers; esbuild
+// would keep that package because it does not declare itself free of side effects. Declaring it so
+// lets esbuild drop the unused OpenAI code: the page never loads or calls the OpenAI SDK.
 import { build } from "esbuild";
 import { fileURLToPath } from "node:url";
 
 const ENTRY = fileURLToPath(new URL("./public/app.js", import.meta.url));
-const NODE_ONLY = /^(ws|https-proxy-agent|node:.+)$/;
+const UNUSED_PACKAGES = /^openai(\/.*)?$/;
 
 let bundle;
 
@@ -22,13 +23,13 @@ export function browserBundle() {
     logLevel: "silent",
     plugins: [
       {
-        name: "node-only-stubs",
+        name: "unused-openai",
         setup(builder) {
-          builder.onResolve({ filter: NODE_ONLY }, ({ path }) => ({ path, namespace: "node-only" }));
-          builder.onLoad({ filter: /.*/, namespace: "node-only" }, () => ({
-            contents: "module.exports = {};",
-            loader: "js",
-          }));
+          builder.onResolve({ filter: UNUSED_PACKAGES }, async ({ path, kind, importer, resolveDir, pluginData }) => {
+            if (pluginData === "resolving") return undefined;
+            const resolved = await builder.resolve(path, { kind, importer, resolveDir, pluginData: "resolving" });
+            return { ...resolved, sideEffects: false };
+          });
         },
       },
     ],

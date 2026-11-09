@@ -4,7 +4,6 @@ import assert from "node:assert/strict";
 import http from "node:http";
 import { describe, it } from "node:test";
 
-import { LIVE_API_VERSION } from "../public/live-transport.js";
 import { TOKEN_SCOPE, main } from "../server.mjs";
 import { MCP_SERVER_URL } from "../tools.mjs";
 import { ENDPOINT, ENV, OfflineProject, clientOptions } from "./offline.mjs";
@@ -13,7 +12,7 @@ import { ENDPOINT, ENV, OfflineProject, clientOptions } from "./offline.mjs";
  * Starts the sample on a free port with offline stand-ins. After startup, the credential
  * records the scopes the page's token requests ask for and can be made to fail.
  */
-async function start({ argv = [], project = new OfflineProject() } = {}) {
+async function start({ argv = [], project = new OfflineProject(), env = {} } = {}) {
   const scopes = [];
   let started = false;
   const credential = {
@@ -29,7 +28,7 @@ async function start({ argv = [], project = new OfflineProject() } = {}) {
   const lines = [];
   const running = await main({
     argv: [...argv, "--port", "0"],
-    env: ENV,
+    env: { ...ENV, ...env },
     credential,
     clientOptions: clientOptions(project),
     log: (line) => lines.push(line),
@@ -104,12 +103,19 @@ describe("HTTP surface", () => {
     const page = await request(port, "/");
     assert.equal(page.status, 200);
     assert.match(page.body, /GPT Live English teacher/);
+    // The lesson inputs and the typed-message box.
+    for (const id of ["learner-name", "level", "typed", "send"]) assert.ok(page.body.includes(`id="${id}"`), id);
     // The page script bundles the SDK's Live client and the browser transport.
     const script = await request(port, "/app.js");
     assert.equal(script.status, 200);
     assert.match(script.type, /text\/javascript/);
-    assert.ok(script.body.includes("authorization.bearer.") && script.body.includes(LIVE_API_VERSION));
+    assert.ok(script.body.includes("authorization.bearer.") && script.body.includes("foundry_features"));
+    // The page answers client delegations and runs the managed agent's local function.
+    assert.ok(script.body.includes("Client delegation") && script.body.includes("get_current_datetime"));
     assert.ok(!script.body.includes('from "ws"'));
+    // The SDK's browser build, without the OpenAI SDK that its unused AIProjectClient imports.
+    assert.ok(!/api.openai.com|class OpenAI/.test(script.body));
+    assert.ok(script.body.length < 400_000, `bundle is ${script.body.length} bytes`);
     for (const path of ["/pcm-capture.js", "/style.css"]) assert.equal((await request(port, path)).status, 200, path);
     for (const path of ["/live-session.js", "/server.mjs", "/../agents.mjs", "/%2e%2e/agents.mjs", "/package.json"]) {
       assert.equal((await request(port, path)).status, 404, path);
@@ -120,8 +126,13 @@ describe("HTTP surface", () => {
       { ...config, downloader: undefined },
       {
         endpoint: ENDPOINT,
-        agent: { name: project.created[0].name, version: "3", managedDelegation: false, backendModel: "text-model" },
+        agent: {
+          name: project.created[0].name, version: "3", managedDelegation: false, clientDelegation: false,
+          backendModel: "text-model", inputs: ["learner_name", "level"],
+        },
         delegation: "Responses",
+        levels: ["beginner", "intermediate", "advanced"],
+        defaultLevel: "intermediate",
         downloader: undefined,
       },
     );
@@ -172,6 +183,27 @@ describe("HTTP surface", () => {
 });
 
 describe("agent lifecycle", () => {
+  it("creates a client-delegation agent with --client, ignoring AGENT_NAME", async () => {
+    const project = new OfflineProject({ teacher: { version: "5", definition: {} } });
+    const { running } = await start({ argv: ["--client", "--auto-delete"], project, env: { AGENT_NAME: "teacher" } });
+    const config = JSON.parse((await request(running.port, "/config")).body);
+    await running.stop();
+    const [agent] = project.created;
+    assert.deepEqual(agent.definition.delegation, { type: "client" });
+    assert.equal(config.delegation, "Client (this page answers the time and addition)");
+    assert.deepEqual(config.agent, {
+      name: agent.name, version: "3", managedDelegation: false, clientDelegation: true,
+      backendModel: "this page", inputs: ["learner_name", "level"],
+    });
+    assert.deepEqual(project.deleted, [agent.name]);
+  });
+
+  it("refuses --managed together with --client before creating anything", async () => {
+    const project = new OfflineProject();
+    await assert.rejects(start({ argv: ["--managed", "--client"], project }), /either --managed or --client/);
+    assert.deepEqual(project.created, []);
+  });
+
   it("keeps agents by default and offers the download command", async () => {
     const { running, project, lines } = await start();
     await running.stop();
@@ -196,7 +228,10 @@ describe("agent lifecycle", () => {
     assert.equal(prompt.definition.tools[0].server_url, MCP_SERVER_URL);
     assert.match(voice.definition.instructions, /MCP calculator and a client-computer clock function/);
     assert.match(config.delegation, /MCP calculator, local date\/time function/);
-    assert.deepEqual(config.agent, { name: voice.name, version: "3", managedDelegation: true, backendModel: `${prompt.name}:7` });
+    assert.deepEqual(config.agent, {
+      name: voice.name, version: "3", managedDelegation: true, clientDelegation: false,
+      backendModel: `${prompt.name}:7`, inputs: ["learner_name", "level"],
+    });
     assert.deepEqual(project.deleted, [voice.name, prompt.name]);
   });
 });

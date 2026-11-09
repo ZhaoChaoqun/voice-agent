@@ -173,10 +173,11 @@ class ManagedToolHandler:
             await connection.response.create()
 
 
-async def main(*, create_only=False, auto_delete=False):
+async def main(*, create_only=False, auto_delete=False, **lesson):
     await managed.main(
         create_only=create_only,
         auto_delete=auto_delete,
+        **lesson,
         prompt_definition=prompt_agent_definition,
         voice_definition=voice_agent_definition,
         event_handler=ManagedToolHandler(),

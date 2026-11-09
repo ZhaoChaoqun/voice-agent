@@ -1,6 +1,7 @@
 // Runs one GPT Live session in the page with the Projects SDK. The page passes raw PCM16
-// microphone chunks to sendAudio() and calls stop(); the session reports UI messages to
-// onMessage: status, ready, audio, transcript, delegation, error, and closed.
+// microphone chunks to sendAudio(), typed messages to sendText(), and calls stop(); the session
+// reports UI messages to onMessage: status, ready, audio, transcript, delegation, error, and closed.
+import { answerClientDelegation } from "./client-backend.js";
 import { ManagedToolHandler } from "./local-tools.js";
 import { RATE } from "./pcm-audio.js";
 
@@ -16,6 +17,10 @@ const BACKEND_STATUSES = {
 const BACKEND_FAILURES = new Set(["error", "response.failed", "response.incomplete"]);
 const CLIENT_DELEGATION_REPLY =
   "This demo uses a Responses backend, not a client executor. Please continue the English lesson.";
+/** How long the learner's transcript must be quiet before a client delegation is answered. */
+const TRANSCRIPT_QUIET_MS = 600;
+const TRANSCRIPT_WAIT_MS = 3000;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** A one-line description of an error, including the cause the SDK wraps. */
 export function describeError(error) {
@@ -28,14 +33,24 @@ export function describeError(error) {
  * their terminal panes. Throws for failures that should end the session.
  */
 export class LiveEventTranslator {
-  constructor({ managedDelegation, backendModel, send, appendCommentary, toolHandler }) {
+  /**
+   * answerClient(delegationId, learnerSaid) replies to a client delegation; onFailure(error)
+   * reports a reply that failed after the event loop moved on.
+   */
+  constructor({ managedDelegation, backendModel, send, answerClient, onFailure = () => {}, toolHandler }) {
     this.managedDelegation = managedDelegation;
     this.backendModel = backendModel;
     this.send = send;
-    this.appendCommentary = appendCommentary;
+    this.answerClient = answerClient;
+    this.onFailure = onFailure;
     // Managed sessions run the prompt agent's local function calls; see local-tools.js.
     this.toolHandler = toolHandler;
     this.title = managedDelegation ? "Managed delegation" : "Delegation";
+    this.learnerSaid = ""; // Input transcript since the previous client delegation.
+    this.lastInputAt = 0;
+    this.answers = new Set();
+    this.typedEvents = new Set(); // event_ids of typed-message commands, to correlate replies and errors.
+    this.typedDelegations = new Set(); // Delegations that answer a typed message.
     this.replied = new Set();
     this.forwarded = new Set();
     this.latestDelegation = undefined;
@@ -60,6 +75,12 @@ export class LiveEventTranslator {
         break;
       }
       case "error":
+        if (this.typedEvents.has(event.error?.client_event_id)) {
+          // The service rejected a typed message; the session continues.
+          this.send({ type: "status", text: `Typed message not accepted: ${event.error.code ?? event.error.message}` });
+          break;
+        }
+        throw new Error(`Live error: ${event.error?.message ?? event.type}`);
       case "transport.failed":
         throw new Error(`Live error: ${event.error?.message ?? event.type}`);
       case "session.output_audio.delta":
@@ -67,16 +88,31 @@ export class LiveEventTranslator {
         this.send({ type: "audio", delta: event.delta });
         break;
       case "session.input_transcript.delta":
+        this.learnerSaid += event.delta;
+        this.lastInputAt = Date.now();
         this.send({ type: "transcript", role: "user", delta: event.delta });
         break;
       case "session.output_transcript.delta":
         this.send({ type: "transcript", role: "teacher", delta: event.delta });
         break;
       case "session.delegation.created":
-        await this.delegationCreated(event.delegation);
+        // A delegation that answers a typed message names its response.create event_id.
+        await this.delegationCreated(event.delegation, this.typedEvents.has(event.client_event_id));
         break;
       case "response.event":
         this.backendEvent(event);
+        break;
+      case "unknown":
+        // Foundry sends session.delegation.done when a managed delegation finishes. The SDK does
+        // not model it yet, so it arrives as an unknown event carrying the service's payload.
+        if (event.eventType === "session.delegation.done") {
+          const { delegation_id: id, status, error_code: errorCode } = event.rawEvent;
+          this.send({
+            type: "delegation",
+            id: id ?? "uncorrelated-backend",
+            status: `Delegation done: ${status}${errorCode ? ` (${errorCode})` : ""}`,
+          });
+        }
         break;
       case "session.commentary.appended":
       case "session.thinking.appended":
@@ -102,7 +138,9 @@ export class LiveEventTranslator {
     }
   }
 
-  async delegationCreated({ id, target }) {
+  async delegationCreated({ id, target }, typed = false) {
+    if (typed) this.typedDelegations.add(id);
+    const suffix = this.typedSuffix(id);
     this.latestDelegation = id;
     if (this.managedDelegation) {
       // Managed sessions keep the native event, but Foundry reports itself as the owner:
@@ -116,7 +154,7 @@ export class LiveEventTranslator {
       this.send({
         type: "delegation",
         id,
-        title: `${this.title} → ${this.backendModel}`,
+        title: `${this.title} → ${this.backendModel}${suffix}`,
         status: "Prompt agent delegation requested",
       });
       return;
@@ -124,13 +162,32 @@ export class LiveEventTranslator {
     this.send({
       type: "delegation",
       id,
-      title: `${this.title} → ${target === "responses" ? this.backendModel : target}`,
+      title: `${this.title} → ${target === "responses" ? this.backendModel : target}${suffix}`,
       status: "Delegation requested",
     });
     if (target === "client" && !this.replied.has(id)) {
+      // GPT Live waits for this page's commentary tied to the delegation ID. Answer without
+      // blocking the event loop, so the teacher's audio keeps playing meanwhile.
       this.replied.add(id);
-      await this.appendCommentary(CLIENT_DELEGATION_REPLY, id);
+      const answer = this.replyToClient(id).catch((error) => this.onFailure(error));
+      this.answers.add(answer);
+      answer.finally(() => this.answers.delete(answer));
     }
+  }
+
+  async replyToClient(id) {
+    // session.delegation.created does not repeat the request, and the learner's transcript
+    // can still be arriving. Wait until it is quiet (at most 3 seconds), then answer from
+    // what the learner said since the previous client delegation.
+    const deadline = Date.now() + TRANSCRIPT_WAIT_MS;
+    while (Date.now() < deadline && Date.now() - this.lastInputAt < TRANSCRIPT_QUIET_MS) await sleep(100);
+    const learnerSaid = this.learnerSaid.trim();
+    this.learnerSaid = "";
+    await this.answerClient(id, learnerSaid);
+  }
+
+  typedSuffix(id) {
+    return this.typedDelegations.has(id) ? " (typed message)" : "";
   }
 
   backendEvent(event) {
@@ -148,7 +205,7 @@ export class LiveEventTranslator {
       this.send({
         type: "delegation",
         id,
-        title: `${event.delegation_id ? this.title : "Uncorrelated backend"} → ${this.backendModel}`,
+        title: `${event.delegation_id ? this.title : "Uncorrelated backend"} → ${this.backendModel}${this.typedSuffix(id)}`,
         status,
         delta: kind === "response.output_text.delta" ? (backend.delta ?? "") : "",
       });
@@ -173,10 +230,18 @@ export class LiveSession {
     this.log = log;
     this.stopping = false;
     this.sending = Promise.resolve();
+    const report = (id, title, status, delta) => onMessage({ type: "delegation", id, title, status, delta });
     this.translator = new LiveEventTranslator({
       ...agent,
       send: onMessage,
-      appendCommentary: (content, delegationId) => this.connection.appendCommentary(content, { delegationId }),
+      // Client-delegation agents make this page the backend; see client-backend.js.
+      answerClient: agent.clientDelegation
+        ? (id, learnerSaid) => answerClientDelegation(this.connection, id, learnerSaid, report)
+        : (id) => this.connection.appendCommentary(CLIENT_DELEGATION_REPLY, { delegationId: id }),
+      onFailure: (error) => {
+        this.onMessage({ type: "error", message: `Client delegation failed: ${describeError(error)}` });
+        this.stop();
+      },
       toolHandler: agent.managedDelegation
         ? new ManagedToolHandler({
             sendRaw: (event) => this.sendRaw(event),
@@ -187,6 +252,35 @@ export class LiveSession {
   }
 
   /** Streams one raw PCM16 microphone chunk once the session has started. */
+  /** Whether this agent's backend answers typed messages; client delegation has none. */
+  get acceptsText() {
+    return !this.agent.clientDelegation;
+  }
+
+  /**
+   * Sends a typed message to the session's backend: a user message item, then a request to answer
+   * it. With Responses delegation GPT Live delegates it to the backend; with a Foundry-managed
+   * agent, Foundry runs the agent. GPT Live speaks the answer.
+   */
+  async sendText(text) {
+    if (!this.connection || this.stopping || !this.translator.ready) throw new Error("The session is not ready.");
+    if (!this.acceptsText) throw new Error("Typed input needs a Responses or Foundry-managed agent backend.");
+    const random = () => Math.random().toString(16).slice(2, 14);
+    const itemId = `typed-${random()}`;
+    const runId = `typed-run-${random()}`;
+    this.translator.typedEvents.add(itemId).add(runId);
+    const item = { type: "message", role: "user", content: [{ type: "input_text", text }] };
+    if (this.agent.managedDelegation) {
+      // This preview SDK refuses both commands outside Responses delegation, so send them on the
+      // sample's transport, as for local function results (see live-transport.js).
+      await this.sendRaw({ type: "response.item.create", event_id: itemId, item });
+      await this.sendRaw({ type: "response.create", event_id: runId });
+    } else {
+      await this.connection.sendResponseItem(item, { eventId: itemId });
+      await this.connection.requestResponse({ eventId: runId });
+    }
+  }
+
   sendAudio(chunk) {
     if (!this.connection || this.stopping || !this.translator.ready) return;
     const bytes = new Uint8Array(chunk);
@@ -215,6 +309,7 @@ export class LiveSession {
         this.stop();
       }
       for await (const event of this.connection) await this.translator.handle(event);
+      await Promise.allSettled([...this.translator.answers]);
     } catch (error) {
       failure = error;
       this.onMessage({ type: "error", message: describeError(error) });

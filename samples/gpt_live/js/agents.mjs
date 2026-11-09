@@ -1,6 +1,7 @@
 // Settings, agent definitions, and agent lifecycle for the GPT Live browser sample.
 // These mirror the Python samples in ../python: response_delegation.py creates or reuses a
-// Responses-delegation agent, and prompt_agent_delegation.py pins a managed prompt agent.
+// Responses-delegation agent, prompt_agent_delegation.py pins a managed prompt agent, and
+// client_delegation.py makes the app the backend.
 import { AIProjectClient, isRestError } from "@azure/ai-projects";
 import { AzureCliCredential } from "@azure/identity";
 import { randomUUID } from "node:crypto";
@@ -21,6 +22,39 @@ export const BACKEND_INSTRUCTIONS =
   "You are an expert English teacher supporting a spoken English lesson. " +
   "Give one accurate, concise grammar explanation and one example or corrected sentence. " +
   "Write guidance for the voice teacher, not a long essay.";
+
+// Structured inputs personalize each lesson. The agent declares them, its instructions and
+// greeting use them as {{placeholders}}, and each session supplies values when it connects.
+export const LEVELS = ["beginner", "intermediate", "advanced"];
+export const DEFAULT_LEVEL = "intermediate";
+export const LESSON_CONTEXT =
+  " The learner's name is {{learner_name}}, and their English level is {{level}}. " +
+  "Match your vocabulary, sentence length, and pace to that level.";
+export const GREETING = "Hi {{learner_name}}! I'm your English teacher. What would you like to practice today?";
+
+export const CLIENT_POLICY =
+  " Delegation policy: this app is your backend. It reads the current date and time " +
+  "from the learner's computer and adds two whole numbers. For any question about the " +
+  "current date or time, or any request to add two numbers, always delegate before " +
+  "answering, then say the app's commentary naturally. Do not guess the time or " +
+  "calculate yourself. Handle greetings and English practice yourself; do not delegate them.";
+
+/** The structured inputs every English-teacher agent in these samples declares. */
+export function lessonInputs() {
+  return {
+    learner_name: { description: "What the teacher calls the learner.", default_value: "friend" },
+    level: {
+      description: "The learner's English level.",
+      default_value: DEFAULT_LEVEL,
+      schema: { type: "string", enum: [...LEVELS] },
+    },
+  };
+}
+
+/** GPT Live speaks this template greeting, with structured inputs filled in, at session start. */
+export function lessonGreeting() {
+  return { type: "template", text: GREETING };
+}
 
 export const PROMPT_INSTRUCTIONS = `You are an expert English teacher supporting a spoken lesson.
 For corrections and grammar questions, give one corrected sentence or example and
@@ -108,9 +142,12 @@ export function responsesAgentDefinition(env) {
     model: required(env, "GPT_LIVE_DEPLOYMENT"),
     instructions:
       ENGLISH_TEACHER_INSTRUCTIONS +
+      LESSON_CONTEXT +
       " Handle greetings and casual conversation yourself. For grammar corrections, " +
       "grammar explanations, or lesson planning, always delegate to the Responses " +
       "English-teacher backend first, then explain its guidance aloud.",
+    greeting: lessonGreeting(),
+    structured_inputs: lessonInputs(),
     audio: liveAudio(),
     delegation: {
       type: "responses",
@@ -139,6 +176,7 @@ export function managedVoiceAgentDefinition(model, promptName, promptVersion) {
     model,
     instructions:
       ENGLISH_TEACHER_INSTRUCTIONS +
+      LESSON_CONTEXT +
       "\nBackchannel policy: Briefly acknowledge the learner while waiting." +
       "\nInterruption policy: Stop speaking and listen when interrupted." +
       "\nDelegation policy: Your backend is an English-teacher specialist. " +
@@ -148,10 +186,30 @@ export function managedVoiceAgentDefinition(model, promptName, promptVersion) {
       "commentary naturally without mentioning tags or internal agents. " +
       "Thinking is factual context, not text to read aloud. Do not delegate " +
       "again just to repeat guidance already received.",
+    greeting: lessonGreeting(),
+    structured_inputs: lessonInputs(),
     audio: liveAudio(),
     // Pin the prompt agent's exact returned version. tagged_text is the default result
     // format, as in the Foundry demo portal.
     delegation: { type: "foundry_managed_agent", agent_name: promptName, agent_version: String(promptVersion) },
+    store: true,
+  };
+}
+
+/** A GPT Live English teacher whose delegations go to the page, not a Foundry backend. */
+export function clientAgentDefinition(env) {
+  return {
+    kind: "voice",
+    sub_protocol: "live",
+    model_type: "self_deployed",
+    model: required(env, "GPT_LIVE_DEPLOYMENT"),
+    instructions: ENGLISH_TEACHER_INSTRUCTIONS + LESSON_CONTEXT + CLIENT_POLICY,
+    greeting: lessonGreeting(),
+    structured_inputs: lessonInputs(),
+    audio: liveAudio(),
+    // GPT Live reports each delegation as target "client" and waits for the page's
+    // commentary tied to the delegation ID.
+    delegation: { type: "client" },
     store: true,
   };
 }
@@ -202,13 +260,20 @@ export function definitionDeployments(definition) {
 /**
  * Creates an English-teacher agent with Responses delegation, or reuses AGENT_NAME's latest
  * version without creating, updating, or deleting it. Created agent names go into `created`.
+ * prepareClientAgent passes the client-delegation definition and never reuses AGENT_NAME.
  */
-export async function prepareResponsesAgent(project, env, log, created) {
-  const existingAgent = env.AGENT_NAME?.trim();
+export async function prepareResponsesAgent(
+  project,
+  env,
+  log,
+  created,
+  { definition: definitionFor = responsesAgentDefinition, reuseAgentName = true } = {},
+) {
+  const existingAgent = reuseAgentName ? env.AGENT_NAME?.trim() : "";
   const name = existingAgent || `english-teacher-${randomUUID().replaceAll("-", "").slice(0, 12)}`;
   let version;
   if (!existingAgent) {
-    const definition = responsesAgentDefinition(env);
+    const definition = definitionFor(env);
     await checkDeployments(project, definitionDeployments(definition), log);
     const agent = await serviceCall("Create agent", () => project.agents.create(name, definition, PREVIEW));
     created.push(name);
@@ -234,10 +299,21 @@ export async function prepareResponsesAgent(project, env, log, created) {
     name,
     version: String(version),
     managedDelegation,
+    clientDelegation: delegation.type === "client",
     backendModel: managedDelegation
       ? `${delegation.agent_name}:${delegation.agent_version ?? "active"}`
-      : (delegation.responses?.model ?? delegation.type ?? "client"),
+      : (delegation.responses?.model ?? (delegation.type === "client" ? "this page" : delegation.type)),
+    // The page supplies values only for inputs the agent declares; an AGENT_NAME agent may declare none.
+    inputs: Object.keys(definition.structured_inputs ?? {}),
   };
+}
+
+/** Always creates a fresh client-delegation agent; AGENT_NAME is for the Responses mode. */
+export function prepareClientAgent(project, env, log, created) {
+  return prepareResponsesAgent(project, env, log, created, {
+    definition: clientAgentDefinition,
+    reuseAgentName: false,
+  });
 }
 
 /**
@@ -294,7 +370,9 @@ export async function prepareManagedAgents(
     name: voiceName,
     version: voiceVersion,
     managedDelegation: true,
+    clientDelegation: false,
     backendModel: `${promptName}:${promptVersion}`,
+    inputs: Object.keys(saved.structured_inputs ?? {}),
   };
 }
 
