@@ -103,6 +103,8 @@ describe("HTTP surface", () => {
     const page = await request(port, "/");
     assert.equal(page.status, 200);
     assert.match(page.body, /GPT Live English teacher/);
+    // The lesson inputs and the typed-message box.
+    for (const id of ["learner-name", "level", "typed", "send"]) assert.ok(page.body.includes(`id="${id}"`), id);
     // The page script bundles the SDK's Live client and the browser transport.
     const script = await request(port, "/app.js");
     assert.equal(script.status, 200);

@@ -1,6 +1,6 @@
 // Runs one GPT Live session in the page with the Projects SDK. The page passes raw PCM16
-// microphone chunks to sendAudio() and calls stop(); the session reports UI messages to
-// onMessage: status, ready, audio, transcript, delegation, error, and closed.
+// microphone chunks to sendAudio(), typed messages to sendText(), and calls stop(); the session
+// reports UI messages to onMessage: status, ready, audio, transcript, delegation, error, and closed.
 import { answerClientDelegation } from "./client-backend.js";
 import { ManagedToolHandler } from "./local-tools.js";
 import { RATE } from "./pcm-audio.js";
@@ -49,6 +49,8 @@ export class LiveEventTranslator {
     this.learnerSaid = ""; // Input transcript since the previous client delegation.
     this.lastInputAt = 0;
     this.answers = new Set();
+    this.typedEvents = new Set(); // event_ids of typed-message commands, to correlate replies and errors.
+    this.typedDelegations = new Set(); // Delegations that answer a typed message.
     this.replied = new Set();
     this.forwarded = new Set();
     this.latestDelegation = undefined;
@@ -73,6 +75,12 @@ export class LiveEventTranslator {
         break;
       }
       case "error":
+        if (this.typedEvents.has(event.error?.client_event_id)) {
+          // The service rejected a typed message; the session continues.
+          this.send({ type: "status", text: `Typed message not accepted: ${event.error.code ?? event.error.message}` });
+          break;
+        }
+        throw new Error(`Live error: ${event.error?.message ?? event.type}`);
       case "transport.failed":
         throw new Error(`Live error: ${event.error?.message ?? event.type}`);
       case "session.output_audio.delta":
@@ -88,7 +96,8 @@ export class LiveEventTranslator {
         this.send({ type: "transcript", role: "teacher", delta: event.delta });
         break;
       case "session.delegation.created":
-        await this.delegationCreated(event.delegation);
+        // A delegation that answers a typed message names its response.create event_id.
+        await this.delegationCreated(event.delegation, this.typedEvents.has(event.client_event_id));
         break;
       case "response.event":
         this.backendEvent(event);
@@ -129,7 +138,9 @@ export class LiveEventTranslator {
     }
   }
 
-  async delegationCreated({ id, target }) {
+  async delegationCreated({ id, target }, typed = false) {
+    if (typed) this.typedDelegations.add(id);
+    const suffix = this.typedSuffix(id);
     this.latestDelegation = id;
     if (this.managedDelegation) {
       // Managed sessions keep the native event, but Foundry reports itself as the owner:
@@ -143,7 +154,7 @@ export class LiveEventTranslator {
       this.send({
         type: "delegation",
         id,
-        title: `${this.title} → ${this.backendModel}`,
+        title: `${this.title} → ${this.backendModel}${suffix}`,
         status: "Prompt agent delegation requested",
       });
       return;
@@ -151,7 +162,7 @@ export class LiveEventTranslator {
     this.send({
       type: "delegation",
       id,
-      title: `${this.title} → ${target === "responses" ? this.backendModel : target}`,
+      title: `${this.title} → ${target === "responses" ? this.backendModel : target}${suffix}`,
       status: "Delegation requested",
     });
     if (target === "client" && !this.replied.has(id)) {
@@ -175,6 +186,10 @@ export class LiveEventTranslator {
     await this.answerClient(id, learnerSaid);
   }
 
+  typedSuffix(id) {
+    return this.typedDelegations.has(id) ? " (typed message)" : "";
+  }
+
   backendEvent(event) {
     // Backend guidance is not the spoken teacher transcript. In managed mode this is the
     // prompt agent's raw tagged-text output; Foundry validates it and forwards only
@@ -190,7 +205,7 @@ export class LiveEventTranslator {
       this.send({
         type: "delegation",
         id,
-        title: `${event.delegation_id ? this.title : "Uncorrelated backend"} → ${this.backendModel}`,
+        title: `${event.delegation_id ? this.title : "Uncorrelated backend"} → ${this.backendModel}${this.typedSuffix(id)}`,
         status,
         delta: kind === "response.output_text.delta" ? (backend.delta ?? "") : "",
       });
@@ -237,6 +252,35 @@ export class LiveSession {
   }
 
   /** Streams one raw PCM16 microphone chunk once the session has started. */
+  /** Whether this agent's backend answers typed messages; client delegation has none. */
+  get acceptsText() {
+    return !this.agent.clientDelegation;
+  }
+
+  /**
+   * Sends a typed message to the session's backend: a user message item, then a request to answer
+   * it. With Responses delegation GPT Live delegates it to the backend; with a Foundry-managed
+   * agent, Foundry runs the agent. GPT Live speaks the answer.
+   */
+  async sendText(text) {
+    if (!this.connection || this.stopping || !this.translator.ready) throw new Error("The session is not ready.");
+    if (!this.acceptsText) throw new Error("Typed input needs a Responses or Foundry-managed agent backend.");
+    const random = () => Math.random().toString(16).slice(2, 14);
+    const itemId = `typed-${random()}`;
+    const runId = `typed-run-${random()}`;
+    this.translator.typedEvents.add(itemId).add(runId);
+    const item = { type: "message", role: "user", content: [{ type: "input_text", text }] };
+    if (this.agent.managedDelegation) {
+      // This preview SDK refuses both commands outside Responses delegation, so send them on the
+      // sample's transport, as for local function results (see live-transport.js).
+      await this.sendRaw({ type: "response.item.create", event_id: itemId, item });
+      await this.sendRaw({ type: "response.create", event_id: runId });
+    } else {
+      await this.connection.sendResponseItem(item, { eventId: itemId });
+      await this.connection.requestResponse({ eventId: runId });
+    }
+  }
+
   sendAudio(chunk) {
     if (!this.connection || this.stopping || !this.translator.ready) return;
     const bytes = new Uint8Array(chunk);

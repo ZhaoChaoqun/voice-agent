@@ -15,6 +15,9 @@ const panes = { teacher: $("teacher"), user: $("user") };
 const delegationPane = $("delegation");
 const nameInput = $("learner-name");
 const levelSelect = $("level");
+const typedForm = $("typed-form");
+const typedInput = $("typed");
+const sendButton = $("send");
 const delegations = new Map();
 let config;
 let session;
@@ -45,6 +48,22 @@ const loaded = fetch("/config")
 function setStatus(text, error = false) {
   statusLine.textContent = text;
   statusLine.classList.toggle("error", error);
+}
+
+/** Enables the text box while a session whose backend answers typed messages is ready. */
+function setTyping(enabled, placeholder) {
+  typedInput.disabled = sendButton.disabled = !enabled;
+  typedInput.placeholder = placeholder;
+}
+
+/** Shows a typed message in the You pane as its own paragraph. */
+function appendTyped(text) {
+  const paragraph = document.createElement("p");
+  paragraph.className = "typed";
+  paragraph.textContent = `[typed] ${text}`;
+  panes.user.append(paragraph);
+  lastRole = "typed";
+  scrollToEnd(panes.user);
 }
 
 function scrollToEnd(element) {
@@ -108,7 +127,15 @@ async function handle(message) {
       if (!failed) setStatus(message.text);
       break;
     case "ready":
-      setStatus("Ready. Speak into your microphone; click Stop to end the lesson.");
+      setStatus(
+        `Ready. Speak into your microphone${session.acceptsText ? " or type below" : ""}; click Stop to end the lesson.`,
+      );
+      setTyping(
+        session.acceptsText,
+        session.acceptsText
+          ? "Type a message; the backend answers and GPT Live speaks the reply."
+          : "Typed input needs a Responses or Foundry-managed agent backend; this agent uses client delegation.",
+      );
       await audio.startCapture(microphone, (chunk) => session?.sendAudio(chunk));
       break;
     case "audio":
@@ -181,13 +208,27 @@ startButton.addEventListener("click", async () => {
     setStatus(error.message, true);
   }
   releaseMicrophone();
+  setTyping(false, "Start a lesson to type a message.");
   session = undefined;
   startButton.disabled = false;
   stopButton.disabled = true;
 });
 
+typedForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const text = typedInput.value.trim();
+  if (!text || !session?.acceptsText) return;
+  typedInput.value = "";
+  appendTyped(text);
+  session
+    .sendText(text)
+    .then(() => setStatus("Typed message sent; the backend is answering."))
+    .catch((error) => setStatus(`Could not send the typed message: ${error.message}`, true));
+});
+
 stopButton.addEventListener("click", () => {
   stopButton.disabled = true;
+  setTyping(false, "Start a lesson to type a message.");
   releaseMicrophone();
   session?.stop();
 });

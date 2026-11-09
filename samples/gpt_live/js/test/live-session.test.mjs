@@ -23,8 +23,8 @@ const ANSWER_MS = 1500;
  * Runs one session as the page does: on "ready" it sends one microphone chunk (an
  * ArrayBuffer, as the AudioWorklet posts), then stops once the scripted events have arrived.
  */
-async function runSession({ agent = RESPONSES_AGENT, events = [], stopAfterMs = 80, openLive } = {}) {
-  const scripted = new ScriptedLive(events);
+async function runSession({ agent = RESPONSES_AGENT, events = [], stopAfterMs = 80, openLive, respond, typed = [] } = {}) {
+  const scripted = new ScriptedLive(events, { respond });
   const messages = [];
   const session = new LiveSession({
     openLive: openLive ?? ((target) => openLiveSession({ endpoint: ENDPOINT, credential, webSocketFactory: scripted }, target)),
@@ -33,6 +33,7 @@ async function runSession({ agent = RESPONSES_AGENT, events = [], stopAfterMs = 
       messages.push(message);
       if (message.type === "ready") {
         session.sendAudio(MICROPHONE.buffer);
+        for (const text of typed) await session.sendText(text);
         await sleep(stopAfterMs);
         session.stop();
       }
@@ -264,5 +265,94 @@ describe("managed prompt-agent session", () => {
       assert.match(ofType(messages, "error")[0].message, new RegExp(`delegation target '${target}'`));
       assert.ok(!scripted.commands().some((type) => /commentary|thinking|response\./.test(type)));
     }
+  });
+});
+
+describe("typed messages", () => {
+  const TYPED_ITEM = (text) => ({ type: "message", role: "user", content: [{ type: "input_text", text }] });
+  /** The backend answers a typed run with a delegation that names the response.create event_id. */
+  const answer = (target) => (command) =>
+    command.type === "response.create"
+      ? [
+          {
+            type: "session.delegation.created",
+            event_id: "event-typed",
+            client_event_id: command.event_id,
+            offset_ms: 0,
+            delegation: { id: "delegation-typed", type: "delegation", target },
+          },
+          live.backend("delegation-typed", "response.completed", { response: { id: "response-typed", output: [] } }),
+          live.teacher('Say "I went."'),
+        ]
+      : [];
+
+  for (const [agent, target, snapshot] of [
+    [RESPONSES_AGENT, "responses", { type: "responses", responses: { model: "text-model" } }],
+    [MANAGED_AGENT, "foundry_managed_agent", MANAGED],
+  ]) {
+    it(`sends a user item, then response.create, to the ${target} backend`, async () => {
+      const { result, messages, scripted } = await runSession({
+        agent,
+        events: [live.started("conversation-typed", snapshot)],
+        respond: answer(target),
+        typed: ["I goed to school."],
+        stopAfterMs: 150,
+      });
+      assert.equal(result.failure, undefined);
+      const [item, run] = scripted.received.filter((command) => command.type.startsWith("response."));
+      assert.equal(item.type, "response.item.create");
+      assert.match(item.event_id, /^typed-[0-9a-f]+$/);
+      assert.deepEqual(item.item, TYPED_ITEM("I goed to school."));
+      assert.equal(run.type, "response.create");
+      assert.match(run.event_id, /^typed-run-[0-9a-f]+$/);
+      // Every titled update for the typed run keeps the label, including later backend events.
+      const titled = ofType(messages, "delegation").filter((message) => message.id === "delegation-typed" && message.title);
+      assert.ok(titled.length >= 2);
+      assert.ok(titled.every((message) => message.title.endsWith("(typed message)")));
+      assert.deepEqual(ofType(messages, "transcript").at(-1), { type: "transcript", role: "teacher", delta: 'Say "I went."' });
+    });
+  }
+
+  it("reports a rejected typed message without ending the session", async () => {
+    const { result, messages } = await runSession({
+      agent: MANAGED_AGENT,
+      events: [live.started("conversation-typed", MANAGED)],
+      respond: (command) =>
+        command.type === "response.item.create"
+          ? [
+              {
+                type: "error",
+                event_id: "evt_managed_1",
+                error: {
+                  type: "invalid_request_error",
+                  code: "typed_input_too_large",
+                  message: "The typed message exceeds the size limit.",
+                  client_event_id: command.event_id,
+                },
+              },
+            ]
+          : [],
+      typed: ["x".repeat(50)],
+      stopAfterMs: 150,
+    });
+    assert.equal(result.failure, undefined);
+    assert.ok(messages.some((message) => message.type === "status" && message.text === "Typed message not accepted: typed_input_too_large"));
+    assert.equal(ofType(messages, "error").length, 0);
+  });
+
+  it("refuses typed input for a client-delegation agent without sending anything", async () => {
+    const scripted = new ScriptedLive([live.started("conversation-client")]);
+    const session = new LiveSession({
+      openLive: (target) => openLiveSession({ endpoint: ENDPOINT, credential, webSocketFactory: scripted }, target),
+      agent: CLIENT_AGENT,
+      onMessage: async (message) => {
+        if (message.type !== "ready") return;
+        assert.equal(session.acceptsText, false);
+        await assert.rejects(session.sendText("hello"), /Responses or Foundry-managed agent backend/);
+        session.stop();
+      },
+    });
+    await session.run();
+    assert.ok(!scripted.commands().some((type) => type.startsWith("response.")));
   });
 });

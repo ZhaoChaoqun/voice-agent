@@ -21,6 +21,11 @@
       <button id="stop" type="button" disabled>Stop</button>
       <span id="status" role="status">Use headphones, click Start, and allow the microphone.</span>
     </section>
+    <form id="typed-form" class="controls typed">
+      <!-- Sent to the session's backend with response.item.create and response.create. -->
+      <input id="typed" type="text" maxlength="2000" placeholder="Start a lesson to type a message." disabled />
+      <button id="send" type="submit" disabled>Send</button>
+    </form>
     <pre id="download" class="download" hidden></pre>
     <main>
       <section class="pane">

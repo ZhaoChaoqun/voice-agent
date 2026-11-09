@@ -6,7 +6,8 @@ GPT Live, Delegation, and You panes update. Like the Python samples, it covers a
 delegation types: Responses (`npm start`), a Foundry-managed prompt agent with tools
 (`npm run managed`), and client delegation, where the page itself is the backend
 (`npm run client`). Every agent greets the learner by name, using the name and level you
-enter on the page as structured inputs.
+enter on the page as structured inputs. With Responses or managed delegation you can also type
+a message instead of speaking.
 
 The page connects to GPT Live directly. It opens the agent's Live WebSocket with the preview
 `@azure/ai-projects` package's Live client (`VoiceAgentLiveClient.connect(...)`, the class behind
@@ -80,6 +81,27 @@ When you click **Start**, the page passes the name and level to
 handshake URL, Foundry fills them into the instructions and greeting, and GPT Live speaks the
 greeting as soon as the session starts. An `AGENT_NAME` agent gets only the inputs it declares;
 the page disables a field the agent does not declare.
+
+### Typed messages
+
+Once the session is ready, type in the box below the controls and click **Send** (or press
+Enter). The message appears in the You pane as `[typed] ...`; the backend answers it and GPT
+Live speaks the reply, so you can mix typing and speaking in one lesson.
+
+A typed message goes to the session's backend, not to the voice model: the page sends a user
+message item with `response.item.create`, then `response.create`. With Responses delegation
+GPT Live delegates it to the Responses model; with a Foundry-managed agent, Foundry runs the
+prompt agent. The delegation that answers it is labeled **(typed message)** in the Delegation
+pane, because its `session.delegation.created` names the `response.create` event ID. If the
+service rejects a typed message (for example, `typed_input_too_large`), the status line says so
+and the lesson continues.
+
+With Responses delegation the page uses the SDK's `sendResponseItem()` and
+`requestResponse()`. In managed mode this preview SDK refuses both, so the page sends the two
+commands on its own transport, as it does for local function results (see
+[Why the sample supplies its own WebSocket transport](#why-the-sample-supplies-its-own-websocket-transport)).
+Client delegation has no backend for typed messages, so the box stays disabled in
+`npm run client`.
 
 ### Responses delegation (default)
 
@@ -184,13 +206,16 @@ requests must still pass the same-origin checks.
 
 #### Why the sample supplies its own WebSocket transport
 
-Besides signing in, the transport lets the page return local function results. This preview JS
-SDK refuses `response.item.create` and `response.create` unless the session uses Responses
-delegation (`Responses commands require a Responses delegation.`), so `sendToolOutput` cannot
-return a function result in a managed session. The service accepts these commands in managed
-mode, and the Python SDK sends them. So `openLiveSession` keeps a handle on its transport and
-sends the two commands on it directly. Everything else, including the handshake, the token
-request, and event parsing, goes through the SDK.
+Besides signing in, the transport lets the page return local function results and send typed
+messages in managed mode. This preview JS SDK refuses `response.item.create` and
+`response.create` unless the session uses Responses delegation (`Responses commands require a
+Responses delegation.`), so `sendToolOutput` and `sendResponseItem` cannot be used in a managed
+session. The service accepts these commands in managed mode, and the Python SDK sends them.
+So `openLiveSession` keeps a handle on its transport and sends the two commands on it directly.
+Everything else, including the handshake, the token request, and event parsing, goes through
+the SDK. [Azure/azure-sdk-for-js#40705](https://github.com/Azure/azure-sdk-for-js/pull/40705)
+removes the restriction for Foundry-managed sessions; once a package with it is bundled, the
+page can use the SDK's own methods.
 
 `browser_bundle.mjs` bundles the page with esbuild from the SDK package's browser build. The
 package's entry point also re-exports `AIProjectClient`, which imports the OpenAI SDK for its

@@ -13,9 +13,10 @@ delegate work:
 
 Every agent also has a **greeting** and **structured inputs**: the learner's name and
 English level personalize the instructions and the greeting for each session (see
-[Greeting and structured inputs](#greeting-and-structured-inputs)). The Agent area has
-separate **GPT Live** and **Delegation** panes; delegation IDs, status, and guidance appear
-in the Delegation pane.
+[Greeting and structured inputs](#greeting-and-structured-inputs)). With Responses or
+Foundry-managed delegation you can also **type** a message instead of speaking (see
+[Typed messages](#typed-messages)). The Agent area has separate **GPT Live** and
+**Delegation** panes; delegation IDs, status, and guidance appear in the Delegation pane.
 
 Agents are defined with the SDK's typed `VoiceAgentLiveDefinition` and
 `PromptAgentDefinition` models and created, read back, and deleted through
@@ -160,6 +161,40 @@ any sample:
 The sample prints the inputs it sends. With `AGENT_NAME`, only the inputs that agent
 declares are sent; an agent that declares none gets none.
 
+## Typed messages
+
+Below the panes is a text box. Once the session is ready, press **Tab** until the text box
+has focus, type a message, and press **Enter**. The message appears in the User pane as
+`[typed] ...`; the backend answers it and GPT Live speaks the reply, so you can mix typing
+and speaking in one lesson.
+
+A typed message goes to the session's **backend**, not to the voice model. The sample sends
+a user message item, then asks the backend to answer it:
+
+```python
+await connection.response.item.create(
+    item={"type": "message", "role": "user", "content": [{"type": "input_text", "text": text}]},
+    event_id=item_id,
+)
+await connection.response.create(event_id=run_id)
+```
+
+The same two commands work with both backends:
+
+- **Responses delegation** (`response_delegation.py`): GPT Live delegates the message to the
+  Responses model and speaks its answer.
+- **Foundry-managed agent** (`prompt_agent_delegation.py`, `prompt_agent_delegation_tools.py`):
+  Foundry runs the prompt agent with the message, and GPT Live speaks the accepted guidance.
+
+The `session.delegation.created` event that answers a typed message names the `response.create`
+event ID in `client_event_id`, so the Delegation pane labels it **(typed message)**. If the
+service rejects a typed message (for example, `typed_input_too_large`), the error names that
+event ID too; the sample shows it in the status line and the lesson continues. Other errors
+still end the session.
+
+**Client delegation** has no backend to answer typed messages: the service rejects
+`response.create` for it, so `client_delegation.py` keeps the text box disabled and says why.
+
 ## Managed prompt-agent delegation
 
 Use the same environment, dependencies, and `az login` setup above. The project
@@ -289,7 +324,7 @@ agent, or `response.*` commands are involved.
 
 ## Tests
 
-Run the offline payload, function-continuation, client-delegation, cleanup, and SDK loopback tests
+Run the offline payload, function-continuation, client-delegation, typed-message, cleanup, and SDK loopback tests
 (no Azure resources or audio devices). They drive the real Projects SDK client:
 agent calls go to an in-memory transport, and the Live client's `wss://` handshake
 is routed to a local WebSocket server:

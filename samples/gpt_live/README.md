@@ -6,7 +6,8 @@ audio through a GPT Live session, and show the teacher's and your transcripts be
 Delegation view. Both cover all three delegation types: Responses, a versioned Foundry-managed
 prompt agent, and client delegation, where the app answers GPT Live itself. Every agent has a
 template greeting and structured inputs (the learner's name and English level) that each
-session fills in.
+session fills in. With Responses or Foundry-managed delegation you can also type a message
+instead of speaking; the backend answers it and GPT Live speaks the reply.
 
 | Folder | Sample |
 | --- | --- |
