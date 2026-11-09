@@ -1,6 +1,7 @@
 // Page side of the GPT Live sample: microphone in, teacher audio out, three text panes.
-// The page opens the GPT Live session itself with the Projects SDK. The local server only
-// creates the agents and returns an access token from your az login session.
+// The page opens the GPT Live session itself with the Projects SDK, sending the learner's name
+// and level as structured inputs. The local server only creates the agents and returns an
+// access token from your az login session.
 import { LiveSession } from "./live-session.js";
 import { openLiveSession } from "./live-transport.js";
 import { PcmAudio } from "./pcm-audio.js";
@@ -12,6 +13,8 @@ const statusLine = $("status");
 const downloadHint = $("download");
 const panes = { teacher: $("teacher"), user: $("user") };
 const delegationPane = $("delegation");
+const nameInput = $("learner-name");
+const levelSelect = $("level");
 const delegations = new Map();
 let config;
 let session;
@@ -27,6 +30,13 @@ const loaded = fetch("/config")
     $("agent").textContent =
       `Agent ${config.agent.name}, version ${config.agent.version} · ` +
       `${config.delegation} delegation → ${config.agent.backendModel}`;
+    for (const level of config.levels) levelSelect.add(new Option(level, level, false, level === config.defaultLevel));
+    // An AGENT_NAME agent may declare no structured inputs; then there is nothing to send.
+    nameInput.disabled = !config.agent.inputs.includes("learner_name");
+    levelSelect.disabled = !config.agent.inputs.includes("level");
+    if (config.agent.clientDelegation || config.agent.managedDelegation) {
+      $("hint").textContent = "Try: “What is 17 plus 25?” or “What is the current date and time?”";
+    }
   })
   .catch(() => {
     $("agent").textContent = "Could not read the agent configuration from the server.";
@@ -74,6 +84,13 @@ function updateDelegation({ id, title, status, delta }) {
   if (status) item.state.textContent = status;
   if (delta) item.text.textContent += delta;
   scrollToEnd(delegationPane);
+}
+
+/** The learner's name and level, for the inputs the agent declares. */
+function structuredInputs() {
+  const values = { learner_name: nameInput.value.trim() || "friend", level: levelSelect.value };
+  const declared = Object.entries(values).filter(([name]) => config.agent.inputs.includes(name));
+  return declared.length ? Object.fromEntries(declared) : undefined;
 }
 
 /** The shared Python downloader's command; shown only for agents the server keeps. */
@@ -140,12 +157,14 @@ startButton.addEventListener("click", async () => {
   try {
     await loaded;
     if (!config) throw new Error("The agent configuration is unavailable; check the server console.");
+    // Foundry fills these into the agent's instructions and greeting for this session.
+    const inputs = structuredInputs();
     setStatus("Waiting for microphone permission…");
     microphone = await navigator.mediaDevices.getUserMedia({
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     });
     session = new LiveSession({
-      openLive: (agent) => openLiveSession({ endpoint: config.endpoint }, agent),
+      openLive: (agent) => openLiveSession({ endpoint: config.endpoint, structuredInputs: inputs }, agent),
       agent: config.agent,
       onMessage: (message) =>
         handle(message).catch((error) => {

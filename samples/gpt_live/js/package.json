@@ -9,10 +9,11 @@
   "scripts": {
     "start": "node server.mjs",
     "managed": "node server.mjs --managed",
+    "client": "node server.mjs --client",
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "@azure/ai-projects": "file:../../../dist/azure-ai-projects-2.10.0.tgz",
+    "@azure/ai-projects": "file:../../../dist/azure-ai-projects-2.11.0.tgz",
     "@azure/identity": "4.14.1",
     "dotenv": "18.0.8",
     "esbuild": "0.28.2"

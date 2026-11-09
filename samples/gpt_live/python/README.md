@@ -2,21 +2,37 @@
 
 English-teacher voice samples that create or reuse agents in an existing Foundry
 project, stream microphone audio through a GPT Live session, and display user/agent
-transcripts, all with the Azure AI Projects SDK. Choose direct Responses delegation or
-a versioned managed prompt agent. The Agent area has separate **GPT Live** and
-**Delegation** panes; delegation IDs, status, and guidance appear in the Delegation pane.
+transcripts, all with the Azure AI Projects SDK. They cover all three ways GPT Live can
+delegate work:
+
+| Delegation | Sample | Who answers |
+| --- | --- | --- |
+| Responses (`responses`) | `response_delegation.py` | A Responses model deployment that Foundry calls. |
+| Foundry-managed agent (`foundry_managed_agent`) | `prompt_agent_delegation.py`, `prompt_agent_delegation_tools.py` | A versioned prompt agent that Foundry runs; the tools sample adds an MCP calculator and a local function. |
+| Client (`client`) | `client_delegation.py` | This app: it reads the computer's clock or adds two whole numbers, and replies on the Live session. |
+
+Every agent also has a **greeting** and **structured inputs**: the learner's name and
+English level personalize the instructions and the greeting for each session (see
+[Greeting and structured inputs](#greeting-and-structured-inputs)). The Agent area has
+separate **GPT Live** and **Delegation** panes; delegation IDs, status, and guidance appear
+in the Delegation pane.
 
 Agents are defined with the SDK's typed `VoiceAgentLiveDefinition` and
 `PromptAgentDefinition` models and created, read back, and deleted through
 `AIProjectClient.agents`. Audio sessions use the SDK's Live WebSocket client,
 `AIProjectClient.beta.voice_agents.live.connect(...)`, with the same credential.
 These GPT Live APIs are not in a PyPI release yet, so `requirements.txt` installs the
-bundled preview wheel `dist/azure_ai_projects-2.10.0-py3-none-any.whl`, built from the
-SDK's GPT Live WebSocket branch; see [`dist/README.md`](../../../dist/README.md) for its
-source and checksum.
+bundled preview wheel `dist/azure_ai_projects-2.11.0-py3-none-any.whl`, built from the
+SDK's `feature/azure-ai-projects/vnext` branch with the GPT Live WebSocket client; see
+[`dist/README.md`](../../../dist/README.md) for its source and checksum.
 
-The SDK returns generated models for known Live events and plain dicts for any event
-it does not model yet. Both are mappings, so the samples dispatch on `event.get("type")`.
+The samples send and receive Live messages only through the SDK; they do not use the
+OpenAI SDK. The SDK returns generated models for known Live events and plain dicts for
+any event it does not model yet. Both are mappings, so the samples dispatch on
+`event.get("type")`. Every event these samples handle is modeled except
+`session.delegation.done`, which Foundry sends when a managed delegation finishes
+(`delegation_id`, `status`, `error_code`, `response_id`); the samples show it as the
+delegation's final status.
 
 ## Files
 
@@ -25,6 +41,7 @@ it does not model yet. Both are mappings, so the samples dispatch on `event.get(
 | `response_delegation.py` | Checks deployments, runs the voice conversation, and prints its ID and download command. |
 | `prompt_agent_delegation.py` | Creates a prompt agent first, creates a GPT Live voice agent pinned to it, and runs the shared voice conversation. |
 | `prompt_agent_delegation_tools.py` | Adds a server-executed MCP calculator and a client-executed current date/time function to the managed prompt agent. |
+| `client_delegation.py` | Creates a GPT Live agent with client delegation and answers its delegations in this app. |
 | `audio_common.py` | Captures microphone audio and plays the agent's response. |
 | `transcript_common.py` | Independently scrollable GPT Live, Delegation, and User terminal panes. |
 | `../../download_conversation_artifacts.py` | Existing separate downloader for conversation JSON, per-item audio, and merged audio. |
@@ -38,19 +55,22 @@ Requires Python 3.11+, Azure CLI, a microphone/headset, and a Foundry project wi
 Voice Agents / GPT Live preview, a GPT Live deployment, and a Responses deployment.
 On Linux, install the PortAudio runtime (`libportaudio2` on Ubuntu/Debian).
 
-Use the shared repository-root `.venv`. From the repository root, in PowerShell:
+These samples use their own virtual environment, `samples/gpt_live/python/.venv`, not the
+shared repository-root `.venv`. The preview 2.11.0 build changes some APIs that other
+samples use with the PyPI release (for example, `VoiceAgentSubagentConfig` no longer takes
+`subagents`, and realtime structured inputs are sent as `structured_inputs`), so keep it out
+of the shared environment. From the repository root, in PowerShell:
 
 ```powershell
 az login
-if (-not (Test-Path -LiteralPath .venv\Scripts\python.exe)) { python -m venv .venv }
-.\.venv\Scripts\python.exe -m pip install --index-url https://pypi.org/simple -r samples\requirements.txt -r samples\gpt_live\python\requirements.txt
+if (-not (Test-Path -LiteralPath samples\gpt_live\python\.venv\Scripts\python.exe)) { python -m venv samples\gpt_live\python\.venv }
+$py = "samples\gpt_live\python\.venv\Scripts\python.exe"
+& $py -m pip install --index-url https://pypi.org/simple -r samples\gpt_live\python\requirements.txt
 if (-not (Test-Path -LiteralPath samples\gpt_live\.env)) { Copy-Item samples\gpt_live\.env.example samples\gpt_live\.env }
 ```
 
 Run the install from the repository root: pip resolves the wheel path in
-`requirements.txt` from the current directory. It replaces any PyPI
-`azure-ai-projects` in the shared `.venv` with the preview 2.10.0 build, which
-still satisfies the other samples' `azure-ai-projects>=2.7.0` requirement.
+`requirements.txt` from the current directory. The commands below use `$py` from this block.
 
 In `samples/gpt_live/.env`, set `FOUNDRY_PROJECT_ENDPOINT`. Authentication uses
 your `az login` account through `AzureCliCredential`, with automatically refreshed
@@ -80,7 +100,7 @@ checked instead. The sample does not create deployments. Never commit `.env`.
 Run:
 
 ```powershell
-.\.venv\Scripts\python.exe samples\gpt_live\python\response_delegation.py
+& $py samples\gpt_live\python\response_delegation.py
 ```
 
 Wait for **Ready**, speak into your microphone, and press **Ctrl+C** to stop.
@@ -101,10 +121,44 @@ same value as `FOUNDRY_PROJECT_ENDPOINT`. The separate downloader waits for
 persistence and saves JSON and audio to `voice-agent-output/<conversation-id>/`.
 Keep the agent (omit `--auto-delete`) if you want to download later.
 
-On macOS/Linux, also run from the repository root: use `python3` to create `.venv` if
-needed, `.venv/bin/python` for install/run commands, and `/` path separators.
-Keep `.env` in `samples/gpt_live/`, not in the shared environment directory; the
-Python and JavaScript samples read the same file.
+On macOS/Linux, also run from the repository root: use `python3` to create
+`samples/gpt_live/python/.venv` if needed, `samples/gpt_live/python/.venv/bin/python` for
+install/run commands, and `/` path separators. Keep `.env` in `samples/gpt_live/`, not in the
+environment directory; the Python and JavaScript samples read the same file.
+
+## Greeting and structured inputs
+
+Every voice agent these samples create declares two structured inputs and a template
+greeting that uses them:
+
+```json
+{
+  "structured_inputs": {
+    "learner_name": {"description": "What the teacher calls the learner.", "default_value": "friend"},
+    "level": {
+      "description": "The learner's English level.",
+      "default_value": "intermediate",
+      "schema": {"type": "string", "enum": ["beginner", "intermediate", "advanced"]}
+    }
+  },
+  "instructions": "... The learner's name is {{learner_name}}, and their English level is {{level}}. ...",
+  "greeting": {"type": "template", "text": "Hi {{learner_name}}! I'm your English teacher. What would you like to practice today?"}
+}
+```
+
+Each session supplies the values when it connects, with
+`live.connect(..., structured_inputs={"learner_name": ..., "level": ...})`; the SDK sends
+them as JSON in the handshake query. Foundry fills them into the instructions and the
+greeting, and GPT Live speaks the greeting as soon as the session starts. Choose the
+values with `--learner-name` (default `Alex`) and `--level` (default `intermediate`) on
+any sample:
+
+```powershell
+& $py samples\gpt_live\python\response_delegation.py --learner-name Mei --level beginner
+```
+
+The sample prints the inputs it sends. With `AGENT_NAME`, only the inputs that agent
+declares are sent; an agent that declares none gets none.
 
 ## Managed prompt-agent delegation
 
@@ -118,11 +172,11 @@ direct Responses backend.
 From the repository root, run:
 
 ```powershell
-.\.venv\Scripts\python.exe samples\gpt_live\python\prompt_agent_delegation.py
+& $py samples\gpt_live\python\prompt_agent_delegation.py
 ```
 
 This sample always creates two fresh agents; it ignores `AGENT_NAME` and leaves
-existing agents untouched:
+existing agents untouched. The voice agent has the same greeting and structured inputs:
 
 1. Create an English-teacher **prompt agent** with plain-text output and versioned
    instructions requiring `[commentary]` and optional `[thinking]` sections.
@@ -151,7 +205,8 @@ delegation ID, and the Delegation pane shows its status and raw tagged-text outp
 Foundry validates that output and appends accepted sections to GPT Live itself;
 each `session.commentary.appended` or `session.thinking.appended` acknowledgment
 marks the delegation as forwarded. These acknowledgments carry no text or
-delegation ID, so the sample attributes them to the latest delegation.
+delegation ID, so the sample attributes them to the latest delegation. When the
+delegation finishes, Foundry sends `session.delegation.done` with its final status.
 The `[thinking]` section is factual background, not private reasoning. Backend
 guidance is kept separate from the transcript of what GPT Live says. Backend
 failures stay visible without a client-side retry or fallback executor.
@@ -173,7 +228,7 @@ purge of backend responses or conversations.
 Use the same setup and `.env`, then run:
 
 ```powershell
-.\.venv\Scripts\python.exe samples\gpt_live\python\prompt_agent_delegation_tools.py
+& $py samples\gpt_live\python\prompt_agent_delegation_tools.py
 ```
 
 The new prompt agent has two tools:
@@ -206,11 +261,39 @@ A different client reconnecting to these agents must implement that handler too;
 the basic `response_delegation.py` client does not execute their local function.
 No additional packages or `.env` settings are needed.
 
-Run the offline payload, function-continuation, cleanup, and SDK loopback tests
+## Client delegation
+
+Use the same setup and `.env`; only `GPT_LIVE_DEPLOYMENT` is needed. Run:
+
+```powershell
+& $py samples\gpt_live\python\client_delegation.py
+```
+
+This sample always creates a fresh agent with `"delegation": {"type": "client"}` and
+ignores `AGENT_NAME`. Its instructions tell GPT Live to delegate current date/time
+questions and adding two numbers, so this app is the backend:
+
+1. GPT Live sends `session.delegation.created` with `target: "client"` and waits.
+2. The event does not repeat the request, so the app waits until the learner's input
+   transcript has been quiet briefly, then reads what the learner said since the
+   previous delegation. It adds two whole numbers ("seventeen plus twenty-five",
+   "add 3 and 4") and reads the computer's clock for time questions.
+3. It replies on the same session with `connection.session.thinking.append(...)`
+   (unspoken facts) and `connection.session.commentary.append(...)` (the answer GPT
+   Live says), both with the delegation's `delegation_id`. Anything else gets a short
+   commentary saying what the app can do.
+
+Try **"What is 17 plus 25?"** or **"What is the current date and time?"**. The
+Delegation pane shows what the app heard and its answer. No backend model, prompt
+agent, or `response.*` commands are involved.
+
+## Tests
+
+Run the offline payload, function-continuation, client-delegation, cleanup, and SDK loopback tests
 (no Azure resources or audio devices). They drive the real Projects SDK client:
 agent calls go to an in-memory transport, and the Live client's `wss://` handshake
 is routed to a local WebSocket server:
 
 ```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s samples/gpt_live/python -p "test_*.py" -v
+& $py -m unittest discover -s samples/gpt_live/python -p "test_*.py" -v
 ```

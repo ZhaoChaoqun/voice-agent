@@ -5,11 +5,16 @@ import { once } from "node:events";
 import { describe, it } from "node:test";
 import { WebSocketServer } from "ws";
 
-import { BrowserWebSocketTransport, LIVE_API_VERSION, openLiveSession } from "../public/live-transport.js";
+import { BrowserWebSocketTransport, browserLiveUrl, openLiveSession } from "../public/live-transport.js";
 import { ENDPOINT, ScriptedLive, credential, live } from "./offline.mjs";
 
 /** The headers the SDK hands its transport. */
-const SDK_HEADERS = { authorization: "Bearer offline-token", "foundry-features": "VoiceAgents=V1Preview" };
+const SDK_HEADERS = {
+  authorization: "Bearer offline-token",
+  "foundry-features": "VoiceAgents=V1Preview",
+  "x-ms-client-request-id": "request-1",
+  "user-agent": "azsdk-js-ai-projects/2.11.0",
+};
 const liveOnly = { handleProtocols: (protocols) => (protocols.has("live") ? "live" : false) };
 
 async function localServer(options, onConnection = () => {}) {
@@ -38,7 +43,7 @@ async function until(condition) {
 }
 
 describe("BrowserWebSocketTransport", () => {
-  it("offers the token as a subprotocol, sends no headers, and relays text both ways", async () => {
+  it("offers the token as a subprotocol, moves the preview header to the query, and relays text both ways", async () => {
     const received = [];
     const serverCloses = [];
     let request;
@@ -60,6 +65,12 @@ describe("BrowserWebSocketTransport", () => {
     assert.equal(request.headers["sec-websocket-protocol"], "live, authorization.bearer.offline-token");
     assert.equal(request.headers.authorization, undefined);
     assert.equal(request.headers["foundry-features"], undefined);
+    // As the SDK's own browser transport does; Foundry accepts the preview flag as a query parameter.
+    const query = new URL(request.url, "http://localhost").searchParams;
+    assert.equal(query.get("foundry_features"), "VoiceAgents=V1Preview");
+    assert.equal(query.get("client-request-id"), "request-1");
+    assert.equal(query.get("authorization"), null);
+    assert.equal(query.get("user-agent"), null);
     assert.deepEqual(events.messages, ['{"type":"session.started"}']);
     assert.deepEqual(received, ['{"type":"response.create"}']);
     assert.deepEqual(serverCloses, [1000]);
@@ -85,11 +96,26 @@ describe("BrowserWebSocketTransport", () => {
   });
 });
 
+describe("browserLiveUrl", () => {
+  it("keeps the SDK's query and adds only the headers a page cannot send", () => {
+    const url = browserLiveUrl("wss://host/live/sessions?api-version=v1", {
+      authorization: "Bearer secret",
+      "Foundry-Features": "VoiceAgents=V1Preview",
+    });
+    assert.equal(url, "wss://host/live/sessions?api-version=v1&foundry_features=VoiceAgents%3DV1Preview");
+  });
+});
+
 describe("openLiveSession", () => {
-  it("opens the agent's Live route with the preview api-version and sends raw commands on the same socket", async () => {
+  it("opens the agent's Live route with structured inputs and sends raw commands on the same socket", async () => {
     const scripted = new ScriptedLive([live.started("conversation-1")]);
     const { connection, sendRaw } = await openLiveSession(
-      { endpoint: ENDPOINT, credential, webSocketFactory: scripted },
+      {
+        endpoint: ENDPOINT,
+        credential,
+        webSocketFactory: scripted,
+        structuredInputs: { learner_name: "Mei", level: "beginner" },
+      },
       { name: "teacher", version: "3" },
     );
     await sendRaw({ type: "response.create" });
@@ -98,9 +124,11 @@ describe("openLiveSession", () => {
     const [{ url, headers }] = scripted.connects;
     const parsed = new URL(url);
     assert.equal(parsed.pathname, "/api/projects/test/agents/teacher/endpoint/protocols/voice/live/sessions");
-    assert.equal(parsed.searchParams.get("api-version"), LIVE_API_VERSION);
-    assert.equal(parsed.searchParams.get("x-agent-version-override"), "3");
+    assert.equal(parsed.searchParams.get("api-version"), "v1");
+    assert.equal(parsed.searchParams.get("agent_version_override"), "3");
+    assert.deepEqual(JSON.parse(parsed.searchParams.get("structured_inputs")), { learner_name: "Mei", level: "beginner" });
     assert.equal(headers.authorization, "Bearer offline-test-token");
+    assert.equal(headers["foundry-features"], "VoiceAgents=V1Preview");
     assert.deepEqual(scripted.commands(), ["response.create", "session.close"]);
   });
 });

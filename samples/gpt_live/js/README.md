@@ -2,7 +2,11 @@
 
 A simple browser version of the [Python GPT Live samples](../python/README.md): talk to an
 English-teacher GPT Live agent with your microphone, hear the teacher's reply, and watch the
-GPT Live, Delegation, and You panes update.
+GPT Live, Delegation, and You panes update. Like the Python samples, it covers all three
+delegation types: Responses (`npm start`), a Foundry-managed prompt agent with tools
+(`npm run managed`), and client delegation, where the page itself is the backend
+(`npm run client`). Every agent greets the learner by name, using the name and level you
+enter on the page as structured inputs.
 
 The page connects to GPT Live directly. It opens the agent's Live WebSocket with the preview
 `@azure/ai-projects` package's Live client (`VoiceAgentLiveClient.connect(...)`, the class behind
@@ -12,8 +16,10 @@ or reuses the agents through `AIProjectClient.agents`, serves the page, and give
 access token from your `az login` session.
 
 The GPT Live APIs are not in an npm release yet, so `package.json` installs the bundled
-preview package `dist/azure-ai-projects-2.10.0.tgz`; see
-[`dist/README.md`](../../../dist/README.md) for its source and checksum.
+preview package `dist/azure-ai-projects-2.11.0.tgz`, built from the SDK's
+`feature/ai-projects/vnext` branch; see [`dist/README.md`](../../../dist/README.md) for its
+source and checksum. The page sends and receives Live messages only through this SDK; it
+does not use the OpenAI SDK.
 Azure Identity is pinned to `4.14.1`, which requires patched MSAL Node `7.1.0`
 or later for [GHSA-xcx6-jx8p-x3h5](https://github.com/AzureAD/microsoft-authentication-library-for-js/security/advisories/GHSA-xcx6-jx8p-x3h5).
 This sample uses Azure CLI authentication rather than the affected authorization-code flow.
@@ -29,9 +35,10 @@ This sample uses Azure CLI authentication rather than the affected authorization
 | `public/app.js` | The page: microphone in, teacher audio out, and the three panes. |
 | `public/live-transport.js` | Opens the Live session with the SDK over a browser WebSocket transport that signs in with a subprotocol (see below). |
 | `public/live-session.js` | Turns Live events into pane updates, as the Python samples do for their panes, and streams microphone audio. |
+| `public/client-backend.js` | Answers client delegations in the page: the current time and adding two whole numbers. |
 | `public/local-tools.js` | Runs `get_current_datetime` in the page and returns its results to the prompt agent. |
 | `public/` (other) | `index.html`, `pcm-audio.js` (Web Audio capture and playback), `pcm-capture.js` (AudioWorklet), and `style.css`. |
-| `test/` | Offline agent, session, tool, transport, and server tests. |
+| `test/` | Offline agent, session, client-backend, tool, transport, and server tests. |
 | `package.json` / `package-lock.json` | Dependencies, including the bundled preview `@azure/ai-projects` package. |
 
 ## How to run
@@ -52,11 +59,27 @@ Microsoft's anonymously accessible `npm-public` feed because these versions are
 not yet available on npmjs. Other packages retain their public npm registry URLs;
 npm uses your configured registry for those URLs when you have one.
 
-Open the printed address, `http://localhost:8080`, click **Start**, allow the microphone,
-and wait for **Ready**. Then ask, for example, **"Please correct my English: I goed to school
-yesterday. Explain why."** Click **Stop** to end the lesson; the page shows the session's
-close reason, Live usage, and Foundry conversation ID. Each **Start** opens a new session.
-Press **Ctrl+C** in the terminal to stop the server.
+Open the printed address, `http://localhost:8080`. Enter your name and choose your level,
+click **Start**, allow the microphone, and wait for **Ready**; the teacher greets you by name.
+Then ask, for example, **"Please correct my English: I goed to school yesterday. Explain
+why."** Click **Stop** to end the lesson; the page shows the session's close reason, Live
+usage, and Foundry conversation ID. Each **Start** opens a new session with the current
+name and level. Press **Ctrl+C** in the terminal to stop the server.
+
+### Greeting and structured inputs
+
+Every agent the server creates declares two structured inputs, `learner_name` and `level`
+(`beginner`, `intermediate`, or `advanced`), uses them as `{{learner_name}}` and `{{level}}`
+in its instructions, and has a template greeting,
+`Hi {{learner_name}}! I'm your English teacher. What would you like to practice today?`
+The definitions are the same as the Python samples'; see
+[Greeting and structured inputs](../python/README.md#greeting-and-structured-inputs).
+
+When you click **Start**, the page passes the name and level to
+`VoiceAgentLiveClient.connect(name, { structuredInputs })`. The SDK sends them as JSON in the
+handshake URL, Foundry fills them into the instructions and greeting, and GPT Live speaks the
+greeting as soon as the session starts. An `AGENT_NAME` agent gets only the inputs it declares;
+the page disables a field the agent does not declare.
 
 ### Responses delegation (default)
 
@@ -65,6 +88,28 @@ Press **Ctrl+C** in the terminal to stop the server.
 Delegation pane shows each delegation's status and the Responses backend's guidance, which is
 separate from what the teacher says. A client-target delegation receives commentary tied to
 its ID; a backend failure ends the session with an error.
+
+### Client delegation
+
+```powershell
+npm run client
+```
+
+This is the browser version of the Python [client delegation](../python/README.md#client-delegation)
+sample. It creates a fresh GPT Live agent with `"delegation": {"type": "client"}`, ignoring
+`AGENT_NAME`, whose instructions delegate current date/time questions and adding two numbers.
+Only `GPT_LIVE_DEPLOYMENT` is needed. The page is the backend:
+
+- GPT Live sends `session.delegation.created` with `target: "client"` and waits for the page.
+- The event does not repeat the request, so the page waits until the learner's input transcript
+  has been quiet briefly, then answers from what the learner said since the previous delegation:
+  it adds two whole numbers ("seventeen plus twenty-five") or reads this computer's clock.
+- It replies on the same session with `connection.appendThinking(facts, { delegationId })`
+  (unspoken facts) and `connection.appendCommentary(answer, { delegationId })` (what GPT Live
+  says). Anything else gets a short commentary saying what the page can do.
+
+Try **"What is 17 plus 25?"** or **"What is the current date and time?"**. The Delegation pane
+shows **Client delegation → this page** with what the page heard and its answer.
 
 ### Managed prompt-agent delegation with MCP and local function tools
 
@@ -97,6 +142,11 @@ guidance; the page streams audio and shows events:
 - Each `session.commentary.appended` or `session.thinking.appended` marks the latest
   delegation's accepted guidance as forwarded to GPT Live. Backend failures stay visible
   without ending the session.
+- When the delegation finishes, Foundry sends `session.delegation.done` with its final status
+  (`delegation_id`, `status`, `error_code`, `response_id`). This is the only Live event the
+  page handles that the SDK does not model yet; the SDK yields it as
+  `{ type: "unknown", eventType: "session.delegation.done", rawEvent }`, and the page shows its
+  status.
 - When the prompt agent calls `get_current_datetime`, the page collects the completed
   `function_call` items from `response.event`, waits for `response.completed`, sends each
   `function_call_output` with `response.item.create`, then sends one `response.create` to resume
@@ -115,13 +165,13 @@ Browsers cannot set headers on a WebSocket handshake, so the page cannot send th
    `POST /token` on the local server, which returns an access token for
    `https://ai.azure.com/.default` from your `az login` session (`AzureCliCredential`).
 2. `public/live-transport.js` passes the SDK a WebSocket transport through the public
-   `webSocketFactory` option. It offers two subprotocols, `live` and
-   `authorization.bearer.<token>`. For the Live session route, Foundry turns the second offer into
-   an `Authorization` header before authentication, then selects and echoes only `live`. The
-   transport fails the session if Foundry selects anything else.
-3. The page uses `api-version=2025-11-15-preview`, which enables the Voice Agents preview
-   without the `Foundry-Features` header. With `api-version=v1` and no header, Foundry returns
-   HTTP 403.
+   `webSocketFactory` option, and does what the SDK's own browser transport does. It offers two
+   subprotocols, `live` and `authorization.bearer.<token>`. For the Live session route, Foundry
+   turns the second offer into an `Authorization` header before authentication, then selects
+   and echoes only `live`. The transport fails the session if Foundry selects anything else.
+3. It moves the SDK's `Foundry-Features: VoiceAgents=V1Preview` header into the
+   `foundry_features` query parameter, next to the SDK's `api-version=v1`. Without it, Foundry
+   rejects the handshake.
 
 The token stays in the page's memory for that one handshake. The server listens on `127.0.0.1`
 only and answers `POST /token` only when the request's `Host` and `Origin` are its own
@@ -142,9 +192,11 @@ mode, and the Python SDK sends them. So `openLiveSession` keeps a handle on its 
 sends the two commands on it directly. Everything else, including the handshake, the token
 request, and event parsing, goes through the SDK.
 
-The SDK package targets Node.js, so `browser_bundle.mjs` bundles the page with esbuild and
-replaces the Node-only modules it never uses in the page (its `ws` transport, proxy agent, and
-file helpers) with empty stubs.
+`browser_bundle.mjs` bundles the page with esbuild from the SDK package's browser build. The
+package's entry point also re-exports `AIProjectClient`, which imports the OpenAI SDK for its
+Responses helpers. The page never uses `AIProjectClient`, but esbuild would still include the
+OpenAI package because it does not declare itself free of side effects. The bundler declares it
+so, which keeps the OpenAI code out of the page (about 150 KB instead of 1 MB).
 
 ### Keeping or deleting agents
 
@@ -158,8 +210,9 @@ run created when you press Ctrl+C, voice agent first. Use `-- --port 9000` to ch
 
 Run the offline tests (no Azure resources, browser, or audio devices). They drive the real
 Projects SDK client: the server's agent calls go to an in-memory HTTP client, and the page's
-Live sessions talk to a scripted WebSocket transport. The browser transport runs on Node.js's
-built-in WebSocket against a local `ws` server.
+Live sessions, including client-delegation replies and `session.delegation.done`, talk to a
+scripted WebSocket transport. The browser transport runs on Node.js's built-in WebSocket
+against a local `ws` server.
 HTTP regressions cover malformed request targets followed by valid page,
 configuration, and same-origin token requests.
 

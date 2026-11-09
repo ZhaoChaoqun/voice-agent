@@ -22,14 +22,21 @@ from dotenv import load_dotenv
 
 from audio_common import Audio, AudioError
 from response_delegation import (
+    DEFAULT_LEARNER_NAME,
+    DEFAULT_LEVEL,
     DemoError,
     ENGLISH_TEACHER_INSTRUCTIONS,
+    LESSON_CONTEXT,
+    add_lesson_arguments,
     converse,
+    lesson_greeting,
+    lesson_inputs,
     live_audio,
     project_credential,
     project_endpoint,
     required,
     service_errors,
+    structured_inputs_for,
 )
 from transcript_common import TranscriptDisplay
 
@@ -67,7 +74,8 @@ def prompt_agent_definition(model):
 def voice_agent_definition(model, prompt_name, prompt_version):
     return VoiceAgentLiveDefinition(
         model=model,
-        instructions=ENGLISH_TEACHER_INSTRUCTIONS + (
+        model_type="self_deployed",
+        instructions=ENGLISH_TEACHER_INSTRUCTIONS + LESSON_CONTEXT + (
             "\nBackchannel policy: Briefly acknowledge the learner while waiting."
             "\nInterruption policy: Stop speaking and listen when interrupted."
             "\nDelegation policy: Your backend is an English-teacher specialist. "
@@ -78,6 +86,8 @@ def voice_agent_definition(model, prompt_name, prompt_version):
             "Thinking is factual context, not text to read aloud. Do not delegate "
             "again just to repeat guidance already received."
         ),
+        greeting=lesson_greeting(),
+        structured_inputs=lesson_inputs(),
         audio=live_audio(),
         # tagged_text is the default result format, as in the Foundry demo portal.
         delegation=VoiceAgentLiveManagedAgentDelegation(
@@ -91,6 +101,8 @@ async def main(
     *,
     create_only=False,
     auto_delete=False,
+    learner_name=DEFAULT_LEARNER_NAME,
+    level=DEFAULT_LEVEL,
     prompt_definition=None,
     voice_definition=None,
     event_handler=None,
@@ -179,8 +191,18 @@ async def main(
                 # Foundry owns prompt execution, backend conversations, and forwarding
                 # accepted commentary/thinking. The tools example additionally handles
                 # explicit backend function calls through event_handler.
+                structured_inputs = structured_inputs_for(
+                    saved, {"learner_name": learner_name, "level": level}
+                )
+                print(
+                    "Structured inputs: "
+                    + ", ".join(f"{key}={value}" for key, value in (structured_inputs or {}).items()),
+                    flush=True,
+                )
                 async with project.beta.voice_agents.live.connect(
-                    agent_name=voice_name, agent_version=voice_version
+                    agent_name=voice_name,
+                    agent_version=voice_version,
+                    structured_inputs=structured_inputs,
                 ) as connection:
                     # Foundry sends session.start; converse waits for session.started.
                     async with TranscriptDisplay() as transcript:
@@ -240,13 +262,19 @@ def run_cli(main_function=None, *, description=__doc__):
         action="store_true",
         help="Delete only the two agents created by this run on exit (default: keep them).",
     )
+    add_lesson_arguments(parser)
     args = parser.parse_args()
+    if not args.learner_name.strip():
+        parser.error("--learner-name must not be empty.")
     try:
         # samples/gpt_live/.env is shared by the Python and JavaScript samples.
         load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
         asyncio.run(
             (main_function or main)(
-                create_only=args.create_only, auto_delete=args.auto_delete
+                create_only=args.create_only,
+                auto_delete=args.auto_delete,
+                learner_name=args.learner_name.strip(),
+                level=args.level,
             )
         )
     except KeyboardInterrupt:

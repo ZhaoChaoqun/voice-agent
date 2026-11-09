@@ -11,6 +11,11 @@
       <h1>GPT Live English teacher</h1>
       <p id="agent">Loading agent…</p>
     </header>
+    <section class="controls lesson">
+      <!-- Sent as the agent's structured inputs when a session starts. -->
+      <label>Your name <input id="learner-name" type="text" value="Alex" maxlength="40" autocomplete="given-name" /></label>
+      <label>Level <select id="level"></select></label>
+    </section>
     <section class="controls">
       <button id="start" type="button">Start</button>
       <button id="stop" type="button" disabled>Stop</button>
@@ -31,7 +36,7 @@
         <div id="user" class="log"></div>
       </section>
     </main>
-    <p class="hint">
+    <p class="hint" id="hint">
       Try: “Please correct my English: I goed to school yesterday. Explain why.”
     </p>
     <script type="module" src="/app.js"></script>

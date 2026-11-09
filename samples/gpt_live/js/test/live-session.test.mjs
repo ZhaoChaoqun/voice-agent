@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { setTimeout as sleep } from "node:timers/promises";
 
+import { FALLBACK } from "../public/client-backend.js";
 import { LiveSession } from "../public/live-session.js";
 import { DATETIME_TOOL_NAME } from "../public/local-tools.js";
 import { openLiveSession } from "../public/live-transport.js";
@@ -12,6 +13,11 @@ import { ENDPOINT, MANAGED, ScriptedLive, credential, live } from "./offline.mjs
 const MICROPHONE = new Uint8Array(4800).map((_, index) => index % 256);
 const RESPONSES_AGENT = { name: "teacher", version: "3", managedDelegation: false, backendModel: "text-model" };
 const MANAGED_AGENT = { name: "teacher-live", version: "3", managedDelegation: true, backendModel: "prompt:7" };
+const CLIENT_AGENT = {
+  name: "teacher-client", version: "3", managedDelegation: false, clientDelegation: true, backendModel: "this page",
+};
+/** Long enough for the page to wait for a quiet transcript and answer a client delegation. */
+const ANSWER_MS = 1500;
 
 /**
  * Runs one session as the page does: on "ready" it sends one microphone chunk (an
@@ -116,6 +122,56 @@ describe("Responses delegation session", () => {
   });
 });
 
+describe("client delegation session", () => {
+  const delegated = (said) => [
+    live.started("conversation-client"),
+    live.user(said),
+    live.delegation("delegation-client", "client"),
+  ];
+  const replies = (scripted) =>
+    scripted.received.filter((command) => /^session\.(thinking|commentary)\.append$/.test(command.type));
+
+  it("answers from what the learner said with thinking and commentary tied to the delegation", async () => {
+    const { result, messages, scripted } = await runSession({
+      agent: CLIENT_AGENT,
+      events: delegated("What is seventeen plus twenty five?"),
+      stopAfterMs: ANSWER_MS,
+    });
+    assert.equal(result.failure, undefined);
+    assert.deepEqual(replies(scripted), [
+      { type: "session.thinking.append", content: "The client app computed 17 + 25 = 42.", delegation_id: "delegation-client" },
+      { type: "session.commentary.append", content: "17 plus 25 is 42.", delegation_id: "delegation-client" },
+    ]);
+    const answered = ofType(messages, "delegation").find((message) => message.title === "Client delegation → this page");
+    assert.equal(answered.status, "Answered locally from: What is seventeen plus twenty five?");
+    assert.equal(answered.delta, "17 plus 25 is 42.");
+    // Only the answer goes out; the page never sends Responses commands for a client agent.
+    assert.ok(!scripted.commands().some((type) => type.startsWith("response.")));
+  });
+
+  it("falls back with commentary only when the page cannot answer", async () => {
+    const { scripted } = await runSession({
+      agent: CLIENT_AGENT,
+      events: delegated("Please correct my English: I goed to school."),
+      stopAfterMs: ANSWER_MS,
+    });
+    assert.deepEqual(replies(scripted), [
+      { type: "session.commentary.append", content: FALLBACK, delegation_id: "delegation-client" },
+    ]);
+  });
+
+  it("reports a reply that fails after the event loop moved on, then closes", async () => {
+    const { messages } = await runSession({
+      agent: CLIENT_AGENT,
+      events: delegated("What time is it?"),
+      // Stop before the transcript is quiet; the reply then fails on the closed session.
+      stopAfterMs: 50,
+    });
+    assert.match(ofType(messages, "error")[0]?.message ?? "", /Client delegation failed/);
+    assert.equal(messages.at(-1).type, "closed");
+  });
+});
+
 describe("managed prompt-agent session", () => {
   it("shows Foundry-managed delegation and never runs the prompt agent itself", async () => {
     const { messages, scripted } = await runSession({
@@ -142,6 +198,32 @@ describe("managed prompt-agent session", () => {
     assert.ok(delegation.every((message) => message.id === "delegation-managed"));
     // The page only streams audio and closes; Foundry runs the prompt agent.
     assert.deepEqual([...new Set(scripted.commands())], ["session.input_audio.append", "session.close"]);
+  });
+
+  it("shows session.delegation.done, which the SDK passes through as an unknown event", async () => {
+    const { messages } = await runSession({
+      agent: MANAGED_AGENT,
+      events: [
+        live.started("conversation-done"),
+        live.delegation("delegation-done", "foundry_managed_agent"),
+        live.backend("delegation-done", "response.completed", { response: { id: "response-1", output: [] } }),
+        {
+          type: "session.delegation.done",
+          event_id: "evt_managed_done_1",
+          delegation_id: "delegation-done",
+          status: "completed",
+          error_code: null,
+          response_id: "response-1",
+          partial: false,
+          observations_truncated: false,
+        },
+      ],
+    });
+    assert.deepEqual(ofType(messages, "delegation").at(-1), {
+      type: "delegation",
+      id: "delegation-done",
+      status: "Delegation done: completed",
+    });
   });
 
   it("runs the local function in the page and returns its result on the session", async () => {

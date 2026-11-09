@@ -46,7 +46,8 @@ an existing customer-hosted MCP does not need a local tunnel.
 | [SIP Voice Agent with GPT Live](sip_voice_agent/README.md) | Create a GPT Live Agent with direct model Responses delegation, create or reuse a SIP inbound Connection, bind it, inspect call records, and remove test routing. Includes digest/IP ACL setup and offline tests. |
 | [Foundry GPT Live with managed prompt-agent delegation](gpt_live/python/README.md#managed-prompt-agent-delegation) | Create a prompt agent first, pin its version to a new GPT Live voice agent, then stream microphone audio with Foundry-managed delegation. |
 | [Foundry GPT Live with prompt-agent tools](gpt_live/python/README.md#managed-prompt-agent-with-mcp-and-local-function-tools) | Give the managed prompt agent an MCP addition calculator and a local current date/time function. |
-| [Foundry GPT Live in the browser](gpt_live/js/README.md) | Talk to the same Responses or managed prompt-agent English teacher from a browser with your microphone. The page opens the Live session directly with the preview `@azure/ai-projects` package; a small Node.js server creates the agents and gives the page an access token. The managed mode adds the MCP calculator and a local date/time function. |
+| [Foundry GPT Live with client delegation](gpt_live/python/README.md#client-delegation) | Make the app GPT Live's backend: it answers delegated time and addition questions on the Live session with thinking and commentary. Every GPT Live sample greets the learner by name using structured inputs. |
+| [Foundry GPT Live in the browser](gpt_live/js/README.md) | Talk to the same English teacher from a browser with your microphone, with Responses, managed prompt-agent (MCP calculator and local date/time function), or client delegation, and a greeting personalized by structured inputs. The page opens the Live session directly with the preview `@azure/ai-projects` package; a small Node.js server creates the agents and gives the page an access token. |
 | [`voice_agent_with_mcp.py`](voice_agent_with_mcp.py) | Create an MCP Agent, converse through the microphone, and display tool arguments and output. |
 | [`voice_agent_with_foundry_iq.py`](voice_agent_with_foundry_iq.py) | Create a Foundry IQ Agent, converse through the microphone, and display tool activity. |
 | [`voice_agent_with_local_function.py`](voice_agent_with_local_function.py) | Execute `add_numbers` in the client, return its output, and hear the response. |
@@ -141,9 +142,10 @@ backend and does not require the Projects SDK; follow its README for setup.
 The common Python SDK samples require `azure-ai-projects>=2.7.0` from PyPI.
 
 The GPT Live samples in `gpt_live/` share one `.env`. The Python terminal samples in
-`gpt_live/python/` use the shared repository-root `.venv` with additional pinned packages
-and a bundled preview `azure-ai-projects` 2.10.0 wheel from `dist/` for the GPT Live agent
-models and Live WebSocket client. The browser sample in `gpt_live/js/` uses Node.js 22+ and
+`gpt_live/python/` use their own `samples/gpt_live/python/.venv` with pinned packages and a
+bundled preview `azure-ai-projects` 2.11.0 wheel from `dist/` for the GPT Live agent models
+and Live WebSocket client; that preview changes APIs other samples use, so keep it out of the
+shared `.venv`. The browser sample in `gpt_live/js/` uses Node.js 22+ and
 the bundled preview `@azure/ai-projects` package from `dist/` instead. Follow their READMEs
 for configuration and installation.
 

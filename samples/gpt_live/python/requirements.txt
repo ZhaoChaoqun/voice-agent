@@ -1,7 +1,7 @@
 # Preview Projects SDK with the GPT Live agent models and Live WebSocket client
 # (see dist/README.md). The [voice] extra installs aiohttp for the Live client.
 # pip resolves this path from the current directory: install from the repository root.
-./dist/azure_ai_projects-2.10.0-py3-none-any.whl[voice]
+./dist/azure_ai_projects-2.11.0-py3-none-any.whl[voice]
 aiohttp==3.14.5
 azure-identity==1.25.3
 # websockets serves the offline tests' local Live endpoint.

@@ -1,10 +1,11 @@
 // Opens GPT Live sessions straight from the page with the SDK's VoiceAgentLiveClient, over a
 // browser WebSocket transport the sample supplies through the public webSocketFactory option.
 //
-// Browsers cannot set WebSocket handshake headers, so the transport moves the SDK's access token
-// into the subprotocol list: it offers "live" and "authorization.bearer.<token>". Foundry turns
-// that offer into an Authorization header for the Live route and selects only "live". The
-// preview api-version stands in for the Foundry-Features: VoiceAgents=V1Preview header.
+// Browsers cannot set WebSocket handshake headers, so the transport does what the SDK's own browser
+// transport does. It moves the SDK's access token into the subprotocol list, offering "live" and
+// "authorization.bearer.<token>"; Foundry turns that offer into an Authorization header for the
+// Live route and selects only "live". It sends the Foundry-Features: VoiceAgents=V1Preview header
+// as the foundry_features query parameter.
 //
 // Keeping the transport also lets the sample send local function results: in Foundry-managed
 // delegation they go back to the prompt agent with response.item.create and response.create,
@@ -13,10 +14,23 @@
 // Everything else goes through the SDK connection.
 import { VoiceAgentLiveClient } from "@azure/ai-projects";
 
-/** A preview api-version enables the Voice Agents preview without the Foundry-Features header. */
-export const LIVE_API_VERSION = "2025-11-15-preview";
 export const LIVE_SUBPROTOCOL = "live";
 const BEARER_OFFER = "authorization.bearer.";
+/** Handshake headers a page cannot send, and the query parameters Foundry accepts instead. */
+const HEADER_QUERY_PARAMETERS = {
+  "foundry-features": "foundry_features",
+  "x-ms-client-request-id": "client-request-id",
+};
+
+/** Moves the SDK's preview and request-ID headers into the Live URL, as the SDK's browser transport does. */
+export function browserLiveUrl(url, headers = {}) {
+  const target = new URL(url);
+  for (const [name, value] of Object.entries(headers)) {
+    const parameter = HEADER_QUERY_PARAMETERS[name.toLowerCase()];
+    if (parameter) target.searchParams.set(parameter, value);
+  }
+  return target.toString();
+}
 
 /** The SDK's Live transport for browsers: a WebSocket that authenticates with a subprotocol offer. */
 export class BrowserWebSocketTransport {
@@ -29,7 +43,7 @@ export class BrowserWebSocketTransport {
     const token = /^Bearer (\S+)$/.exec(headers?.authorization ?? "")?.[1];
     if (!token) throw new Error("The SDK supplied no bearer token for the Live handshake.");
     if (abortSignal?.aborted) throw new Error("WebSocket connection was cancelled.");
-    const socket = new WebSocket(url, [LIVE_SUBPROTOCOL, BEARER_OFFER + token]);
+    const socket = new WebSocket(browserLiveUrl(url, headers), [LIVE_SUBPROTOCOL, BEARER_OFFER + token]);
     socket.binaryType = "arraybuffer";
     this.socket = socket;
     socket.addEventListener("message", (event) => this.handlers?.onMessage(event.data));
@@ -122,16 +136,20 @@ export const serverCredential = {
 /**
  * Opens a Live session for `agent` and resolves once Foundry sends session.started, with
  * the SDK connection and sendRaw(event), which sends a client command on the same socket.
+ * The SDK sends `structuredInputs` as JSON in the handshake URL; Foundry fills them into the
+ * agent's instructions and greeting.
  */
 export async function openLiveSession(
-  { endpoint, credential = serverCredential, webSocketFactory = browserWebSocketFactory },
+  { endpoint, credential = serverCredential, webSocketFactory = browserWebSocketFactory, structuredInputs },
   agent,
 ) {
   let transport;
   const live = new VoiceAgentLiveClient(endpoint, credential, {
-    apiVersion: LIVE_API_VERSION,
     webSocketFactory: { create: () => (transport = webSocketFactory.create()) },
   });
-  const connection = await live.connect(agent.name, { agentVersionOverride: agent.version });
+  const connection = await live.connect(agent.name, {
+    agentVersionOverride: agent.version,
+    structuredInputs,
+  });
   return { connection, sendRaw: (event) => transport.send(JSON.stringify(event)) };
 }
