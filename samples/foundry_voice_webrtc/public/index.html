@@ -81,7 +81,7 @@
             <option value="whisper-1">whisper-1</option>
           </select>
           <label class="checkbox" for="enhanced-turn-detection"><input id="enhanced-turn-detection" type="checkbox" checked disabled aria-describedby="turn-detection-help"> GPT Live 1-quality turn detection</label>
-          <p id="turn-detection-help">Default on for new non-GPT Live Agents. Uses streaming transcription, interruption filtering and end-of-turn detection. Uncheck to restore the previous settings and transcription model. Click Apply settings between calls. This changes the shared saved Agent, not just this browser.</p>
+          <p id="turn-detection-help">Available for GPT Realtime 2.1, GPT Realtime 2.1 mini and Azure Realtime; disabled for Azure Realtime Flash and GPT-5.4 until supported. Default on for new Agents using a supported model. Uses streaming transcription, interruption filtering and end-of-turn detection. Uncheck to restore the previous settings and transcription model. Click Apply settings between calls. This changes the shared saved Agent, not just this browser.</p>
           <p id="turn-detection-status" role="status"></p>
           <p>Realtime model or transcription changes create a new version without deleting previous versions. GPT Live switches to a separate saved Agent. New Agents default to mai-transcribe-2-streaming. Azure Realtime uses native Ava; switching back uses Tyler HD if the saved voice is native. Model availability depends on your project.</p>
           <div class="agent-actions"><button id="save-model" disabled>Apply settings</button><button id="show-settings" disabled>Show Agent settings</button></div>

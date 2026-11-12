@@ -508,11 +508,15 @@ can trigger preparation; use Entra sign-in for deployments outside a controlled 
 
 ### Compare before and after turn detection
 
-In **Agent & audio settings**, select any non-GPT Live model, then use
+In **Agent & audio settings**, select GPT Realtime 2.1, GPT Realtime 2.1 mini,
+or Azure Realtime, then use
 **GPT Live 1-quality turn detection** and **Apply settings**. This demo preset is
-on by default for newly created Agents and stays on across non-GPT Live model
-switches. It does not change the Agent to the GPT Live protocol. Existing saved
-settings, including an explicit opt-out, are preserved.
+on by default for newly created Agents using a supported model. The control is
+disabled for **Azure Realtime Flash** and **GPT-5.4**, where this feature is not
+yet supported. Switching back to a supported model requires **Apply settings**
+before the control becomes available. This UI restriction does not modify
+existing saved Agent settings or change the Agent to the GPT Live protocol.
+Existing saved settings, including an explicit opt-out, are preserved.
 
 | Checkbox | Saved behavior |
 | --- | --- |
