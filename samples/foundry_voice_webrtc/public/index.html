@@ -35,10 +35,12 @@
   <header id="app-header"><a class="brand" href="/">◉ <span>Voice Agent In Foundry Agent Service</span></a><span class="tag">AZURE FOUNDRY <span> / </span> LIVE VOICE</span><a class="repository-link" href="https://github.com/microsoft/voice-agent" target="_blank" rel="noopener noreferrer">microsoft/voice-agent on GitHub</a></header>
   <main id="app-content">
     <section class="intro">
-      <p class="eyebrow">YOUR FIRST VOICE AGENT</p><h1>A little more human.</h1><p>Speak or type. Hear a reply. Interrupt naturally.</p><div class="weather-controls"><span id="weather-status" role="status">Loading Seattle weather...</span><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Weather: Open-Meteo</a></div>
+      <div class="intro-copy">
+        <p class="eyebrow">YOUR FIRST VOICE AGENT</p><h1>A little more human.</h1><p>Speak or type. Hear a reply. Interrupt naturally.</p><div class="weather-controls"><span id="weather-status" role="status">Loading Seattle weather...</span><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Weather: Open-Meteo</a></div>
+      </div>
       <section class="scenario-picker" aria-labelledby="scenario-label">
-        <div><label id="scenario-label" for="scenario-choice">Choose a conversation</label><p>Six fictional demos. No real transactions, bookings, hiring decisions or device changes.</p></div>
-        <select id="scenario-choice" disabled>
+        <label id="scenario-label" for="scenario-choice">Choose a conversation</label>
+        <select id="scenario-choice" aria-describedby="scenario-description scenario-switch-note" disabled>
           <option value="">General assistant</option>
           <option value="health">Health coverage</option>
           <option value="banking">Everyday banking</option>
@@ -47,6 +49,7 @@
           <option value="property">Home buying</option>
           <option value="interview">Electrician interview</option>
         </select>
+        <p id="scenario-description">Six fictional demos. No real transactions, bookings, hiring decisions or device changes.</p>
         <p id="scenario-switch-note" role="status">Choose a scenario before starting a call.</p>
       </section>
     </section>
