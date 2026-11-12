@@ -66,15 +66,12 @@ sequenceDiagram
   N-->>B: demo.ready
   B->>N: PCM append 或 input_text
   N->>A: 校验后转发
-  A-->>N: 静默 function call，不输出中间文本或音频
-  N->>A: tool_choice:none 短 backchannel
-  A-->>N: backchannel audio + response.done
-  N-->>B: 仅转发 backchannel 音频，隐藏 transcript
-  N->>T: 校验 / 去重 / 执行
+  A-->>B: 同一 response 内先说简短 filler（如“好的。”）+ function call
+  N->>T: response.done 后校验 / 去重 / 执行
   T-->>N: 成功或失败结果、状态、证据
   N-->>B: demo.tool / demo.state / demo.sources
-  N->>A: function_call_output + result-only continuation
-  A-->>B: 实际结果与输出语音，经 relay 转发
+  N->>A: function_call_output + result-only continuation (tool_choice:none)
+  A-->>B: 单条完成结果与输出语音（不重复 filler），经 relay 转发
 ```
 
 `demo.ready` 同时依赖配置确认和 greeting 完成，避免首个用户请求与欢迎语重叠。
@@ -85,35 +82,28 @@ UI 语言只决定欢迎语和界面；转录候选语言固定为 `zh-CN,en-US`
 
 客户 Flash 模板使用以下可审阅 profile；必须在客户实际项目中验证兼容性：
 
-| 项目            | 值                                                                                     |
-| --------------- | -------------------------------------------------------------------------------------- |
-| 输入 / 输出编码 | `audio/pcm`，`rate: 24000`，浏览器单声道 PCM16                                         |
-| AEC             | `server_echo_cancellation`，`reference_source: server`，`channels: 1`                  |
-| 降噪            | `azure_personal_noise_suppression`，`detection_input: mas_dns`                         |
-| 转录            | `azure-speech-streaming`，`language: zh-CN,en-US`                                      |
-| 动态 VAD        | `azure_semantic_vad`，`profile: normal`                                                |
-| 回合行为        | `auto_truncate/create_response/interrupt_response: true`，`remove_filler_words: false` |
-| 输出 voice      | `zh-CN-Xiaoxiao:DragonHDFlashLatestNeural`                                             |
+| 项目            | 值                                                                                                                       |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 输入 / 输出编码 | `audio/pcm`，`rate: 24000`，浏览器单声道 PCM16                                                                           |
+| AEC             | `server_echo_cancellation`，`reference_source: server`，`channels: 1`                                                    |
+| 降噪            | `azure_personal_noise_suppression`，`detection_input: mas_dns`                                                           |
+| 转录            | `azure-speech-streaming`，`language: zh-CN,en-US`                                                                        |
+| 动态 VAD        | `azure_semantic_vad`，`profile: normal`                                                                                  |
+| 回合行为        | Flash `auto_truncate: false`（自身已处理截断）；`create_response/interrupt_response: true`，`remove_filler_words: false` |
+| 输出 voice      | `zh-CN-Xiaoxiao:DragonHDFlashLatestNeural`                                                                               |
 
 动态 VAD 在托管语音数据面执行，不是前端关键字触发器，也没有额外添加 speech-start classifier
 或 endpointing model 来改变这份配置。relay 不在每次 `session.update` 重写 VAD/降噪/转录；
 因此必须先正确发布 Agent，不能只靠连接时覆盖来补齐缺失配置。
 
-instructions 要求工具前模型只输出 function call，不说中间文本或音频，禁止长过程说明。
-`VoiceSession` 在 `response.done` 收集并去重 call；若 response 没有 spoken output，
-用 call ID 稳定选择“好 / 收到 / 嗯，好 / 可以”，英语为 “Sure.”，请求一次禁用工具的 backchannel response。
-backchannel 的音频正常转发，但 `audio_transcript/output_audio_transcript/text/output_text`
-的 delta/done 事件被隐藏，不在聊天中生成额外消息；后续完成回答恢复正常 transcript 转发。
-收到完成后才执行 pending calls，再通过只允许讲话的 continuation 汇报工具结果。
-取消/失败会丢弃 pending calls，不执行被取消的动作。单元测试覆盖 fallback、音频转发和全部 transcript 变体隐藏、
-后续回答恢复、重复 call、取消、首轮 greeting 和 continuation 顺序。
-对旧模型已主动说出的 acknowledgement 保留兼容调度；新的 instructions 不再请求这一行为。
-协议层还跟踪 `response.output_item.added`：同一 response 已出现 message，随后又出现
-function_call 时，relay 发出 `demo.discard-assistant-output` 并携带待移除的 item IDs。
-三个 UI 共用的 VoiceClient 立即停止排队音频、移除对应 transcript；relay 抑制这些 item
-后续的音频和文本 delta/done，当前 response 结束后清理跟踪状态。
-工具完成后的新消息不受影响，已有其他回合的消息也不会被删除。
-已经通过扬声器播放的前缀无法撤回，不能把此机制描述为绝对没有听到过过程话语。
+全局 instructions 与 `control_device` 描述要求模型在家电控制类的同一 response 内、
+`function_call` 之前只说一句简短 filler（中文“好的。/好。/收到。”，英文“Sure./Got it.”，绝不描述设备、动作或计划；查询类问题不说 filler）。
+`session.update` 将 `tool_choice` 统一设为 `"auto"`，避免 `"required"` 导致 Flash 只输出 `function_call` 而跳过简短 filler。
+`VoiceSession` 直接将模型生成的简短 filler 音频与字幕转发到浏览器，不在服务端额外注入确认轮次；
+在 `response.done` 收齐并去重 pending calls 后立即执行工具，再通过 `tool_choice: "none"` 的 continuation 请求单条结果汇报，
+并在续写提示中要求不再重复已经说过的简短 filler。
+取消/失败会丢弃 pending calls，不执行被取消的动作。单元测试覆盖 `tool_choice: "auto"`、模型 filler 转发、
+无额外注入、静默工具直接执行、重复 call 去重、取消、首轮 greeting 和 continuation 顺序。
 
 这是确定的调度策略，不是硬编码的用户意图解析器；输出仍由真正的 Voice Agent 生成。
 成功语句必须基于实际工具结果，失败不能被模型描述成成功；源代码不能保证每个声学环境下的主观体验。

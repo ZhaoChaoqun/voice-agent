@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { homeGreeting } from "#server/greeting";
 import {
+  FLASH_TURN_DETECTION,
   HOME_ECHO_CANCELLATION,
   HOME_INPUT_AUDIO,
 } from "#server/voice-profile";
@@ -202,7 +203,8 @@ function conciergeSettings(
   };
 }
 
-function turnDetectionProfile(_model: string): Record<string, unknown> {
+function turnDetectionProfile(model: string): Record<string, unknown> {
+  if (model.startsWith("microsoft-realtime-flash")) return FLASH_TURN_DETECTION;
   return HOME_INPUT_AUDIO.turn_detection;
 }
 

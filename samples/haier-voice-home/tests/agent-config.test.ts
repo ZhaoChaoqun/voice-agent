@@ -6,6 +6,7 @@ import {
   type AuthoringRequest,
 } from "../server/sync-agent-config";
 import {
+  FLASH_TURN_DETECTION,
   HOME_ECHO_CANCELLATION,
   HOME_INPUT_AUDIO,
   HOME_VOICE_NAME,
@@ -45,6 +46,10 @@ describe("portable Voice Agent configuration", () => {
         audio: {
           input: {
             ...HOME_INPUT_AUDIO,
+            turn_detection:
+              edition === "flash"
+                ? FLASH_TURN_DETECTION
+                : HOME_INPUT_AUDIO.turn_detection,
             echo_cancellation: HOME_ECHO_CANCELLATION,
             format: { type: "audio/pcm", rate: 24000 },
           },
@@ -55,8 +60,9 @@ describe("portable Voice Agent configuration", () => {
         },
       });
       expect(definition.instructions).toContain(
-        "The application relay supplies its own brief spoken backchannel",
+        'say exactly ONE brief filler acknowledgement in the user\'s language: "好的。"',
       );
+      expect(definition.instructions).not.toContain("application relay");
       expect(JSON.stringify(definition)).not.toMatch(
         /\/subscriptions\/|services\.ai\.azure\.com/,
       );

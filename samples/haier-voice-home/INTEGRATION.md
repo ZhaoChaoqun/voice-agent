@@ -86,7 +86,7 @@ audio:
     turn_detection:
       type: azure_semantic_vad
       profile: normal
-      auto_truncate: true
+      auto_truncate: false
       create_response: true
       interrupt_response: true
       remove_filler_words: false
@@ -217,18 +217,18 @@ sequenceDiagram
   participant A as Foundry Voice Agent (Flash)
   B->>R: 建立会话
   R->>A: 鉴权 WebSocket + structured_inputs
-  R->>A: session.update (PCM 24kHz + tool_choice:required)
+  R->>A: session.update (PCM 24kHz + tool_choice:auto)
   A-->>R: session.updated + 开场 greeting response.done
   R-->>B: 会话就绪 (demo.ready)
   B->>R: 用户文本或 24kHz PCM 音频帧
   R->>A: conversation.item.create / input_audio_buffer.append
-  A-->>R: 静默 function_call
-  R->>R: 播放短 backchannel（隐藏其 transcript）+ 鉴权执行真实工具
+  A-->>B: 同一 response 内先说简短 filler（如“好的。”）+ function_call
+  R->>R: response.done 后鉴权、去重并执行真实工具
   R->>A: function_call_output + response.create (tool_choice:none)
-  A-->>B: 单条完成结果语音与字幕，经 relay 转发
+  A-->>B: 单条完成结果语音与字幕（不重复 filler），经 relay 转发
 ```
 
-**握手后的会话初始化（关键）**：连接打开后，后端发送一次 `session.update` 固定音频采样率、音色和工具策略。针对 `microsoft-realtime-flash-1` 等轻量实时模型，建议将会话级 `tool_choice` 设为 `"required"` 以确保设备控制指令稳定触发工具调用；同时等待收到 `session.updated` **以及**开场欢迎语的 `response.done` 后，再允许客户端发送首轮输入，避免与欢迎语抢话：
+**握手后的会话初始化（关键）**：连接打开后，后端发送一次 `session.update` 固定音频采样率、音色和工具策略。将会话级 `tool_choice` 保持为 `"auto"`（不要设为 `"required"`，否则 `microsoft-realtime-flash-1` 只输出 `function_call` 而跳过 instructions 要求的工具前简短 filler，且查询/闲聊会被迫误调工具）；同时等待收到 `session.updated` **以及**开场欢迎语的 `response.done` 后，再允许客户端发送首轮输入，避免与欢迎语抢话：
 
 ```json
 {
@@ -237,7 +237,7 @@ sequenceDiagram
     "type": "realtime",
     "instructions": "<server-owned-instructions>",
     "tools": [],
-    "tool_choice": "required",
+    "tool_choice": "auto",
     "output_modalities": ["audio", "text"],
     "audio": {
       "input": { "format": { "type": "audio/pcm", "rate": 24000 } },
@@ -318,12 +318,8 @@ sequenceDiagram
 
 随后由编排器发起带 `"tool_choice": "none"` 的 `response.create`，避免与已有 response 重叠或重复触发工具。
 `ok: true` 必须来自真实执行结果，不能照抄示例伪造成功。
-本样例还会在工具前生成短 backchannel、隐藏其 transcript，并在工具后只显示一条完成回答。
-若模型在同一 response 先生成 message 再调用函数，relay 会发送
-`demo.discard-assistant-output`（携带 `itemIds`），要求浏览器停止排队音频并删除对应消息，
-同时丢弃这些 item 的后续输出。它是**应用自己的事件，不是 Azure 原生协议事件**，
-自定义客户端需要实现相同处理；不能只处理原生 `response.*` 而忽略它。
-已经播放的声音无法撤回，此机制用于截断余下的错误过程输出。
+在本样例中，全局 `instructions` 和 `control_device` schema 共同约束模型在控制类 `function_call` 前于同一 response 内先说一句简短 filler（中文请求使用“好的。/好。/收到。”，英文请求使用“Sure./Got it.”，绝不描述动作、设备或计划；纯查询问题不说 filler）。
+`VoiceSession` 直接将该简短 filler 的音频与字幕转发给客户端，无需由 relay 额外注入一轮确认语音或做自定义事件删除；待 `response.done` 收齐工具调用后立即执行工具，并在续写提示中明确要求只播报真实完成结果、不再重复已说过的 filler。
 具体调度、取消、去重与错误处理见 `server/voice.ts` 和 `tests/server-voice.test.ts`。
 
 **可直接运行的完整应用路径**：
@@ -429,22 +425,20 @@ async function negotiateAgentWebRtc({
 后端必须接收/处理相应 function events，并在受支持的 control/event 路径返回
 `function_call_output`，保留 call ID、授权、去重和完成确认。
 如果同一 event 在 control-channel 与 DataChannel 都可见，要选定权威事件源并去重，
-不能执行两次动作。backchannel 的 transcript 若直接从 DataChannel 到达，
-还需 UI 按后端提供的 backchannel response identity 过滤；
-仅依赖现有 WebSocket relay 的过滤代码不能覆盖这条直达路径。
+不能执行两次动作。模型按 instructions 说出的工具前简短 filler 与工具后完成回复均走标准实时事件，无需客户端自定义丢弃协议。
 
 **仓库现状与可复用实现**：
 
 | 路径                                                                    | 已提供什么 / 没提供什么                                                                                         |
 | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| 本样例 `server/voice.ts`、三个 UI                                       | 已接通 Haier 的 WebSocket relay、家庭工具和 backchannel；没有接上 Agent-mode WebRTC                             |
+| 本样例 `server/voice.ts`、三个 UI                                       | 已接通 Haier 的 WebSocket relay、家庭工具和结果续写编排；没有接上 Agent-mode WebRTC                             |
 | `../foundry_voice_webrtc/server.py` 的 `Config.voice_url()` / `relay()` | 同一个保存的 Agent 的 WebSocket/WebRTC endpoint 与信令参考                                                      |
 | `../foundry_voice_webrtc/public/app.js` 的 `connectWebRtc()`            | SDP、ICE、麦克风、DataChannel 和远端音频参考                                                                    |
 | 本样例 `server/webrtc-benchmark.ts`                                     | **直接 Voice Live model-mode lab**（支持 `microsoft-realtime-flash-1`，无工具）；不是这里的 Agent-mode 接入实现 |
 
 参考 sample 有自己的 Agent 创建/设置逻辑与业务场景，**不等于已装好 Haier 工具执行器**。
 不要直接启动其 create/reset/apply-settings 流程去覆盖已保存的 Haier Agent。
-客户若要在 Haier UI 切换 WebRTC，需要把信令、真实工具与 backchannel 编排一起接入并验收；
+客户若要在 Haier UI 切换 WebRTC，需要把信令、真实工具与结果续写编排一起接入并验收；
 不能仅给当前 `/api/voice` 添加 `transport=webrtc` 就宣称完成。
 
 Agent-mode、model-mode 和 Azure OpenAI 的 `/openai/v1/realtime/calls` 是不同入口，
@@ -468,7 +462,7 @@ Voice Agent function call → Node VoiceSession → ToolRunner → HomeStore（�
 | 方案                      | 链路                                                                    | 适用场景                                                                     |
 | ------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | 直接 Function Tool        | Agent → relay/ToolRunner → DeviceAdapter → 客户设备 REST/MQTT/SDK/网关  | 推荐先完成一台设备闭环；复用现有 schema 和 UI 编排                           |
-| relay 调用 MCP            | Agent function → relay → 受信任 MCP client → 设备 MCP server → 设备平台 | 希望复用现有 relay 的 backchannel/审计，同时把设备能力独立服务化             |
+| relay 调用 MCP            | Agent function → relay → 受信任 MCP client → 设备 MCP server → 设备平台 | 希望复用现有 relay 的工具去重/结果续写/审计，同时把设备能力独立服务化        |
 | Foundry 托管远端 MCP tool | Agent → 项目配置的 MCP connection/server → 设备平台                     | 多 Agent 共用工具或已有 MCP 平台；需验证该 Agent/model 的支持与审批/事件机制 |
 
 无论选哪种，MCP 都不会自动提供真实设备驱动、租户权限、用户确认或设备执行证明。
@@ -538,7 +532,7 @@ server 建议放在客户受控网络，使用支持的 MCP transport 和明确�
 不要照抄其中的免审批策略用于有风险的真实设备操作。
 
 **托管 MCP 的执行不再经过现有本地 `ToolRunner`。**
-现有本地 function call 的短 backchannel、transcript 隐藏、设备动态展示和完成确认
+现有本地 function call 的工具去重、设备动态展示和完成确认续写
 不会因此自动套用；需针对托管 MCP 的实际事件与审批生命周期另行接入和验收。
 如果要最小化行为变化，可以先保留 function tool，让受信任 relay 内部调用 MCP。
 
@@ -547,8 +541,8 @@ server 建议放在客户受控网络，使用支持的 MCP transport 和明确�
 建议先选一台空调完成闭环，再扩展其他设备和场景：
 
 1. 客户提供测试设备、协议/SDK 文档、沙箱身份，以及型号能力与状态回执定义。
-2. 只读查询：确认用户只能看到自己的设备，离线/陈旧状态不被说成实时事实。
-3. 一次写操作：语音请求 → 参数/授权校验 → 短 backchannel → 提交命令 → 设备回执 → 单条完成回答。
+2. 只读查询：确认用户只能看到自己的设备，离线/陈旧状态不被说成实时事实，且查询不播报多余 filler。
+3. 一次写操作：语音请求 → 模型先说简短 filler + 发出 function call → 参数/授权校验 → 提交命令 → 设备回执 → 单条不重复 filler 的完成回答。
 4. 验证重复事件、超时、网络中断、设备拒绝、权限不足、用户取消及部分失败；不能重复执行或假报成功。
 5. 在 WebSocket 与 Agent-mode WebRTC 分别验收工具顺序、打断、音频及 transcript 行为。
 6. 上线前补齐用户认证、审计、限额/预算、告警、人工处理与数据保留；private Git 仓库不能替代运行时鉴权。

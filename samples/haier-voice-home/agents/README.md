@@ -8,15 +8,15 @@
 `npm run agents:render` 合并以下源码，生成忽略目录中的完整
 `.local/agent-definitions.json`：
 
-| 来源                                                 | 维护内容                                                               |
-| ---------------------------------------------------- | ---------------------------------------------------------------------- |
-| `agents/*.json`                                      | 模型、PCM 格式、speech profile、voice 和 `store: false`                |
-| `server/voice-profile.ts`                            | 共享的动态 VAD、AEC、降噪和双语转录常量                                |
-| `server/instructions.txt` / `server/instructions.ts` | 工具前模型静默、relay backchannel、单条结果回答、语言和 grounding 规则 |
-| `server/tools.ts` / `shared/controls.ts`             | 全部 function schema 与服务端输入范围                                  |
-| `server/greeting.ts`                                 | 中英文 welcome_text 和 structured input greeting 默认值                |
-| `server/agent-config.ts`                             | wire definition 合并，以及保留未知 Portal 字段的转换逻辑               |
-| `server/sync-agent-config.ts`                        | 离线展开、显式发布、并发检查和 readback                                |
+| 来源                                                 | 维护内容                                                                   |
+| ---------------------------------------------------- | -------------------------------------------------------------------------- |
+| `agents/*.json`                                      | 模型、PCM 格式、speech profile、voice 和 `store: false`                    |
+| `server/voice-profile.ts`                            | 共享的动态 VAD、AEC、降噪和双语转录常量                                    |
+| `server/instructions.txt` / `server/instructions.ts` | 工具前模型简短 filler、禁止长过程说明、单条结果回答、语言和 grounding 规则 |
+| `server/tools.ts` / `shared/controls.ts`             | 全部 function schema 与服务端输入范围                                      |
+| `server/greeting.ts`                                 | 中英文 welcome_text 和 structured input greeting 默认值                    |
+| `server/agent-config.ts`                             | wire definition 合并，以及保留未知 Portal 字段的转换逻辑                   |
+| `server/sync-agent-config.ts`                        | 离线展开、显式发布、并发检查和 readback                                    |
 
 `welcome_text` 是字符串 structured input，greeting 为
 `{"type":"template","text":"{{{welcome_text}}}"}`。浏览器初始语言在建立 Voice
@@ -25,9 +25,10 @@ WebSocket 时选择中英文欢迎语，不会把识别语言锁定为单一语�
 输入输出是 24 kHz PCM；浏览器发送 mono。`server_echo_cancellation`
 使用 server reference、`channels: 1`；personal noise suppression 的 detection
 input 是 `mas_dns`。转录显式提供 `zh-CN,en-US` 候选语言。
-客户模板使用 `azure_semantic_vad`、`profile: normal`，
-`auto_truncate/create_response/interrupt_response: true`，
-`remove_filler_words: false`。模板不会绑定原演示部署中的其他 classifier。
+客户 Flash 模板使用 `azure_semantic_vad`、`profile: normal`，
+`auto_truncate: false`（Flash 模型自身处理打断截断，关闭服务端自动截断以避免与客户端截断重复竞态），
+`create_response/interrupt_response: true`、`remove_filler_words: false`。
+模板不会绑定原演示部署中的其他 classifier。
 
 ## 发布流程
 

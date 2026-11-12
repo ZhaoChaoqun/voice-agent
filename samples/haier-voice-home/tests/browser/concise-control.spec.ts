@@ -1,4 +1,4 @@
-/** Opt-in real-Agent regression for silent tools and concise device confirmations. */
+/** Opt-in real-Agent regression for brief model fillers and concise device confirmations. */
 import { expect, test } from "@playwright/test";
 
 import { installSilentSink } from "./audio-helper";
@@ -64,9 +64,19 @@ for (const model of [LIVE_MODEL]) {
       .toBe(true);
     await expect
       .poll(
-        () =>
-          events
-            .slice(start)
+        () => {
+          const turn = events.slice(start);
+          const successIndex = turn.findIndex(
+            (event) =>
+              event.type === "demo.tool" &&
+              (event.activity as { name?: string; status?: string }).name ===
+                "control_device" &&
+              (event.activity as { name?: string; status?: string }).status ===
+                "success",
+          );
+          if (successIndex < 0) return 0;
+          return turn
+            .slice(successIndex + 1)
             .filter((event) =>
               [
                 "response.audio_transcript.done",
@@ -76,7 +86,8 @@ for (const model of [LIVE_MODEL]) {
             .filter(
               (event) =>
                 String(event.transcript ?? "") !== homeGreeting("zh").text,
-            ).length,
+            ).length;
+        },
         { timeout: TURN_TIMEOUT_MS },
       )
       .toBeGreaterThanOrEqual(1);
@@ -109,30 +120,13 @@ for (const model of [LIVE_MODEL]) {
     const completions = transcripts.filter(
       (transcript) => transcript.index > successIndex,
     );
-    expect(acknowledgements).toHaveLength(0);
-    expect(
-      turn
-        .slice(0, successIndex)
-        .some((event) =>
-          ["response.audio.delta", "response.output_audio.delta"].includes(
-            String(event.type),
-          ),
-        ),
-    ).toBe(true);
-    expect(
-      turn
-        .slice(0, successIndex)
-        .filter((event) =>
-          [
-            "response.audio_transcript.done",
-            "response.output_audio_transcript.done",
-          ].includes(String(event.type)),
-        )
-        .filter(
-          (event) => String(event.transcript ?? "") !== homeGreeting("zh").text,
-        ),
-    ).toHaveLength(0);
+    expect(acknowledgements.length).toBeLessThanOrEqual(1);
+    for (const acknowledgement of acknowledgements) {
+      expect(acknowledgement.text.trim().length).toBeLessThanOrEqual(6);
+      expect(acknowledgement.text).not.toMatch(/电视|打开|开启|TV/i);
+    }
     expect(completions).toHaveLength(1);
+    expect(completions[0].text).not.toMatch(/^(好的|好。|收到)/);
     expect(completions[0].text).toMatch(/^电视(打开啦|已打开)/);
     expect(completions[0].text).toMatch(/小城良方|折月亮|尚公主|良陈美锦/);
     expect(completions[0].text).not.toMatch(

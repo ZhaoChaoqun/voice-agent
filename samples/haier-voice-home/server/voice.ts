@@ -17,11 +17,6 @@ const MAX_BACKPRESSURE = 2_000_000; // Close slow consumers instead of growing a
 const MAX_AUDIO_LENGTH = 96_000; // About 1.5 seconds of 24 kHz mono PCM per browser frame.
 const MAX_SESSION_MS = 30 * 60 * 1000; // Avoid abandoned billable voice connections.
 const MAX_ITEM_ID_LENGTH = 32; // Native realtime rejects longer client-created conversation item IDs.
-const REQUIRED_TOOL_MODELS = new Set([
-  "microsoft-realtime-flash-1",
-  "microsoft-realtime-flash",
-  "gpt-realtime-2.1-mini",
-]); // Economical realtime models need an explicit policy to use client tools reliably.
 const instructions = homeInstructions();
 const emptyEvent = z
   .object({
@@ -90,10 +85,6 @@ interface PendingToolCall {
   arguments: string;
 }
 
-// These short confirmations are spoken before a local function is executed.
-// The call ID selects a stable variant so repeated intents do not always sound identical.
-const TOOL_ACKNOWLEDGEMENTS = ["好。", "收到。", "嗯，好。", "可以。"];
-
 export interface VoiceDependencies {
   getToken: () => Promise<string>;
   connect: (url: string, token: string) => WebSocket;
@@ -134,14 +125,15 @@ export function sendEvent(
   socket.send(JSON.stringify(event));
 }
 
-function sessionUpdate(modelId: string): BackendEvent {
+function sessionUpdate(): BackendEvent {
   return {
     type: "session.update",
     session: {
       type: "realtime",
       instructions,
       tools,
-      tool_choice: REQUIRED_TOOL_MODELS.has(modelId) ? "required" : "auto",
+      // "required" makes Flash skip the brief filler requested by the instructions.
+      tool_choice: "auto",
       output_modalities: ["audio", "text"],
       audio: {
         input: {
@@ -167,12 +159,9 @@ export class VoiceSession {
   private greetingFinished = false;
   private stopped = false;
   private activeResponse = false;
-  private toolAcknowledgementInProgress = false;
   private pendingContinuation = false;
   private continuationInstructions: string[] = [];
   private pendingToolCalls: PendingToolCall[] = [];
-  private responseMessageItems = new Map<string, string[]>();
-  private discardedAssistantItemIds = new Set<string>();
   private sentCalls = new Set<string>();
   private runner: ToolRunner;
   private readyTimeout: ReturnType<typeof setTimeout>;
@@ -237,7 +226,7 @@ export class VoiceSession {
       );
       this.upstream = this.dependencies.connect(url.toString(), token);
       this.upstream.on("open", () =>
-        sendEvent(this.upstream!, sessionUpdate(modelId)),
+        sendEvent(this.upstream!, sessionUpdate()),
       );
       this.upstream.on("message", (data) => this.fromBackend(data));
       this.upstream.on("error", (error: NodeJS.ErrnoException) => {
@@ -307,14 +296,6 @@ export class VoiceSession {
     try {
       const event = JSON.parse(data.toString()) as BackendEvent;
       if (typeof event.type !== "string") return;
-      this.trackResponseOutput(event);
-      const suppressTranscript =
-        this.toolAcknowledgementInProgress &&
-        isAssistantTranscriptEvent(event.type);
-      const suppressDiscardedOutput =
-        typeof event.item_id === "string" &&
-        this.discardedAssistantItemIds.has(event.item_id) &&
-        isAssistantOutputEvent(event.type);
       if (event.type === "error") {
         if (
           [
@@ -350,40 +331,10 @@ export class VoiceSession {
         this.functionCall(event);
       if (event.type === "response.done") this.responseDone(event);
       // Session metadata contains server-controlled instructions and tool schemas; keep it private.
-      if (
-        !event.type.startsWith("session.") &&
-        !suppressTranscript &&
-        !suppressDiscardedOutput
-      )
-        sendEvent(this.browser, event);
-      if (event.type === "response.done") {
-        this.responseMessageItems.clear();
-        this.discardedAssistantItemIds.clear();
-      }
+      if (!event.type.startsWith("session.")) sendEvent(this.browser, event);
     } catch {
       this.fail("The managed voice service returned an invalid event.");
     }
-  }
-
-  private trackResponseOutput(event: BackendEvent): void {
-    if (event.type !== "response.output_item.added") return;
-    const responseId = event.response_id;
-    const item = event.item as { id?: unknown; type?: unknown } | undefined;
-    if (typeof responseId !== "string" || !item) return;
-    if (item.type === "message" && typeof item.id === "string") {
-      const itemIds = this.responseMessageItems.get(responseId) ?? [];
-      itemIds.push(item.id);
-      this.responseMessageItems.set(responseId, itemIds);
-      return;
-    }
-    if (item.type !== "function_call") return;
-    const itemIds = this.responseMessageItems.get(responseId) ?? [];
-    if (itemIds.length === 0) return;
-    for (const itemId of itemIds) this.discardedAssistantItemIds.add(itemId);
-    sendEvent(this.browser, {
-      type: "demo.discard-assistant-output",
-      itemIds,
-    });
   }
 
   private functionCall(event: Record<string, unknown>): void {
@@ -453,42 +404,15 @@ export class VoiceSession {
     if (response?.status === "failed") this.markFailedResponse(event, response);
     if (response?.status === "cancelled" || response?.status === "failed") {
       this.pendingToolCalls = [];
-      this.toolAcknowledgementInProgress = false;
       this.pendingContinuation = false;
       return;
     }
     for (const output of response?.output ?? []) {
       if (output.type === "function_call") this.functionCall(output);
     }
-    if (this.toolAcknowledgementInProgress) {
-      this.toolAcknowledgementInProgress = false;
-      this.executePendingToolCalls();
-      this.requestToolContinuation();
-      return;
-    }
-    if (this.pendingToolCalls.length > 0) {
-      if (responseHasSpokenOutput(response)) {
-        this.executePendingToolCalls();
-        this.requestToolContinuation();
-      } else {
-        this.requestToolAcknowledgement();
-      }
-      return;
-    }
+    // The Agent instructions own any brief spoken acknowledgement before a function call.
+    this.executePendingToolCalls();
     this.requestToolContinuation();
-  }
-
-  private requestToolAcknowledgement(): void {
-    const phrase = toolAcknowledgement(this.pendingToolCalls[0].callId);
-    sendEvent(this.upstream!, {
-      type: "response.create",
-      response: {
-        tool_choice: "none",
-        instructions: `If the latest user request is Chinese, repeat verbatim, character for character: "${phrase}" If it is English, say exactly: "Sure." Do not add any other text.`,
-      },
-    });
-    this.toolAcknowledgementInProgress = true;
-    this.activeResponse = true;
   }
 
   private requestToolContinuation(): void {
@@ -592,48 +516,13 @@ export class VoiceSession {
   }
 }
 
-function responseHasSpokenOutput(
-  response: BackendResponse | undefined,
-): boolean {
-  return (response?.output ?? []).some((item) => {
-    if (item.type !== "message" || !Array.isArray(item.content)) return false;
-    return item.content.some((content) => {
-      if (!content || typeof content !== "object") return false;
-      const value = content as { text?: unknown; transcript?: unknown };
-      return [value.text, value.transcript].some(
-        (entry) => typeof entry === "string" && entry.trim().length > 0,
-      );
-    });
-  });
-}
-
-function isAssistantTranscriptEvent(type: string): boolean {
-  return /^(response\.(audio_transcript|output_audio_transcript|text|output_text)\.(delta|done))$/.test(
-    type,
-  );
-}
-
-function isAssistantOutputEvent(type: string): boolean {
-  return /^(response\.(audio|output_audio|audio_transcript|output_audio_transcript|text|output_text)\.(delta|done))$/.test(
-    type,
-  );
-}
-
-function toolAcknowledgement(callId: string): string {
-  const index = [...callId].reduce(
-    (total, character) => total + character.charCodeAt(0),
-    0,
-  );
-  return TOOL_ACKNOWLEDGEMENTS[index % TOOL_ACKNOWLEDGEMENTS.length];
-}
-
 function toolContinuationInstruction(
   name: string,
   rawArguments: string,
   rawOutput: string,
 ): string {
   const completed =
-    "The function already succeeded. Speak only about the completed result. Do not narrate a plan or use future-tense phrases such as 我先, 我来, 然后再, I will, or I'll.";
+    "The function already succeeded. Speak only about the completed result. Do not repeat the brief filler already spoken, and do not narrate a plan or use future-tense phrases such as 我先, 我来, 然后再, I will, or I'll.";
   if (!["control_device", "prepare_media_experience"].includes(name))
     return completed;
   try {

@@ -19,6 +19,7 @@ import {
   voiceAgentService,
 } from "../server/agent-config";
 import {
+  FLASH_TURN_DETECTION,
   HOME_ECHO_CANCELLATION,
   HOME_INPUT_AUDIO,
 } from "../server/voice-profile";
@@ -131,7 +132,7 @@ describe("Portal-preserving Agent authoring", () => {
       audio: {
         input: {
           noise_reduction: { type: "azure_deep_noise_suppression" },
-          turn_detection: HOME_INPUT_AUDIO.turn_detection,
+          turn_detection: FLASH_TURN_DETECTION,
         },
       },
     });
@@ -167,18 +168,15 @@ describe("Portal-preserving Agent authoring", () => {
     );
     expect(prompt).toContain("not a prerequisite");
   });
-  it("keeps pre-tool model output silent and one useful post-action TV reply", () => {
+  it("asks the model for one brief filler before a tool and one useful post-action TV reply", () => {
     const prompt = homeInstructions();
     expect(prompt).toContain(
-      "the function call must be the only model output before its result arrives",
+      'say exactly ONE brief filler acknowledgement in the user\'s language: "好的。"',
     );
-    expect(prompt).toContain(
-      "The application relay supplies its own brief spoken backchannel",
-    );
+    expect(prompt).toContain('"Sure." or "Got it." for an English request');
+    expect(prompt).toContain('Before the function call: "好的。"');
     expect(prompt).toContain('Answer: "电视打开啦。想轻松一点');
-    expect(prompt).toContain(
-      'a short backchannel such as "好。" without adding it to the conversation transcript',
-    );
+    expect(prompt).not.toContain("application relay");
     expect(prompt).toContain(
       "The completed device result and useful viewing suggestion belong in the single post-tool answer",
     );
@@ -190,14 +188,49 @@ describe("Portal-preserving Agent authoring", () => {
     );
     expect(control?.description).toContain("打开电视");
     expect(control?.description).toContain(
-      "Emit no text or audio before this function call; the application relay owns the spoken backchannel.",
+      "Before this call, say only one brief filler such as 好的。/Sure. that does not describe the action.",
     );
     expect(control?.description).toContain(
       "Never claim success or narrate the procedure before this function returns.",
     );
-    expect(control?.description).not.toContain(
-      "A very short acknowledgement may precede the call",
+    expect(control?.description).not.toContain("application relay");
+  });
+  it("disables server auto_truncate for Flash while preserving dynamic VAD", () => {
+    const definition = voiceAgentDefinition(
+      remoteVoiceDefinition("microsoft-realtime-flash-1"),
+      { instructions: "Concierge", tools: [] },
     );
+    expect(definition).toMatchObject({
+      audio: {
+        input: {
+          turn_detection: {
+            type: "azure_semantic_vad",
+            auto_truncate: false,
+            profile: "normal",
+            remove_filler_words: false,
+            create_response: true,
+            interrupt_response: true,
+          },
+        },
+      },
+    });
+    const service = voiceAgentService(
+      "home-flash",
+      remoteVoiceDefinition("microsoft-realtime-flash-1"),
+      { instructions: "Concierge", tools: [] },
+    );
+    expect(service).toMatchObject({
+      audio: {
+        input: {
+          turnDetection: {
+            type: "azure_semantic_vad",
+            autoTruncate: false,
+            profile: "normal",
+            removeFillerWords: false,
+          },
+        },
+      },
+    });
   });
   it("preserves complete dynamic fields and bilingual transcription in the authoring API payload", () => {
     const definition = voiceAgentDefinition(remoteVoiceDefinition(), {
@@ -243,7 +276,7 @@ describe("Portal-preserving Agent authoring", () => {
 
   it("authors dynamic VAD without resetting Portal recording or output voice", () => {
     const service = voiceAgentService(
-      "haier-home-realtime",
+      "home-realtime",
       remoteVoiceDefinition(),
       {
         instructions: "New concierge instructions",
@@ -317,11 +350,7 @@ describe("Portal-preserving Agent authoring", () => {
 
   it("rejects malformed or wrong-protocol definitions rather than silently replacing their settings", () => {
     expect(() =>
-      voiceAgentService(
-        "haier-home-realtime",
-        {},
-        { instructions: "", tools: [] },
-      ),
+      voiceAgentService("home-realtime", {}, { instructions: "", tools: [] }),
     ).toThrow();
   });
 

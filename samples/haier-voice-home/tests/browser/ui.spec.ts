@@ -159,28 +159,15 @@ test("streams a mocked assistant turn, tool state, and an auditable action", asy
       socket.send(JSON.stringify({ type: "response.created" }));
       socket.send(
         JSON.stringify({
-          type: "response.output_audio_transcript.delta",
-          item_id: "pre-tool-message",
-          delta: "我先帮你调整空调。",
+          type: "response.output_audio_transcript.done",
+          item_id: "filler1",
+          transcript: "好的。",
         }),
       );
       socket.send(
         JSON.stringify({
           type: "response.output_audio.delta",
-          item_id: "pre-tool-message",
-          delta: "AAAAAA==",
-        }),
-      );
-      socket.send(
-        JSON.stringify({
-          type: "demo.discard-assistant-output",
-          itemIds: ["pre-tool-message"],
-        }),
-      );
-      socket.send(
-        JSON.stringify({
-          type: "response.audio.delta",
-          item_id: "backchannel",
+          item_id: "filler1",
           delta: "AAAAAA==",
         }),
       );
@@ -228,10 +215,11 @@ test("streams a mocked assistant turn, tool state, and an auditable action", asy
     .getByLabel("也可以打字告诉小海…", { exact: true })
     .fill("请把空调调到 25 度");
   await page.getByRole("button", { name: "发送消息", exact: true }).click();
-  await expect(page.locator(".message-assistant")).toHaveText(
+  await expect(page.locator(".message-assistant")).toHaveText([
+    "好的。",
     "好呀，空调已经调到 25 度。",
-  );
-  await expect(page.locator(".message-assistant")).toHaveCount(1);
+  ]);
+  await expect(page.locator(".message-assistant")).toHaveCount(2);
   await expect(
     page.locator(".device-card-main").filter({ hasText: "空调" }),
   ).toContainText("25°C");

@@ -160,18 +160,16 @@ HAIER_VERIFIED_MODELS=microsoft-realtime-flash-1
 
 ## 交互约束与数据边界
 
-模型在工具执行前只输出 function call，不输出中间文本、音频或过程说明。
-relay 在执行前提供简短 spoken backchannel，中文只使用“好 / 收到 / 嗯，好 / 可以”，
-英语使用 “Sure.”。backchannel 的音频正常播放，但对应 transcript/text delta 和 done
-不会转发到聊天记录；聊天只显示一条工具后的完成回答。
-relay 等 backchannel response 完成后再执行工具，随后请求只描述真实结果的 continuation。
-设备实际成功后才报告完成结果；失败不能说成已完成。fallback 的选择、音频转发、
-transcript 隐藏和执行顺序均有源码及单元测试覆盖。
-如果模型仍在同一个 response 中先产生 message、再产生 function call，
-relay 会发送应用事件 `demo.discard-assistant-output`，让共享浏览器客户端停止排队音频、
-移除对应 message，并阻止该 item 的后续音频/文本继续到达页面。
-已经实际播放的声音不能撤回；这个防线用于尽早截断过程输出，不能替代模型指令和实机听测。
-它约束协议顺序，不代表模型的实际语音质量无需人工确认。
+模型在控制类动作的同一 response 内、`function_call` 之前只说一句简短 filler：
+中文请求使用“好的。/好。/收到。”，英文请求使用 “Sure. / Got it.”（英文请求不得说中文 filler），
+且绝不提及设备、设定值、具体动作、执行计划或结果；纯信息查询不需要 filler。
+会话保持 `tool_choice: "auto"`，使 `microsoft-realtime-flash-1` 既能在设备控制前稳定说出简短 filler 并调用工具，
+又不会在查询或闲聊时误调工具。
+relay 直接转发模型说出的简短 filler 音频与字幕，不在服务端额外注入确认轮次；
+待 `response.done` 收齐 `function_call` 后立即执行工具，随后发起 `tool_choice: "none"` 的结果续写，
+要求只汇报真实完成结果且不重复已经说过的 filler。
+设备实际成功后才报告完成结果；失败不能说成已完成。prompt 规则、工具 schema 描述、
+`tool_choice: "auto"` 和执行顺序均有源码及单元测试覆盖。
 
 六类设备包括电视、冰箱、空调、加湿器、灯和窗帘。温度/湿度等设置受 schema 和服务端规则限制；
 设置目标值不会伪造传感器变化。电影夜、舒适、外出是模拟场景，外出不会关闭冰箱。
@@ -230,19 +228,19 @@ HAIER_LIVE_BROWSER=1 npm run test:browser -- tests/browser/live-ui.spec.ts --wor
 
 ## 故障排查
 
-| 症状                         | 检查                                                                                     |
-| ---------------------------- | ---------------------------------------------------------------------------------------- |
-| 模型不可用                   | 项目 endpoint、Agent 名字、`HAIER_VERIFIED_MODELS` 和区域/配额；重启 Node 读取新环境     |
-| `401` / `403`                | 开发身份登录状态、正确 tenant、项目消费或开发角色；不要换成浏览器 token                  |
-| `realtime_requires_language` | 检查已发布定义包含 `azure-speech-streaming` 的 `zh-CN,en-US` candidate languages         |
-| 连接后一直等待               | greeting 是否完成、structured input 模板是否发布、输出 voice 是否匹配、服务端错误 code   |
-| pre-tool 没有声音            | 检查 response audio 事件和 fallback 测试；backchannel transcript 按设计不显示在聊天中    |
-| 麦克风被拒绝                 | localhost 或 HTTPS secure context、用户手势、浏览器系统权限                              |
-| `EADDRINUSE`                 | 选择自己空闲的端口，不停止其他会话的服务；edition proxy 的 backend 端口须一致            |
-| 无 WebGL                     | 使用可用 GPU/浏览器；UI 应显示错误，设备/文本控件仍可使用                                |
-| 存储错误                     | 确认运行身份可写家庭 JSON、上传目录及 ACA 挂载；不能把未保存结果当成功                   |
-| WebRTC SDP/ICE 失败          | 服务是否提供 `/voice-live/realtime/calls` 对应 API、UDP/ICE 可达性、模型是否在该资源可用 |
-| 配置发布后字段消失           | 使用脚本读回对比；不要再用会丢弃 advanced fields 的其他 serializer 覆盖                  |
+| 症状                         | 检查                                                                                                           |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 模型不可用                   | 项目 endpoint、Agent 名字、`HAIER_VERIFIED_MODELS` 和区域/配额；重启 Node 读取新环境                           |
+| `401` / `403`                | 开发身份登录状态、正确 tenant、项目消费或开发角色；不要换成浏览器 token                                        |
+| `realtime_requires_language` | 检查已发布定义包含 `azure-speech-streaming` 的 `zh-CN,en-US` candidate languages                               |
+| 连接后一直等待               | greeting 是否完成、structured input 模板是否发布、输出 voice 是否匹配、服务端错误 code                         |
+| 工具前缺少简短回应           | 核对会话 `tool_choice` 为 `auto`（`required` 会让 Flash 跳过 filler），并确认已重新发布最新 instructions/tools |
+| 麦克风被拒绝                 | localhost 或 HTTPS secure context、用户手势、浏览器系统权限                                                    |
+| `EADDRINUSE`                 | 选择自己空闲的端口，不停止其他会话的服务；edition proxy 的 backend 端口须一致                                  |
+| 无 WebGL                     | 使用可用 GPU/浏览器；UI 应显示错误，设备/文本控件仍可使用                                                      |
+| 存储错误                     | 确认运行身份可写家庭 JSON、上传目录及 ACA 挂载；不能把未保存结果当成功                                         |
+| WebRTC SDP/ICE 失败          | 服务是否提供 `/voice-live/realtime/calls` 对应 API、UDP/ICE 可达性、模型是否在该资源可用                       |
+| 配置发布后字段消失           | 使用脚本读回对比；不要再用会丢弃 advanced fields 的其他 serializer 覆盖                                        |
 
 ## 公共访问风险
 

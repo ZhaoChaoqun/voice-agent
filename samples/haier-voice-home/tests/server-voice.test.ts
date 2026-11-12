@@ -120,7 +120,7 @@ describe("managed Voice Agent relay", () => {
     });
   });
 
-  it("requires tools on economical model turns while leaving Realtime automatic", async () => {
+  it("leaves tool choice automatic so instructions can emit one brief filler before tools", async () => {
     const realtime = await connected();
     const flash = await connected({ modelId: "microsoft-realtime-flash-1" });
     const mini = await connected({ modelId: "gpt-realtime-2.1-mini" });
@@ -130,11 +130,11 @@ describe("managed Voice Agent relay", () => {
     );
     expect(flash.upstream.events[0].session).toHaveProperty(
       "tool_choice",
-      "required",
+      "auto",
     );
     expect(mini.upstream.events[0].session).toHaveProperty(
       "tool_choice",
-      "required",
+      "auto",
     );
   });
 
@@ -229,7 +229,7 @@ describe("managed Voice Agent relay", () => {
     ).toHaveLength(3);
   });
 
-  it("speaks one acknowledgement before applying a tool and schedules its completed result", async () => {
+  it("applies a silent tool call immediately and schedules its completed result", async () => {
     const { browser, upstream, home } = await connected();
     acknowledge(upstream);
     upstream.receive({ type: "response.created" });
@@ -257,71 +257,6 @@ describe("managed Voice Agent relay", () => {
         output: [{ ...call, type: "function_call" }],
       },
     });
-    expect(
-      upstream.events.filter((event) => event.type === "response.create"),
-    ).toHaveLength(1);
-    expect(
-      upstream.events.find((event) => event.type === "response.create"),
-    ).toMatchObject({
-      response: {
-        tool_choice: "none",
-        instructions: expect.stringMatching(
-          /repeat verbatim, character for character: "(好。|收到。|嗯，好。|可以。)"/,
-        ),
-      },
-    });
-    expect(home.snapshot().revision).toBe(0);
-    for (const kind of [
-      "audio_transcript",
-      "output_audio_transcript",
-      "text",
-      "output_text",
-    ]) {
-      for (const suffix of ["delta", "done"])
-        upstream.receive({
-          type: `response.${kind}.${suffix}`,
-          item_id: "ack-item",
-          transcript: "好。",
-          text: "好。",
-          delta: "好。",
-        });
-    }
-    upstream.receive({
-      type: "response.audio.delta",
-      item_id: "ack-item",
-      delta: "AAAA",
-    });
-    upstream.receive({
-      type: "response.output_audio.delta",
-      item_id: "ack-item",
-      delta: "AAAA",
-    });
-    expect(
-      browser.events.some((event) =>
-        /^response\.(audio_transcript|output_audio_transcript|text|output_text)\./.test(
-          String(event.type),
-        ),
-      ),
-    ).toBe(false);
-    expect(
-      browser.events.filter((event) =>
-        ["response.audio.delta", "response.output_audio.delta"].includes(
-          String(event.type),
-        ),
-      ),
-    ).toHaveLength(2);
-    upstream.receive({
-      type: "response.done",
-      response: {
-        status: "completed",
-        output: [
-          {
-            type: "message",
-            content: [{ type: "output_audio", transcript: "好。" }],
-          },
-        ],
-      },
-    });
     expect(home.snapshot().revision).toBe(1);
     expect(
       upstream.events.filter(
@@ -330,7 +265,15 @@ describe("managed Voice Agent relay", () => {
     ).toHaveLength(1);
     expect(
       upstream.events.filter((event) => event.type === "response.create"),
-    ).toHaveLength(2);
+    ).toHaveLength(1);
+    expect(upstream.events.at(-1)).toMatchObject({
+      response: {
+        tool_choice: "none",
+        instructions: expect.stringContaining(
+          "Do not repeat the brief filler already spoken",
+        ),
+      },
+    });
     expect(upstream.events.at(-1)).toMatchObject({
       response: {
         tool_choice: "none",
@@ -345,25 +288,9 @@ describe("managed Voice Agent relay", () => {
     expect(browser.events.some((event) => event.type === "demo.state")).toBe(
       true,
     );
-    upstream.receive({
-      type: "response.audio_transcript.done",
-      item_id: "completion-item",
-      transcript: "电视打开啦。",
-    });
-    expect(
-      browser.events.filter(
-        (event) => event.type === "response.audio_transcript.done",
-      ),
-    ).toEqual([
-      {
-        type: "response.audio_transcript.done",
-        item_id: "completion-item",
-        transcript: "电视打开啦。",
-      },
-    ]);
   });
 
-  it("discards a model-authored pre-tool message before applying the tool", async () => {
+  it("forwards the model's own pre-tool filler and does not inject another one", async () => {
     const { browser, upstream, home } = await connected();
     acknowledge(upstream);
     const call = {
@@ -381,7 +308,7 @@ describe("managed Voice Agent relay", () => {
       type: "response.output_audio_transcript.delta",
       response_id: "tool-response",
       item_id: "pre-tool-message",
-      delta: "好的，我来打开电视。",
+      delta: "好的。",
     });
     upstream.receive({
       type: "response.output_item.added",
@@ -393,28 +320,26 @@ describe("managed Voice Agent relay", () => {
       "response.output_audio.delta",
       "response.audio_transcript.done",
       "response.output_audio_transcript.done",
-      "response.text.done",
-      "response.output_text.done",
     ])
       upstream.receive({
         type,
         response_id: "tool-response",
         item_id: "pre-tool-message",
-        transcript: "好的，我来打开电视。",
-        text: "好的，我来打开电视。",
+        transcript: "好的。",
         delta: "AAAA",
       });
-    expect(browser.events).toContainEqual({
-      type: "demo.discard-assistant-output",
-      itemIds: ["pre-tool-message"],
-    });
     expect(
       browser.events.some(
-        (event) =>
-          event.item_id === "pre-tool-message" &&
-          event.type !== "response.output_audio_transcript.delta",
+        (event) => event.type === "demo.discard-assistant-output",
       ),
     ).toBe(false);
+    expect(browser.events).toContainEqual({
+      type: "response.output_audio_transcript.done",
+      response_id: "tool-response",
+      item_id: "pre-tool-message",
+      transcript: "好的。",
+      delta: "AAAA",
+    });
     upstream.receive({
       type: "response.done",
       response: {
@@ -422,7 +347,7 @@ describe("managed Voice Agent relay", () => {
         output: [
           {
             type: "message",
-            content: [{ type: "output_audio", transcript: "没问题。" }],
+            content: [{ type: "output_audio", transcript: "好的。" }],
           },
           call,
         ],

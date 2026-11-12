@@ -33,4 +33,9 @@ export const HOME_INPUT_AUDIO = {
   },
 };
 
-export const FLASH_TURN_DETECTION = HOME_TURN_DETECTION;
+// Flash already truncates interrupted playback itself; disabling server
+// auto-truncation avoids a duplicate browser truncate racing the backend.
+export const FLASH_TURN_DETECTION = {
+  ...HOME_TURN_DETECTION,
+  auto_truncate: false,
+};
