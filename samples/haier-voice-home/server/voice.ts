@@ -19,6 +19,7 @@ const MAX_SESSION_MS = 30 * 60 * 1000; // Avoid abandoned billable voice connect
 const MAX_ITEM_ID_LENGTH = 32; // Native realtime rejects longer client-created conversation item IDs.
 const REQUIRED_TOOL_MODELS = new Set([
   "microsoft-realtime-flash-1",
+  "microsoft-realtime-flash",
   "gpt-realtime-2.1-mini",
 ]); // Economical realtime models need an explicit policy to use client tools reliably.
 const instructions = homeInstructions();

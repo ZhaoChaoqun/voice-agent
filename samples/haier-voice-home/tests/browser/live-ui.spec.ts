@@ -19,7 +19,7 @@ async function say(page: Page, value: string): Promise<void> {
   await send.click();
 }
 
-for (const model of ["gpt-realtime-2.1", "gpt-realtime-2.1-mini"]) {
+for (const model of [process.env.LIVE_MODEL ?? "microsoft-realtime-flash-1"]) {
   test(`real ${model}: Chinese control, English product grounding, and spoken output`, async ({
     page,
   }) => {

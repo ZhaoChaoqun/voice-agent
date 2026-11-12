@@ -13,7 +13,7 @@ flowchart LR
   Audio["AudioWorklet<br/>24 kHz mono PCM16"]
   Boundary["Node 同源边界<br/>loopback 或受保护 HTTPS"]
   Relay["VoiceSession relay<br/>服务端身份 / 事件校验 / 编排"]
-  Foundry["Foundry Voice Agent<br/>Realtime 或 Mini<br/>instructions / greeting / function schema"]
+  Foundry["Foundry Voice Agent<br/>国内客户：Microsoft Realtime Flash<br/>instructions / greeting / function schema"]
   Live["Voice Live 数据面<br/>Azure Speech / VAD / AEC / 降噪 / 输出语音"]
   Tools["本地 ToolRunner<br/>schema 校验 / call ID 去重"]
   Home["HomeStore<br/>模拟家庭 / 食材 / 补货清单"]
@@ -83,7 +83,7 @@ UI 语言只决定欢迎语和界面；转录候选语言固定为 `zh-CN,en-US`
 
 ## speech profile 和工具前后编排
 
-两只 Agent 使用同一个可审阅 profile：
+客户 Flash 模板使用以下可审阅 profile；必须在客户实际项目中验证兼容性：
 
 | 项目            | 值                                                                                     |
 | --------------- | -------------------------------------------------------------------------------------- |
@@ -154,7 +154,7 @@ cookie 使用 HMAC、12 小时到期、HttpOnly、Secure、SameSite=Lax 和 `__H
 ```mermaid
 flowchart LR
   B["Browser<br/>RTCPeerConnection"] -->|"SDP offer / text turn，loopback HTTP"| N["Lab Node<br/>服务端鉴权 control channel"]
-  N -->|"MediaGateway WebSocket<br/>/voice-live/realtime/calls"| L["Voice Live model mode<br/>Realtime 或 Mini"]
+  N -->|"MediaGateway WebSocket<br/>/voice-live/realtime/calls"| L["Voice Live model mode<br/>历史海外比较模型，非国内客户路径"]
   B <-->|"WebRTC RTP audio<br/>voice-live-events DataChannel"| L
 ```
 
@@ -168,7 +168,7 @@ lab 不连接 Foundry Agent、不带家居工具、知识库、家庭存储或�
 ```mermaid
 flowchart TB
   User["受控演示浏览器"] -->|"HTTPS / 同源 WS"| ACA["一个 ACA app / 一个副本<br/>构建 UI + Node relay"]
-  ACA -->|"user-assigned managed identity"| F["部署者自己的 Foundry project<br/>Realtime + Mini Agent"]
+  ACA -->|"user-assigned managed identity"| F["客户自己的 Foundry project<br/>Microsoft Realtime Flash Agent"]
   ACA -->|"同一身份，AcrPull"| R["部署者自己的 ACR<br/>由源码构建的 image"]
   ACA -->|"Azure Files mount /data"| S["私有家庭与上传存储"]
 ```

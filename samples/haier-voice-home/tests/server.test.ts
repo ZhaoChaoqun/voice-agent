@@ -85,6 +85,58 @@ afterEach(() => {
 });
 
 describe("Portal-preserving Agent authoring", () => {
+  it("defaults the China customer to Flash without requiring overseas Agents", () => {
+    const config = runtimeConfig({
+      FOUNDRY_PROJECT_ENDPOINT:
+        "https://example.services.ai.azure.com/api/projects/example",
+      HAIER_FLASH_AGENT: "unit-flash",
+      HAIER_MINI_AGENT: "unused-comparison-mini",
+      HAIER_VERIFIED_MODELS: "microsoft-realtime-flash-1",
+    });
+    expect(config.models.filter((model) => model.available)).toEqual([
+      expect.objectContaining({
+        id: "microsoft-realtime-flash-1",
+        agentName: "unit-flash",
+        label: "Microsoft Realtime Flash",
+      }),
+    ]);
+    const unversioned = runtimeConfig({
+      FOUNDRY_PROJECT_ENDPOINT:
+        "https://example.services.ai.azure.com/api/projects/example",
+      HAIER_FLASH_AGENT: "unit-flash",
+      HAIER_SECONDARY_MODEL_ID: "microsoft-realtime-flash",
+      HAIER_VERIFIED_MODELS: "microsoft-realtime-flash",
+    });
+    expect(unversioned.models.filter((model) => model.available)).toEqual([
+      expect.objectContaining({
+        id: "microsoft-realtime-flash",
+        agentName: "unit-flash",
+        label: "Microsoft Realtime Flash",
+      }),
+    ]);
+  });
+
+  it("preserves Portal-tuned noise reduction on an existing Flash Agent while applying defaults when absent", () => {
+    const existing = remoteVoiceDefinition("microsoft-realtime-flash-1") as {
+      audio: { input: Record<string, unknown> };
+    };
+    existing.audio.input.noise_reduction = {
+      type: "azure_deep_noise_suppression",
+    };
+    const merged = voiceAgentDefinition(existing, {
+      instructions: "Concierge",
+      tools: [],
+    });
+    expect(merged).toMatchObject({
+      audio: {
+        input: {
+          noise_reduction: { type: "azure_deep_noise_suppression" },
+          turn_detection: HOME_INPUT_AUDIO.turn_detection,
+        },
+      },
+    });
+  });
+
   it("uses the Mini selector without presenting it as Flash", () => {
     const config = runtimeConfig({
       FOUNDRY_PROJECT_ENDPOINT:

@@ -8,7 +8,7 @@ test.skip(
 test.describe.configure({ mode: "serial" });
 const TURN_TIMEOUT_MS = 75_000; // Bound managed model startup plus local tool continuation.
 
-for (const model of ["gpt-realtime-2.1", "gpt-realtime-2.1-mini"]) {
+for (const model of [process.env.LIVE_MODEL ?? "microsoft-realtime-flash-1"]) {
   test(`real ${model}: Chinese control and English source-grounded follow-up`, async ({
     page,
   }) => {

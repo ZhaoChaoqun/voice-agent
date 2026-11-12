@@ -22,6 +22,16 @@ const projectEndpoint = required("FOUNDRY_PROJECT_ENDPOINT");
 const accessCode = required("HAIER_ACCESS_CODE");
 const sessionSecret = required("HAIER_SESSION_SECRET");
 const minimum = process.env.HAIER_MIN_REPLICAS ?? "1";
+const secondaryModelId =
+  process.env.HAIER_SECONDARY_MODEL_ID ?? "microsoft-realtime-flash-1";
+if (
+  !["microsoft-realtime-flash-1", "microsoft-realtime-flash"].includes(
+    secondaryModelId,
+  )
+)
+  throw new Error(
+    "HAIER_SECONDARY_MODEL_ID must be microsoft-realtime-flash-1 or microsoft-realtime-flash.",
+  );
 const webRoot = process.env.HAIER_WEB_ROOT ?? "editions/habitat/dist";
 if (!["0", "1"].includes(minimum))
   throw new Error("HAIER_MIN_REPLICAS must be 0 or 1.");
@@ -87,9 +97,8 @@ const env = {
   HAIER_DATA_PATH: "/data/sessions",
   HAIER_WEB_ROOT: webRoot,
   FOUNDRY_PROJECT_ENDPOINT: projectEndpoint,
-  HAIER_REALTIME_AGENT: required("HAIER_REALTIME_AGENT"),
-  HAIER_MINI_AGENT: required("HAIER_MINI_AGENT"),
-  HAIER_SECONDARY_MODEL_ID: "gpt-realtime-2.1-mini",
+  HAIER_FLASH_AGENT: required("HAIER_FLASH_AGENT"),
+  HAIER_SECONDARY_MODEL_ID: secondaryModelId,
   HAIER_VERIFIED_MODELS: required("HAIER_VERIFIED_MODELS"),
   AZURE_CLIENT_ID: required("AZURE_CLIENT_ID"),
 };

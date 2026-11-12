@@ -24,9 +24,8 @@ const env = {
     "https://example.services.ai.azure.com/api/projects/example",
   HAIER_ACCESS_CODE: "unit-test-access-code-not-a-real-credential",
   HAIER_SESSION_SECRET: "unit-test-signing-secret-not-a-real-credential",
-  HAIER_REALTIME_AGENT: "unit-realtime",
-  HAIER_MINI_AGENT: "unit-mini",
-  HAIER_VERIFIED_MODELS: "gpt-realtime-2.1,gpt-realtime-2.1-mini",
+  HAIER_FLASH_AGENT: "unit-flash",
+  HAIER_VERIFIED_MODELS: "microsoft-realtime-flash-1",
   AZURE_CLIENT_ID: "unit-client",
   HAIER_ENVIRONMENT_STORAGE: "unit-storage",
 };
@@ -62,6 +61,14 @@ describe("offline ACA manifest renderer", () => {
         expect(manifest.properties.template.containers[0].env).toContainEqual({
           name: "HAIER_PUBLIC_GUEST_ACCESS",
           value: "0",
+        });
+        expect(manifest.properties.template.containers[0].env).toContainEqual({
+          name: "HAIER_FLASH_AGENT",
+          value: "unit-flash",
+        });
+        expect(manifest.properties.template.containers[0].env).toContainEqual({
+          name: "HAIER_SECONDARY_MODEL_ID",
+          value: "microsoft-realtime-flash-1",
         });
         expect(manifest.properties.template.volumes[0].storageType).toBe(
           "AzureFile",

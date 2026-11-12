@@ -8,7 +8,8 @@
 
 需要部署者自己的 subscription、region、resource group、ACA managed environment、
 ACR、user-assigned managed identity、Foundry project，以及 ACA environment 中已注册的
-Azure Files storage。选择支持所需两个 managed models 和 speech profile 的区域。
+Azure Files storage。海尔国内客户使用 Microsoft Realtime Flash，核对客户项目中该模型及
+speech profile 的支持情况，不把其他海外模型作为部署前提。
 
 建议先完成[本地 Agent 接入与验收](../README.md)，再部署 Web 应用。
 使用独立 app/存储隔离不同公开演示；不要覆盖他人现有资源。
@@ -58,9 +59,8 @@ HAIER_REGISTRY_SERVER=<your-registry>.azurecr.io
 HAIER_IMAGE=<your-registry>.azurecr.io/voice-home:<your-tag>
 HAIER_PUBLIC_ORIGIN=https://<your-app-fqdn>
 FOUNDRY_PROJECT_ENDPOINT=https://<resource>.services.ai.azure.com/api/projects/<project>
-HAIER_REALTIME_AGENT=<your-realtime-agent>
-HAIER_MINI_AGENT=<your-mini-agent>
-HAIER_VERIFIED_MODELS=gpt-realtime-2.1,gpt-realtime-2.1-mini
+HAIER_FLASH_AGENT=<your-flash-agent>
+HAIER_VERIFIED_MODELS=microsoft-realtime-flash-1
 HAIER_ENVIRONMENT_STORAGE=<your-environment-storage-binding-name>
 HAIER_ACCESS_CODE=<new-random-value-at-least-24-characters>
 HAIER_SESSION_SECRET=<different-new-random-value-at-least-32-characters>
@@ -94,7 +94,7 @@ az containerapp create \
 ```
 
 JSON 是 YAML 的子集；也可使用组织批准的 IaC 流程消费同等定义。
-部署后必须核对实际 FQDN 与配置 origin，并验证 identity、存储写权限、两只 Agent、
+部署后必须核对实际 FQDN 与配置 origin，并验证 identity、存储写权限、客户 Flash Agent、
 greeting、工具前短 acknowledgement、工具后结果、音频/打断和双浏览器家庭隔离。
 `/api/health` 只证明进程存活，不证明 Foundry 或全部功能已就绪。
 更新已存在 app 的流程由部署者自己的 IaC 管理；不要假定 `create` 能替代所有更新策略。

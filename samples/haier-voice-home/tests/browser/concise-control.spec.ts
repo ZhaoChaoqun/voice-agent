@@ -6,8 +6,7 @@ import { homeGreeting } from "../../server/greeting";
 
 const BASE_URL = process.env.HAIER_LIVE_URL ?? "http://127.0.0.1:5197";
 const TURN_TIMEOUT_MS = 90_000; // Include managed-Agent setup and one real tool continuation.
-const SECONDARY_MODEL =
-  process.env.HAIER_SECONDARY_MODEL_ID ?? "gpt-realtime-2.1-mini";
+const LIVE_MODEL = process.env.LIVE_MODEL ?? "microsoft-realtime-flash-1";
 
 test.skip(
   process.env.RUN_LIVE_TESTS !== "1",
@@ -15,7 +14,7 @@ test.skip(
 );
 test.use({ trace: "off", screenshot: "off" });
 
-for (const model of ["gpt-realtime-2.1", SECONDARY_MODEL]) {
+for (const model of [LIVE_MODEL]) {
   test(`${model} acknowledges, opens the TV, and gives one short confirmation`, async ({
     page,
   }) => {

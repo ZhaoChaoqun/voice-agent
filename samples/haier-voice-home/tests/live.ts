@@ -17,7 +17,7 @@ const POLL_MS = 50; // Keep assertions responsive without busy-waiting on stream
 const AUDIO_FRAME_BYTES = 960; // 20 ms of signed 16-bit mono PCM at 24 kHz.
 const AUDIO_FRAME_MS = 20; // Pace synthetic audio like microphone input, not a bulk transfer.
 const TRAILING_SILENCE_BYTES = 57_600; // 1.2 seconds lets server VAD detect the utterance end.
-const model = process.env.LIVE_MODEL ?? "gpt-realtime-2.1";
+const model = process.env.LIVE_MODEL ?? "microsoft-realtime-flash-1";
 const openingLanguage = process.env.LIVE_LANGUAGE ?? "zh";
 assert(
   openingLanguage === "zh" || openingLanguage === "en",

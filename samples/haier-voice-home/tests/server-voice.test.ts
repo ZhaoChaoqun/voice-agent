@@ -79,7 +79,11 @@ async function connected({
       connect: (url, token) => {
         expect(url).toContain(
           `/agents/${
-            modelId === "gpt-realtime-2.1" ? "home-realtime" : "home-mini"
+            modelId === "gpt-realtime-2.1"
+              ? "home-realtime"
+              : modelId === "microsoft-realtime-flash-1"
+                ? "home-flash"
+                : "home-mini"
           }/endpoint/protocols/voice?api-version=v1`,
         );
         expect(token).toBe("mock-secret-token");

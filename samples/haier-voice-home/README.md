@@ -12,7 +12,7 @@
 | `src/`、`server/`、`shared/` | Classic UI、唯一的 Node API/relay、共享协议与控制规则        |
 | `editions/modern/`           | 明亮现代客厅 UI，同时提供 Habitat 复用的可维护组件           |
 | `editions/habitat/`          | 推荐展示的 Habitat UI，固定视平线、程序化材质和房间反射      |
-| `agents/`                    | Realtime / Mini 的无资源绑定配置模板                         |
+| `agents/`                    | 国内客户 Flash 配置；其他模型仅作显式海外比较参考            |
 | `knowledge/`                 | 产品事实摘要、来源及带日期的影视推荐快照                     |
 | `webrtc-benchmark/`          | 独立的 WebRTC **model-mode** latency lab，不是完整家居 Agent |
 | `tests/`、`deploy/`          | 离线回归、显式 opt-in 集成测试和可选 ACA 部署输入            |
@@ -33,9 +33,10 @@ Node 24.5+ 用于服务端 HTTPS 代理配置；无代理时同样使用这一�
 只有启用真实语音时才需要 Azure CLI 登录、Foundry 资源和项目。
 离线运行可以操作模拟设备和查看知识来源，但**没有伪造的 AI 回复或浏览器 TTS 回退**。
 
-在自己的 Azure 订阅中准备 Foundry 资源和项目，确认目标区域实际支持：
+本样例的海尔国内客户接入以 **Microsoft Realtime Flash** 为准。
+在自己的 Azure 订阅中准备 Foundry 资源和项目，确认客户项目的具体配置：
 
-- `gpt-realtime-2.1` 和 `gpt-realtime-2.1-mini` managed Voice Agent；
+- Microsoft Realtime Flash managed Voice Agent，当前 API ID 为 `microsoft-realtime-flash-1`；
 - Azure Speech streaming transcription、Azure Semantic VAD、
   personal noise suppression、server echo cancellation；
 - `zh-CN-Xiaoxiao:DragonHDFlashLatestNeural`。
@@ -85,7 +86,7 @@ npm run dev
 打开 `http://127.0.0.1:5184`。Modern 也可独立 `npm run dev`，默认端口 `5180`。
 这两个 Vite proxy 只用于 loopback 开发，不是公共部署入口。
 
-## 创建并发布两只 Voice Agent
+## 创建并发布客户 Flash Voice Agent
 
 先用自己的开发身份完成 `az login`，必要时指定 tenant。不要把 access token 复制到配置或 UI。
 管理 Agent 的身份需要项目级创建/更新权限，例如 **Foundry Agent Developer**；
@@ -102,16 +103,15 @@ npm run dev
 npm run agents:render
 ```
 
-检查忽略目录 `.local/agent-definitions.json` 中的两个完整定义。它们包含 24 kHz mono PCM、
+检查忽略目录 `.local/agent-definitions.json` 中的 `flash` 完整定义。它包含 24 kHz mono PCM、
 动态 VAD、AEC、降噪、双语转录、Xiaoxiao、structured input greeting 和全部工具。
 默认 `store: false`，不会主动开启服务端会话存储；仍需遵守服务的数据处理条款。
 
-在 `.env` 中填写自己的项目和两只独立 Agent 名字，然后由有权限的操作者显式运行：
+在 `.env` 中填写自己的项目和 Flash Agent 名字，然后由有权限的操作者显式运行：
 
 ```dotenv
 FOUNDRY_PROJECT_ENDPOINT=https://<resource>.services.ai.azure.com/api/projects/<project>
-HAIER_REALTIME_AGENT=<your-realtime-agent-name>
-HAIER_MINI_AGENT=<your-mini-agent-name>
+HAIER_FLASH_AGENT=<your-flash-agent-name>
 ```
 
 ```bash
@@ -123,37 +123,37 @@ npm run agents:publish -- --confirm-project "$FOUNDRY_PROJECT_ENDPOINT"
 也可以在 `--confirm-project` 后直接填写与 `.env` 完全相同的项目 URL。
 脚本创建缺失的 Agent，或为已有同类型、同模型 Agent 发布新版本；更新前检查版本变化，
 更新后读回所有提交字段，发现配置丢失会报错。已有 Agent 的其他 Portal 设置会保留。
-两只 Agent 按顺序发布，**不是跨 Agent 原子事务**；第二只失败时检查输出并重跑。
+默认命令只发布客户 Flash，不会创建或更新其他海外比较模型。
 该脚本不创建资源、model deployment、RBAC，也不修改任何预置项目。
 现有 Agent 被其他操作者并发编辑时，应协调独占发布窗口；读前检查不能替代服务端事务。
 
 验证项目中的精确模型和 Agent 定义后，在 `.env` 中显式启用选择器：
 
 ```dotenv
-HAIER_VERIFIED_MODELS=gpt-realtime-2.1,gpt-realtime-2.1-mini
+HAIER_VERIFIED_MODELS=microsoft-realtime-flash-1
 ```
 
-这个变量是操作者声明，不是程序自动验收证明。先分别测试两只 Agent，再用于演示。
+这个变量是操作者声明，不是程序自动验收证明。先测试客户 Flash Agent，再用于演示。
 `gpt-live` 在此应用中未集成，选择器会明确标为不可用，不会别名映射到其他模型。
 
 ## 环境变量
 
-| 变量                                         | 用途 / 默认                                                       |
-| -------------------------------------------- | ----------------------------------------------------------------- |
-| `FOUNDRY_PROJECT_ENDPOINT`                   | 服务端唯一允许的项目 HTTPS endpoint；无默认资源                   |
-| `HAIER_REALTIME_AGENT` / `HAIER_MINI_AGENT`  | 两只 Agent 名字；发布时必须显式提供                               |
-| `HAIER_SECONDARY_MODEL_ID`                   | 默认 `gpt-realtime-2.1-mini`；正常接入保持此值                    |
-| `HAIER_VERIFIED_MODELS`                      | 逗号分隔的精确模型 ID；默认不启用任何语音模型                     |
-| `AZURE_TENANT_ID`                            | 可选，本地 CLI credential tenant                                  |
-| `AZURE_CLIENT_ID`                            | 云端 user-assigned managed identity client ID                     |
-| `HOST` / `PORT`                              | 默认 `127.0.0.1` / `5178`                                         |
-| `HAIER_LOCAL_STATE_PATH`                     | 本地家庭 JSON；默认 `.azure/home.json`                            |
-| `HAIER_PUBLIC_ORIGIN`                        | 可选云模式的精确 HTTPS origin；设置后必须完整配置保护             |
-| `HAIER_ACCESS_CODE` / `HAIER_SESSION_SECRET` | 云模式私有随机值，分别至少 24 / 32 字符                           |
-| `HAIER_PUBLIC_GUEST_ACCESS`                  | 默认 `0`；`1` 表示任何访客可产生实际服务费用                      |
-| `HAIER_DATA_PATH`                            | 云模式持久化家庭目录；必须可写                                    |
-| `HAIER_WEB_ROOT`                             | 构建目录：`dist`、`editions/modern/dist`、`editions/habitat/dist` |
-| `VOICE_LIVE_ENDPOINT` / `WEBRTC_MODEL`       | 仅 WebRTC lab；资源 endpoint 无默认值                             |
+| 变量                                         | 用途 / 默认                                                         |
+| -------------------------------------------- | ------------------------------------------------------------------- |
+| `FOUNDRY_PROJECT_ENDPOINT`                   | 服务端唯一允许的项目 HTTPS endpoint；无默认资源                     |
+| `HAIER_FLASH_AGENT`                          | 客户 Flash Agent 名字；发布时必须显式提供                           |
+| `HAIER_SECONDARY_MODEL_ID`                   | 默认 `microsoft-realtime-flash-1`；历史变量名不表示另需第二只 Agent |
+| `HAIER_VERIFIED_MODELS`                      | 逗号分隔的精确模型 ID；默认不启用任何语音模型                       |
+| `AZURE_TENANT_ID`                            | 可选，本地 CLI credential tenant                                    |
+| `AZURE_CLIENT_ID`                            | 云端 user-assigned managed identity client ID                       |
+| `HOST` / `PORT`                              | 默认 `127.0.0.1` / `5178`                                           |
+| `HAIER_LOCAL_STATE_PATH`                     | 本地家庭 JSON；默认 `.azure/home.json`                              |
+| `HAIER_PUBLIC_ORIGIN`                        | 可选云模式的精确 HTTPS origin；设置后必须完整配置保护               |
+| `HAIER_ACCESS_CODE` / `HAIER_SESSION_SECRET` | 云模式私有随机值，分别至少 24 / 32 字符                             |
+| `HAIER_PUBLIC_GUEST_ACCESS`                  | 默认 `0`；`1` 表示任何访客可产生实际服务费用                        |
+| `HAIER_DATA_PATH`                            | 云模式持久化家庭目录；必须可写                                      |
+| `HAIER_WEB_ROOT`                             | 构建目录：`dist`、`editions/modern/dist`、`editions/habitat/dist`   |
+| `VOICE_LIVE_ENDPOINT` / `WEBRTC_MODEL`       | 仅 WebRTC lab；资源 endpoint 无默认值                               |
 
 `.env` 只供服务端使用。不要创建含 secret 的 `VITE_*`，不要提交填好的环境文件、
 上传文档、录音、Playwright trace 或 `.local` manifest。
@@ -167,7 +167,7 @@ relay 在执行前提供简短 spoken backchannel，中文只使用“好 / 收�
 relay 等 backchannel response 完成后再执行工具，随后请求只描述真实结果的 continuation。
 设备实际成功后才报告完成结果；失败不能说成已完成。fallback 的选择、音频转发、
 transcript 隐藏和执行顺序均有源码及单元测试覆盖。
-如果 Mini 等模型仍在同一个 response 中先产生 message、再产生 function call，
+如果模型仍在同一个 response 中先产生 message、再产生 function call，
 relay 会发送应用事件 `demo.discard-assistant-output`，让共享浏览器客户端停止排队音频、
 移除对应 message，并阻止该 item 的后续音频/文本继续到达页面。
 已经实际播放的声音不能撤回；这个防线用于尽早截断过程输出，不能替代模型指令和实机听测。
@@ -196,7 +196,8 @@ lab 直接连接 **Voice Live model mode**，浏览器音频走 WebRTC RTP，
 PORT=5188 npm run lab:webrtc
 ```
 
-lab 仅监听 `127.0.0.1:5188`。同一份程序通过 `WEBRTC_MODEL` 选择 Realtime 或 Mini；
+lab 仅监听 `127.0.0.1:5188`，保留的是历史海外模型传输对比，**不属于海尔国内 Flash 部署步骤**；
+它不能证明客户 Flash 的 WebRTC 可用性，也不能直接切换为未列入 lab allowlist 的模型。
 TTFA 从发送文本到每轮**第一个** `output_audio_buffer.started` 计算，
 不是物理扬声器出声时间，也不包含麦克风 VAD 的端到端测量。
 浏览器使用 STUN 进行 ICE 协商；防火墙、UDP、浏览器策略和区域能力会影响连接。

@@ -238,11 +238,11 @@ test("curtains ease between open and closed positions instead of snapping", asyn
     .toBeLessThan(0.7);
 });
 
-test("bilingual UI, both available real engines and clearly unavailable gpt-live", async ({
+test("bilingual UI, available Flash engine and clearly unavailable gpt-live", async ({
   page,
 }) => {
   await expect(page.locator("#atelier-model")).toHaveValue(
-    "gpt-realtime-2.1-mini",
+    "microsoft-realtime-flash-1",
   );
   await expect(
     page.locator("#atelier-model option[value='gpt-live']"),
@@ -250,11 +250,12 @@ test("bilingual UI, both available real engines and clearly unavailable gpt-live
   await expect(
     page.locator("#atelier-model option[value='gpt-live']"),
   ).toContainText("暂不可用");
-  await page.locator("#atelier-model").selectOption("gpt-realtime-2.1-mini");
+  await page
+    .locator("#atelier-model")
+    .selectOption("microsoft-realtime-flash-1");
   await expect(page.locator("#atelier-model")).toHaveValue(
-    "gpt-realtime-2.1-mini",
+    "microsoft-realtime-flash-1",
   );
-  await page.locator("#atelier-model").selectOption("gpt-realtime-2.1");
   await page.getByRole("button", { name: "EN", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Live in the light. Feel at home." }),

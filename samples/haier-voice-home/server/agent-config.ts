@@ -82,8 +82,13 @@ function wireInputAudio(current: VoiceDefinition): Record<string, unknown> {
   const input = structuredClone(current.audio.input);
   input.format = { type: "audio/pcm", rate: 24000 };
   input.echo_cancellation = structuredClone(HOME_ECHO_CANCELLATION);
-  input.noise_reduction = structuredClone(HOME_INPUT_AUDIO.noise_reduction);
-  input.transcription = structuredClone(HOME_INPUT_AUDIO.transcription);
+  const isFlash = current.model.startsWith("microsoft-realtime-flash");
+  if (!isFlash || input.noise_reduction === undefined) {
+    input.noise_reduction = structuredClone(HOME_INPUT_AUDIO.noise_reduction);
+  }
+  if (!isFlash || input.transcription === undefined) {
+    input.transcription = structuredClone(HOME_INPUT_AUDIO.transcription);
+  }
   const transcription = objectSchema.parse(input.transcription ?? {});
   if (
     transcription.model === "azure-speech-streaming" &&

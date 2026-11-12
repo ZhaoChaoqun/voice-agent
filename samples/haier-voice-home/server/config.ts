@@ -31,15 +31,18 @@ export function runtimeConfig(
     (env.HAIER_VERIFIED_MODELS ?? "").split(",").map((entry) => entry.trim()),
   );
   const secondaryModelId =
-    env.HAIER_SECONDARY_MODEL_ID ?? "gpt-realtime-2.1-mini";
+    env.HAIER_SECONDARY_MODEL_ID ?? "microsoft-realtime-flash-1";
   if (
-    !["microsoft-realtime-flash-1", "gpt-realtime-2.1-mini"].includes(
-      secondaryModelId,
-    )
+    ![
+      "microsoft-realtime-flash-1",
+      "microsoft-realtime-flash",
+      "gpt-realtime-2.1-mini",
+    ].includes(secondaryModelId)
   )
     throw new Error(
-      "HAIER_SECONDARY_MODEL_ID must be microsoft-realtime-flash-1 or gpt-realtime-2.1-mini.",
+      "HAIER_SECONDARY_MODEL_ID must be microsoft-realtime-flash-1, microsoft-realtime-flash, or gpt-realtime-2.1-mini.",
     );
+  const isFlash = secondaryModelId.startsWith("microsoft-realtime-flash");
   const models: ModelOption[] = [
     {
       id: "gpt-live",
@@ -56,12 +59,13 @@ export function runtimeConfig(
     },
     {
       id: secondaryModelId,
-      label:
-        secondaryModelId === "gpt-realtime-2.1-mini"
-          ? "GPT Realtime 2.1 Mini"
-          : "Microsoft Realtime Flash",
+      label: isFlash ? "Microsoft Realtime Flash" : "GPT Realtime 2.1 Mini",
       available: false,
-      agentName: nameSchema.parse(env.HAIER_MINI_AGENT ?? "home-mini"),
+      agentName: nameSchema.parse(
+        isFlash
+          ? (env.HAIER_FLASH_AGENT ?? "home-flash")
+          : (env.HAIER_MINI_AGENT ?? "home-mini"),
+      ),
     },
   ];
   for (const model of models) {

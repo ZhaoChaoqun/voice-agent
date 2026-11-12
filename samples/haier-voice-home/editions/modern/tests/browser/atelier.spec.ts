@@ -178,16 +178,16 @@ test("knowledge import and model availability remain honest", async ({
   page,
 }) => {
   await expect(page.locator("#atelier-model")).toHaveValue(
-    "gpt-realtime-2.1-mini",
+    "microsoft-realtime-flash-1",
   );
   await expect(
     page.locator("#atelier-model option[value='gpt-live']"),
   ).toBeDisabled();
-  await page.locator("#atelier-model").selectOption("gpt-realtime-2.1");
-  await expect(page.locator("#atelier-model")).toHaveValue("gpt-realtime-2.1");
-  await page.locator("#atelier-model").selectOption("gpt-realtime-2.1-mini");
+  await page
+    .locator("#atelier-model")
+    .selectOption("microsoft-realtime-flash-1");
   await expect(page.locator("#atelier-model")).toHaveValue(
-    "gpt-realtime-2.1-mini",
+    "microsoft-realtime-flash-1",
   );
   await page.getByRole("button", { name: "产品知识库", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();

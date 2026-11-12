@@ -25,7 +25,7 @@ export type AuthoringRequest = (
 
 export function agentDefinitions(): Record<string, Record<string, unknown>> {
   return Object.fromEntries(
-    ["realtime", "mini"].map((edition) => [
+    ["flash", "realtime", "mini"].map((edition) => [
       edition,
       voiceAgentDefinition(
         JSON.parse(
@@ -43,19 +43,32 @@ export function agentDefinitions(): Record<string, Record<string, unknown>> {
 export function publishSettings(
   env: NodeJS.ProcessEnv,
   confirmation: string | undefined,
-): { endpoint: string; realtime: string; mini: string } {
+  comparison = false,
+): {
+  endpoint: string;
+  agents: { edition: "flash" | "realtime" | "mini"; name: string }[];
+} {
   const endpoint = runtimeConfig(env).projectEndpoint;
   if (!endpoint || endpoint !== confirmation)
     throw new Error(
       "Publishing requires FOUNDRY_PROJECT_ENDPOINT and --confirm-project with the same exact HTTPS project URL.",
     );
-  const realtime = names.parse(env.HAIER_REALTIME_AGENT);
-  const mini = names.parse(env.HAIER_MINI_AGENT);
-  if (realtime === mini)
-    throw new Error("Realtime and Mini must have different Agent names.");
-  if (/placeholder|replace|example/i.test(`${endpoint} ${realtime} ${mini}`))
+  const editions: ("flash" | "realtime" | "mini")[] = comparison
+    ? ["realtime", "mini"]
+    : ["flash"];
+  const agents = editions.map((edition) => ({
+    edition,
+    name: names.parse(env[`HAIER_${edition.toUpperCase()}_AGENT`]),
+  }));
+  if (new Set(agents.map((agent) => agent.name)).size !== agents.length)
+    throw new Error("Selected Agents must have different names.");
+  if (
+    /placeholder|replace|example/i.test(
+      `${endpoint} ${agents.map((agent) => agent.name).join(" ")}`,
+    )
+  )
     throw new Error("Replace the example placeholders before publishing.");
-  return { endpoint, realtime, mini };
+  return { endpoint, agents };
 }
 
 function assertSaved(
@@ -141,12 +154,13 @@ async function main(): Promise<void> {
     args.some(
       (arg, index) =>
         arg !== "--publish" &&
+        arg !== "--comparison" &&
         arg !== "--confirm-project" &&
         args[index - 1] !== "--confirm-project",
     )
   )
     throw new Error(
-      "Supported options: --publish --confirm-project <project-url>",
+      "Supported options: --publish [--comparison] --confirm-project <project-url>",
     );
   const definitions = agentDefinitions();
   if (!publish) {
@@ -162,7 +176,11 @@ async function main(): Promise<void> {
     );
     return;
   }
-  const settings = publishSettings(process.env, confirmation);
+  const settings = publishSettings(
+    process.env,
+    confirmation,
+    args.includes("--comparison"),
+  );
   const credential = new AzureCliCredential(
     process.env.AZURE_TENANT_ID
       ? { tenantId: process.env.AZURE_TENANT_ID }
@@ -190,8 +208,8 @@ async function main(): Promise<void> {
       );
     return response.json();
   };
-  await publishAgent(request, settings.realtime, definitions.realtime!);
-  await publishAgent(request, settings.mini, definitions.mini!);
+  for (const agent of settings.agents)
+    await publishAgent(request, agent.name, definitions[agent.edition]!);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)

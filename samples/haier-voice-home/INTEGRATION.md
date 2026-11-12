@@ -1,40 +1,36 @@
 # 客户接入指南：部署 Agent、API 对话与真实设备工具
 
-本文按三个步骤组织：
+本文面向海尔国内客户环境，按三个步骤组织：
 
-1. 在客户自己的 Foundry project 中部署、配置 Realtime / Mini Voice Agent。
+1. 在客户自己的 Foundry project 中部署、配置 **Microsoft Realtime Flash** Voice Agent。
 2. 通过 WebSocket 或 WebRTC 与**同一只已保存的 Voice Agent** 对话。
 3. 把工具执行连接到真实设备，选择直接设备 API 或 MCP。
 
 **Voice Agent 使用 Voice Live，但不等于 Voice Live。**
 本指南的对话入口是 Foundry Agent endpoint，而不是直接指定模型的 Voice Live endpoint。
-所有命令中的资源值都由客户提供；本文不包含预置资源、访问密钥或部署结果。
-示例命令仅供操作者审阅后执行，不会因为阅读或构建样例而触发部署。
+所有命令中的资源参数均由客户提供，不包含预置资源或访问密钥。
 
 ## 第 1 节：部署和配置 Voice Agent
 
 ### 1.1 前置条件与身份
 
-准备 Node.js 24.5+、npm、Azure CLI，以及自己的 Foundry resource / project。
-确认目标项目支持 `gpt-realtime-2.1`、`gpt-realtime-2.1-mini` managed 模型、
-Azure Speech streaming transcription 和本指南的 speech profile。
-区域支持、访问资格及配额需在客户项目中确认，不能从一个演示项目的成功推断其他项目也可用。
+准备 Node.js 24.5+、npm、Azure CLI，以及客户自己的 Foundry resource / project。
+国内环境仅支持 **Microsoft Realtime Flash**，无需准备海外 `gpt-realtime` 系列模型。
+当前仓库默认模型 ID 为 `microsoft-realtime-flash-1`；若客户项目模型目录中显示的精确 ID 为不带版本号的 `microsoft-realtime-flash`，后端和模板同样支持（只需在 `agents/flash.json`、`.env` 的 `HAIER_SECONDARY_MODEL_ID` 与 `HAIER_VERIFIED_MODELS` 中保持一致）。
+请在目标项目中确认模型访问资格、配额，以及 Azure Speech streaming transcription 和下方语音配置的区域支持情况。
 
-`model_type: managed` 使用服务管理的模型，不是客户 Azure OpenAI deployment 的名字。
-如果选择 self-deployed 模式，则需另行准备支持的 model deployment，并调整模型绑定；
-不能只把一个 deployment 名字填入 managed 模板。
+`model_type: managed` 直接绑定服务托管模型，不需要预先创建同名 Azure OpenAI model deployment。
+若客户环境采用 `self_deployed` 模式，则需先部署对应模型并同步调整 `model_type` 与 `model` 字段。
 
-管理身份需要读取、创建/更新及按需启用 Agent 的项目权限；运行身份仅需调用权限。
-根据实际角色定义，使用 `Foundry Agent Developer` / `Foundry Agent Consumer` 等项目级角色。
-不要为运行服务授予订阅级 Owner，不要把资源 API key 或 Entra token 放进浏览器。
+管理身份需要读取、创建/更新及启用 Agent 的项目权限（如 `Foundry Agent Developer`）；运行态服务仅需调用权限（如 `Foundry Agent Consumer`）。
+生产环境推荐使用应用自身的 Managed Identity，不要为运行服务授予订阅级 Owner，也不要将 API key 或 Entra token 下发到浏览器。
 
 ```bash
 # 以下变量均替换为客户自己的值。不要把填好的脚本或 .env 提交到 Git。
 export AZURE_TENANT_ID="<your-tenant-id>"
 export AZURE_SUBSCRIPTION_ID="<your-subscription-id>"
 export FOUNDRY_PROJECT_ENDPOINT="https://<resource>.services.ai.azure.com/api/projects/<project>"
-export HAIER_REALTIME_AGENT="<your-realtime-agent-name>"
-export HAIER_MINI_AGENT="<your-mini-agent-name>"
+export HAIER_FLASH_AGENT="<your-flash-agent-name>"
 
 az login --tenant "$AZURE_TENANT_ID"
 az account set --subscription "$AZURE_SUBSCRIPTION_ID"
@@ -44,182 +40,148 @@ cd samples/haier-voice-home
 npm ci
 ```
 
-`az account set` 选择管理订阅；Agent authoring 和对话仍以
-`FOUNDRY_PROJECT_ENDPOINT` 指定的项目为准，必须核对二者对应关系。
-本地使用 `AzureCliCredential`，生产环境推荐应用自己的 managed identity。
-资源创建、网络隔离和 RBAC 分配应按客户基础设施流程办理，本指南不自动 provision。
+`az account set` 用于指定 CLI 默认订阅；Agent 发布和对话均以 `FOUNDRY_PROJECT_ENDPOINT` 指向的项目为准。
 
 ### 1.2 可审阅的 Agent YAML
 
-下面用 YAML 展示两个 Agent 的配置结构。`instructions` / `tools` 的空值与源码基础模板一致，
-**不是可直接发布的完整定义**；下一步会从共享源码填入，避免维护两套相互矛盾的指令和工具。
-`structured_inputs` 与 greeting 也由同一个 materializer 生成。
-部署 API 接收 JSON；不能把 YAML 文件直接作为 `az rest --body` 上传。
+下面以与 Foundry Portal 一致的单 Agent YAML 格式展示 Flash Agent 的 `definition` 结构。
+源码基础模板（`agents/flash.json`）中 `instructions` 和 `tools` 留空，由生成脚本从 `server/instructions.*` 与 `server/tools.ts` 自动合并填入，避免维护两份重复定义。
+Foundry REST API 接收 JSON 请求体，请使用 1.3 节生成的 JSON 文件提交，不要直接把 YAML 作为 `--body` 上传。
 
 ```yaml
-realtime: &voice_agent
-  kind: voice
-  model: gpt-realtime-2.1
-  model_type: managed
-  sub_protocol: realtime
-  instructions: "" # 由 server/instructions.ts 和 instructions.txt 填入
-  tools: [] # 由 server/tools.ts 填入完整 function schema
-  store: false
-  output_modalities: [audio, text]
-  structured_inputs:
-    welcome_text:
-      description: Initial welcome only; speech recognition remains bilingual.
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 200
-      default_value: 你好，我是小海，你的家庭助手。今天想让我帮你做点什么？
-  greeting:
-    type: template
-    text: "{{{welcome_text}}}"
-  audio:
-    input:
-      format:
-        type: audio/pcm
-        rate: 24000
-      echo_cancellation:
-        type: server_echo_cancellation
-        reference_source: server
-        channels: 1
-      noise_reduction:
-        type: azure_personal_noise_suppression
-        detection_input: mas_dns
-      transcription:
-        model: azure-speech-streaming
-        language: zh-CN,en-US
-      turn_detection:
-        type: azure_semantic_vad
-        profile: normal
-        auto_truncate: true
-        create_response: true
-        interrupt_response: true
-        remove_filler_words: false
-    output:
-      format:
-        type: audio/pcm
-        rate: 24000
-      voice: zh-CN-Xiaoxiao:DragonHDFlashLatestNeural
-      voice_type: azure-standard
-
-mini:
-  <<: *voice_agent
-  model: gpt-realtime-2.1-mini
+kind: voice
+model: microsoft-realtime-flash-1
+model_type: managed
+sub_protocol: realtime
+instructions: "" # 由 server/instructions.ts 和 instructions.txt 填入
+tools: [] # 由 server/tools.ts 填入完整 function schema
+store: false
+output_modalities: [audio, text]
+structured_inputs:
+  welcome_text:
+    description: Initial welcome only; speech recognition remains bilingual.
+    schema:
+      type: string
+      minLength: 1
+      maxLength: 200
+    default_value: 你好，我是小海，你的家庭助手。今天想让我帮你做点什么？
+greeting:
+  type: template
+  text: "{{{welcome_text}}}"
+audio:
+  input:
+    format:
+      type: audio/pcm
+      rate: 24000
+    echo_cancellation:
+      type: server_echo_cancellation
+      reference_source: server
+      channels: 1
+    noise_reduction:
+      type: azure_personal_noise_suppression
+      detection_input: mas_dns
+    transcription:
+      model: azure-speech-streaming
+      language: zh-CN,en-US
+    turn_detection:
+      type: azure_semantic_vad
+      profile: normal
+      auto_truncate: true
+      create_response: true
+      interrupt_response: true
+      remove_filler_words: false
+  output:
+    format:
+      type: audio/pcm
+      rate: 24000
+    voice: zh-CN-Xiaoxiao:DragonHDFlashLatestNeural
+    voice_type: azure-standard
 ```
 
-权威源码是 `agents/realtime.json`、`agents/mini.json`、
-`server/voice-profile.ts`、`server/greeting.ts`、`server/instructions.*` 和 `server/tools.ts`。
-实际中英文 greeting 默认值以 `server/greeting.ts` 展开结果为准。
-用户界面语言决定首次 welcome_text，不把后续识别或回答锁成单语。
+权威配置源码位于 `agents/flash.json`、`server/voice-profile.ts`、`server/greeting.ts`、`server/instructions.*` 和 `server/tools.ts`。
+界面初始语言仅决定连接时的 `welcome_text`，后续语音识别保持中英双语自动检测（`zh-CN,en-US`）。
+若目标国内区域对个别输入子项（如 `noise_reduction.detection_input: "mas_dns"` 或特定 `transcription.model`）存在版本限制，可在 Foundry Portal 中调整该子项；`npm run agents:publish` 在更新已有 Flash Agent 时会保留 Portal 中已配置的降噪和转录设置。
 
 ### 1.3 生成完整定义
 
 ```bash
-# 完全离线，不查询或修改 Azure。
+# 完全离线渲染，不访问或修改 Azure。
 npm run agents:render
 
-# 将展开后的两个定义包装为 authoring API 的 request body。
+# 仅提取客户所需的 Flash 定义，包装为 authoring API 请求体。
 node --input-type=module <<'NODE'
 import { readFileSync, writeFileSync } from "node:fs";
 const definitions = JSON.parse(
   readFileSync(".local/agent-definitions.json", "utf8"),
 );
-for (const edition of ["realtime", "mini"]) {
-  writeFileSync(
-    `.local/${edition}.request.json`,
-    `${JSON.stringify({ definition: definitions[edition] }, null, 2)}\n`,
-    { mode: 0o600 },
-  );
-}
+writeFileSync(
+  ".local/flash.request.json",
+  `${JSON.stringify({ definition: definitions.flash }, null, 2)}\n`,
+  { mode: 0o600 },
+);
 NODE
 ```
 
-检查 `.local/*.request.json`：必须包含完整 instructions、全部工具、greeting、音频和 VAD。
-`store: false` 是 fresh template 的默认选择；若更新已有 Agent，要审阅已有 recording/数据保留配置。
-`.local/` 被 Git 和 Docker context 排除，但本地文件仍应妥善保管。
+检查 `.local/flash.request.json`：应包含完整的 `instructions`、全部 7 个工具 schema、`greeting`、音频参数与动态 VAD。
+新模板默认 `store: false`（不开启服务端会话落盘）；更新已有 Agent 时会保留其原有 `store` 配置。
 
-### 1.4 发布：优先使用带保护的脚本
+### 1.4 发布：推荐使用带校验的发布脚本
 
 ```bash
 npm run agents:publish -- \
   --confirm-project "$FOUNDRY_PROJECT_ENDPOINT"
 ```
 
-脚本要求显式 endpoint 和两个不同的 Agent 名字，拒绝示例占位符。
-新建和更新均使用 named Agent version endpoint；更新已有 Agent 时保留未知/Portal-owned 字段，
-拒绝改变 kind/model/model_type，发布前检查版本变化，发布后逐字段 readback。
-两只 Agent 顺序发布，不是原子事务；第二只失败不会回滚第一只。
-并发检查也不是服务端 compare-and-swap，应协调独占发布窗口。
+脚本默认仅发布 `HAIER_FLASH_AGENT` 单只 Flash Agent，要求 `--confirm-project` 与 `FOUNDRY_PROJECT_ENDPOINT` 完全一致并拒绝示例占位符。
+更新已有 Agent 时会合并保留 Portal 侧其他字段、拒绝跨模型类型覆盖、发布前检查版本并发变更，并在发布后逐字段读回校验。
 
-### 1.5 等价的 `az rest` 发布与 readback
+### 1.5 等价的 `az rest` 发布与读回命令
 
-以下是**人工管理版本的底层方式**，与上一小节二选一，不要连续重复发布。
-它展示 API，不带脚本的 Portal 字段合并和并发保护：直接上传基础模板会重置未携带的设置。
-对已有 Agent，优先使用上面的脚本；只有审阅完整 definition 后才使用此方式。
+如果不使用 Node 脚本，也可以直接用 `az rest` 调用底层 API（与 1.4 节二选一，无需重复执行；注意直接 POST 会按请求体完整写入新版本，更新已有 Agent 时建议优先用 1.4 节脚本保留 Portal 字段）：
 
 ```bash
 export AUTHORING_API_VERSION="2025-11-15-preview"
 
 az rest --method post \
-  --url "$FOUNDRY_PROJECT_ENDPOINT/agents/$HAIER_REALTIME_AGENT/versions?api-version=$AUTHORING_API_VERSION" \
+  --url "$FOUNDRY_PROJECT_ENDPOINT/agents/$HAIER_FLASH_AGENT/versions?api-version=$AUTHORING_API_VERSION" \
   --resource "https://ai.azure.com" \
   --headers "Content-Type=application/json" "Foundry-Features=VoiceAgents=V1Preview" \
-  --body @.local/realtime.request.json \
+  --body @.local/flash.request.json \
   --query "{version:version,status:status}" --output json
 
-az rest --method post \
-  --url "$FOUNDRY_PROJECT_ENDPOINT/agents/$HAIER_MINI_AGENT/versions?api-version=$AUTHORING_API_VERSION" \
-  --resource "https://ai.azure.com" \
-  --headers "Content-Type=application/json" "Foundry-Features=VoiceAgents=V1Preview" \
-  --body @.local/mini.request.json \
-  --query "{version:version,status:status}" --output json
-
-# 导出实际保存的完整定义为 YAML，而不是只查看本地模板。
+# 读回服务端实际保存的最新版本为 YAML 进行核对。
 az rest --method get \
-  --url "$FOUNDRY_PROJECT_ENDPOINT/agents/$HAIER_REALTIME_AGENT?api-version=$AUTHORING_API_VERSION" \
+  --url "$FOUNDRY_PROJECT_ENDPOINT/agents/$HAIER_FLASH_AGENT?api-version=$AUTHORING_API_VERSION" \
   --resource "https://ai.azure.com" \
   --headers "Foundry-Features=VoiceAgents=V1Preview" \
-  --query "versions.latest" --output yaml > .local/realtime.saved.yaml
-
-az rest --method get \
-  --url "$FOUNDRY_PROJECT_ENDPOINT/agents/$HAIER_MINI_AGENT?api-version=$AUTHORING_API_VERSION" \
-  --resource "https://ai.azure.com" \
-  --headers "Foundry-Features=VoiceAgents=V1Preview" \
-  --query "versions.latest" --output yaml > .local/mini.saved.yaml
+  --query "versions.latest" --output yaml > .local/flash.saved.yaml
 ```
 
-核对版本、`status`、精确模型及 advanced audio 字段。若目标项目的 Agent 被禁用，
-在确认需要开放该 Agent 的调用后，按服务的启用流程处理；仓库现有 stable-v1 参考使用：
+核对返回的 `version`、`status: active`、模型 ID 及音频字段。若目标项目中的 Agent 处于未启用状态，可按服务接口显式启用：
 
 ```bash
-# 仅在需要时由有权限的操作者执行；这会改变目标 Agent 的可调用状态。
 az rest --method post \
-  --url "$FOUNDRY_PROJECT_ENDPOINT/agents/$HAIER_REALTIME_AGENT:enable?api-version=v1" \
+  --url "$FOUNDRY_PROJECT_ENDPOINT/agents/$HAIER_FLASH_AGENT:enable?api-version=v1" \
   --resource "https://ai.azure.com" \
   --headers "Foundry-Features=VoiceAgents=V1Preview"
 ```
 
-Mini 同理，替换为自己的 Mini Agent 名字。authoring 示例沿用本样例发布脚本的 preview contract；
-对话使用 `api-version=v1`。启用示例来自仓库 stable-v1 reference。
-服务不接受某版本或字段时应检查对应服务文档，不要删除字段或改用其他协议来伪装成功。
-最后在 `.env` 中配置 endpoint、两只 Agent 名字，并在实际验证后设置：
+最后在 `samples/haier-voice-home/.env` 中写入完整服务端配置（完成实际连通性验证后设置 `HAIER_VERIFIED_MODELS`）：
 
 ```dotenv
-HAIER_VERIFIED_MODELS=gpt-realtime-2.1,gpt-realtime-2.1-mini
+FOUNDRY_PROJECT_ENDPOINT=https://<resource>.services.ai.azure.com/api/projects/<project>
+HAIER_FLASH_AGENT=<your-flash-agent-name>
+HAIER_SECONDARY_MODEL_ID=microsoft-realtime-flash-1
+HAIER_VERIFIED_MODELS=microsoft-realtime-flash-1
 ```
-
-此变量是应用开关，不是自动测试报告。发布成功不代表模型推理、音频、设备工具都已接通。
 
 ## 第 2 节：通过 API 与 Voice Agent 对话
 
 ### 2.1 共同的鉴权与 endpoint
 
 两种传输都选择 Agent **name**，不是模型名、旧 assistant ID 或资源 ID。
-同一个 Realtime / Mini Agent 可以通过对应项目支持的传输建立新 session。
+对客户同一只 Flash Agent，只使用其实际项目和模型支持的传输建立 session；
+WebRTC 是否可用需要单独确认，不能根据另一种模型或海外项目的验证结果承诺支持。
 token 由受信任后端取得，scope/resource 是 `https://ai.azure.com`：
 
 ```bash
@@ -252,17 +214,46 @@ wss://<resource>.services.ai.azure.com/api/projects/<project>/agents/<agent-name
 sequenceDiagram
   participant B as Browser / Device client
   participant R as 客户后端 relay
-  participant A as Foundry Voice Agent
-  B->>R: 用户文本或 PCM
-  R->>A: 鉴权 WebSocket + structured inputs
-  A-->>R: session / greeting / response events
-  R-->>B: 音频、transcript 和受控 UI 事件
-  R->>A: conversation.item.create + response.create
-  A-->>R: function call
-  R->>R: backchannel 编排、授权及真实工具执行
-  R->>A: function_call_output
-  A-->>B: 最终完成回答，经 relay 转发
+  participant A as Foundry Voice Agent (Flash)
+  B->>R: 建立会话
+  R->>A: 鉴权 WebSocket + structured_inputs
+  R->>A: session.update (PCM 24kHz + tool_choice:required)
+  A-->>R: session.updated + 开场 greeting response.done
+  R-->>B: 会话就绪 (demo.ready)
+  B->>R: 用户文本或 24kHz PCM 音频帧
+  R->>A: conversation.item.create / input_audio_buffer.append
+  A-->>R: 静默 function_call
+  R->>R: 播放短 backchannel（隐藏其 transcript）+ 鉴权执行真实工具
+  R->>A: function_call_output + response.create (tool_choice:none)
+  A-->>B: 单条完成结果语音与字幕，经 relay 转发
 ```
+
+**握手后的会话初始化（关键）**：连接打开后，后端发送一次 `session.update` 固定音频采样率、音色和工具策略。针对 `microsoft-realtime-flash-1` 等轻量实时模型，建议将会话级 `tool_choice` 设为 `"required"` 以确保设备控制指令稳定触发工具调用；同时等待收到 `session.updated` **以及**开场欢迎语的 `response.done` 后，再允许客户端发送首轮输入，避免与欢迎语抢话：
+
+```json
+{
+  "type": "session.update",
+  "session": {
+    "type": "realtime",
+    "instructions": "<server-owned-instructions>",
+    "tools": [],
+    "tool_choice": "required",
+    "output_modalities": ["audio", "text"],
+    "audio": {
+      "input": { "format": { "type": "audio/pcm", "rate": 24000 } },
+      "output": {
+        "format": { "type": "audio/pcm", "rate": 24000 },
+        "voice": {
+          "type": "azure-standard",
+          "name": "zh-CN-Xiaoxiao:DragonHDFlashLatestNeural"
+        }
+      }
+    }
+  }
+}
+```
+
+（注：上方 `"tools": []` 在实际代码中填入 `server/tools.ts` 的工具数组；不要在连接时的 `session.update` 里重置已保存 Agent 的 `turn_detection`、`noise_reduction` 或 `transcription`，以保留服务端已发布的配置。在工具执行完成后的续写 `response.create` 中再显式传 `{"tool_choice": "none"}`，防止模型再次循环调用工具。）
 
 **文本输入**由两个 JSON frame 组成：
 
@@ -318,7 +309,14 @@ sequenceDiagram
 }
 ```
 
-随后由编排器发起需要的 `response.create`，避免与已有 response 重叠。
+```json
+{
+  "type": "response.create",
+  "response": { "tool_choice": "none" }
+}
+```
+
+随后由编排器发起带 `"tool_choice": "none"` 的 `response.create`，避免与已有 response 重叠或重复触发工具。
 `ok: true` 必须来自真实执行结果，不能照抄示例伪造成功。
 本样例还会在工具前生成短 backchannel、隐藏其 transcript，并在工具后只显示一条完成回答。
 若模型在同一 response 先生成 message 再调用函数，relay 会发送
@@ -350,7 +348,8 @@ wss://<resource>.services.ai.azure.com/api/projects/<project>/agents/<agent-name
 
 token 同样留在后端。后端建立这个 WebSocket control-channel，浏览器通过客户应用自己的
 鉴权信令接口交换 SDP；音频随后在浏览器与服务之间走 WebRTC RTP。
-本节只讨论本样例的 Realtime / Mini Agent，不讨论 GPT Live 的另一套协议。
+本节给出客户 Flash Agent 的候选信令接入方式；必须先验证目标项目和 Flash 模型对
+该 transport 的支持，不把其他模型的 WebRTC 验证当作 Flash 的验收。不讨论 GPT Live 的另一套协议。
 
 ```mermaid
 sequenceDiagram
@@ -370,7 +369,7 @@ sequenceDiagram
 ```
 
 浏览器需要创建 `RTCPeerConnection`，加入麦克风 track，并在生成 offer **之前**创建
-`voice-live-events` DataChannel；Realtime 的 SDP 需要相应的 SCTP/application media section。
+`voice-live-events` DataChannel；本节的 realtime 协议 SDP 需要相应的 SCTP/application media section。
 按部署网络配置 STUN/TURN，等待 ICE gathering 完成或按服务支持的 candidate 流程处理。
 SDP 经鉴权信令后端发送下面的 JSON，而不是 POST 到另一个 model-mode endpoint：
 
@@ -450,7 +449,7 @@ async function negotiateAgentWebRtc({
 
 Agent-mode、model-mode 和 Azure OpenAI 的 `/openai/v1/realtime/calls` 是不同入口，
 不能混用 SDP 创建流程。GPT Live Agent 还使用另一条 `/voice/live/sessions` 路由及事件族，
-不在本文两个 Realtime 模板的接入范围内。
+不在本文客户 Flash 模板的接入范围内。
 
 ## 第 3 节：把工具接到真实设备——直接 API 还是 MCP
 

@@ -15,6 +15,7 @@ import { tools } from "../server/tools";
 const endpoint = "https://unit-test.services.ai.azure.com/api/projects/unit";
 const env = {
   FOUNDRY_PROJECT_ENDPOINT: endpoint,
+  HAIER_FLASH_AGENT: "unit-flash",
   HAIER_REALTIME_AGENT: "unit-realtime",
   HAIER_MINI_AGENT: "unit-mini",
 };
@@ -24,6 +25,7 @@ const version = (definition: object, revision = "1") => ({
 
 describe("portable Voice Agent configuration", () => {
   it.each([
+    ["flash", "microsoft-realtime-flash-1"],
     ["realtime", "gpt-realtime-2.1"],
     ["mini", "gpt-realtime-2.1-mini"],
   ])(
@@ -61,23 +63,39 @@ describe("portable Voice Agent configuration", () => {
     },
   );
 
-  it("requires a project confirmation and two explicit distinct names", () => {
+  it("defaults publishing to the China customer's single Flash Agent", () => {
     expect(publishSettings(env, endpoint)).toEqual({
       endpoint,
-      realtime: "unit-realtime",
-      mini: "unit-mini",
+      agents: [{ edition: "flash", name: "unit-flash" }],
     });
     expect(() => publishSettings({}, undefined)).toThrow();
     expect(() => publishSettings(env, "https://other.invalid")).toThrow(
       "confirm-project",
     );
     expect(() =>
-      publishSettings({ ...env, HAIER_MINI_AGENT: undefined }, endpoint),
+      publishSettings({ ...env, HAIER_FLASH_AGENT: undefined }, endpoint),
     ).toThrow();
+    expect(
+      publishSettings(
+        {
+          FOUNDRY_PROJECT_ENDPOINT: endpoint,
+          HAIER_FLASH_AGENT: "unit-flash",
+        },
+        endpoint,
+      ).agents,
+    ).toHaveLength(1);
+  });
+
+  it("publishes the overseas comparison pair only with explicit opt-in", () => {
+    expect(publishSettings(env, endpoint, true).agents).toEqual([
+      { edition: "realtime", name: "unit-realtime" },
+      { edition: "mini", name: "unit-mini" },
+    ]);
     expect(() =>
       publishSettings(
         { ...env, HAIER_MINI_AGENT: env.HAIER_REALTIME_AGENT },
         endpoint,
+        true,
       ),
     ).toThrow("different");
   });

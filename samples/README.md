@@ -28,7 +28,7 @@ caller's goal from what actually happens in the demonstration.
 
 | Sample | What it demonstrates |
 | --- | --- |
-| [Haier Voice Home](haier-voice-home/README.md) | Source-buildable bilingual smart-home experience with Foundry Voice Agents, locally executed simulated-device tools, grounded product knowledge, Classic/Modern/Habitat UIs, portable Realtime/Mini configuration, and a separate WebRTC latency lab. Setup and architecture documentation are in Chinese. |
+| [Haier Voice Home](haier-voice-home/README.md) | Source-buildable bilingual smart-home experience with a Microsoft Realtime Flash Voice Agent for the China customer scenario, simulated-device tools, grounded knowledge, Classic/Modern/Habitat UIs, and a separate overseas comparison lab. Setup and architecture documentation are in Chinese. |
 | [Voice Agent Cost Lab](../tools/cost_calculator/README.md) | Standalone browser list-price calculator in `tools`: South India model prices, labeled Central India HD/Voice Live references, managed/BYOM model selection, prompt sensitivity, and CSV export. No Azure credentials required. |
 | [Add voice to an existing customer agent](existing_agent_voice_design/README.md) | Design guide: use a Hosted Agent as the Foundry Voice Agent conversation engine to connect managed voice to an existing customer agent or API endpoint. Includes a high-level architecture diagram; not a runnable sample. |
 | [Google ADK with an existing Voice Agent](adk_voice_agent/README.md) | One ADK live-audio application with configuration-only selection of Gemini Live or an existing Foundry Voice Agent, SDK transport, PCM resampling, transcripts, interruption handling, and offline tests. |
