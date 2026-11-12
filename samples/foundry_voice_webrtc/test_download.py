@@ -14,6 +14,7 @@ from aiohttp.test_utils import TestClient, TestServer
 from server import (DOWNLOAD_SECRET, ConversationDownloadError, SessionConfiguration, Settings,
                     conversation_download_token, create_app, forward_upstream, truncation_update,
                     verify_download_token, write_conversation_archive)
+from server import scenario_settings
 
 
 def recording():
@@ -25,6 +26,41 @@ def recording():
 
 
 class DownloadTests(unittest.IsolatedAsyncioTestCase):
+    async def test_scenario_downloads_keep_project_and_reject_other_scenarios(self):
+        cfg = Settings("https://example.services.ai.azure.com/api/projects/demo", "agent",
+                       live_project_endpoint="https://live.services.ai.azure.com/api/projects/tip")
+        app = create_app(cfg, AsyncMock())
+        writing = AsyncMock(side_effect=lambda client, cfg, headers, conversation, output: output.write(b"archive"))
+        async with TestClient(TestServer(app)) as client:
+            origin = {"Origin": str(client.make_url("")).rstrip("/")}
+            for base in (cfg, cfg.live_companion()):
+                target = scenario_settings(base, "health")
+                token = conversation_download_token(app[DOWNLOAD_SECRET], target.agent, "conv_saved")
+                with patch("server.write_conversation_archive", writing):
+                    response = await client.post(f"/api/conversation/download?agent={base.agent}&scenario=health",
+                                                 headers=origin, json={"downloadToken": token})
+                    self.assertEqual(response.status, 200)
+                    await response.read()
+                    self.assertEqual(writing.call_args.args[1], target)
+                response = await client.post(f"/api/conversation/download?agent={base.agent}&scenario=banking",
+                                             headers=origin, json={"downloadToken": token})
+                self.assertEqual(response.status, 403)
+
+    async def test_flash_scenario_greeting_is_requested_once_after_configuration(self):
+        event = {"type": "session.updated", "session": {
+            "id": "flash-demo", "model": "azure-realtime-flash-2026-10-14",
+            "turn_detection": {"type": "azure_semantic_vad", "create_response": True}}}
+        upstream = AsyncMock()
+        upstream.__aiter__.return_value = [
+            SimpleNamespace(type=aiohttp.WSMsgType.TEXT, data=json.dumps(event)) for _ in range(2)]
+        browser = AsyncMock()
+        await forward_upstream(upstream, browser, "websocket", SessionConfiguration(), greeting="Hello, demo home.")
+        self.assertEqual(upstream.send_json.await_count, 1)
+        request = upstream.send_json.call_args.args[0]
+        self.assertEqual(request["type"], "response.create")
+        self.assertIn("Hello, demo home.", request["response"]["instructions"])
+        browser.send_json.assert_awaited_once_with({"type": "bridge.ready"})
+
     def test_download_tokens_are_bound_to_agent_server_and_expiry(self):
         secret = b"test signing secret"
         token = conversation_download_token(secret, "agent", "conv_test")

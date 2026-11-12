@@ -35,6 +35,16 @@
   <header id="app-header"><a class="brand" href="/">◉ <span>Voice Agent In Foundry Agent Service</span></a><span class="tag">AZURE FOUNDRY <span> / </span> LIVE VOICE</span><a class="repository-link" href="https://github.com/microsoft/voice-agent" target="_blank" rel="noopener noreferrer">microsoft/voice-agent on GitHub</a></header>
   <main id="app-content">
     <section class="intro"><p class="eyebrow">YOUR FIRST VOICE AGENT</p><h1>A little more human.</h1><p>Speak or type. Hear a reply. Interrupt naturally.</p><div class="weather-controls"><span id="weather-status" role="status">Loading Seattle weather...</span><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Weather: Open-Meteo</a></div></section>
+    <section class="scenario-picker" aria-labelledby="scenario-label">
+      <div><label id="scenario-label" for="scenario-choice">Choose a conversation</label><p>Three ready-to-try demos. No real accounts or devices connected.</p></div>
+      <select id="scenario-choice" disabled>
+        <option value="">General assistant</option>
+        <option value="health">Health coverage</option>
+        <option value="banking">Everyday banking</option>
+        <option value="home">Connected home</option>
+      </select>
+      <p id="scenario-switch-note" role="status">Choose a scenario before starting a call.</p>
+    </section>
     <div class="workspace">
       <section class="call-panel" aria-labelledby="call-title">
         <div class="panel-top"><h2 id="call-title">Voice session</h2><span id="connection" class="badge">Offline</span></div>
@@ -60,8 +70,8 @@
             <option value="azure-speech-streaming">azure-speech-streaming</option>
             <option value="azure-llm-speech">azure-llm-speech</option>
             <option value="mai-transcribe">mai-transcribe</option>
-            <option value="mai-transcribe-2" selected>mai-transcribe-2</option>
-            <option value="mai-transcribe-2-streaming">mai-transcribe-2-streaming</option>
+            <option value="mai-transcribe-2">mai-transcribe-2</option>
+            <option value="mai-transcribe-2-streaming" selected>mai-transcribe-2-streaming</option>
             <option value="gpt-live-transcribe">gpt-live-transcribe</option>
             <option value="gpt-realtime-whisper">gpt-realtime-whisper</option>
             <option value="gpt-transcribe">gpt-transcribe</option>
@@ -70,8 +80,11 @@
             <option value="gpt-4o-transcribe-diarize">gpt-4o-transcribe-diarize</option>
             <option value="whisper-1">whisper-1</option>
           </select>
-          <p>Realtime model or transcription changes create a new version without deleting previous versions. GPT Live switches to a separate saved Agent. New Agents default to mai-transcribe-2. Azure Realtime uses native Ava; switching back uses Tyler HD if the saved voice is native. Model availability depends on your project.</p>
-          <div class="agent-actions"><button id="save-model" disabled>Apply model</button><button id="show-settings" disabled>Show Agent settings</button></div>
+          <label class="checkbox" for="enhanced-turn-detection"><input id="enhanced-turn-detection" type="checkbox" checked disabled aria-describedby="turn-detection-help"> GPT Live 1-quality turn detection</label>
+          <p id="turn-detection-help">Default on for new non-GPT Live Agents. Uses streaming transcription, interruption filtering and end-of-turn detection. Uncheck to restore the previous settings and transcription model. Click Apply settings between calls. This changes the shared saved Agent, not just this browser.</p>
+          <p id="turn-detection-status" role="status"></p>
+          <p>Realtime model or transcription changes create a new version without deleting previous versions. GPT Live switches to a separate saved Agent. New Agents default to mai-transcribe-2-streaming. Azure Realtime uses native Ava; switching back uses Tyler HD if the saved voice is native. Model availability depends on your project.</p>
+          <div class="agent-actions"><button id="save-model" disabled>Apply settings</button><button id="show-settings" disabled>Show Agent settings</button></div>
         </div>
         <div class="transport-control"><label for="transport">Connection</label><select id="transport"><option value="websocket">WebSocket — audio over HTTPS</option><option value="webrtc">WebRTC — direct audio</option></select><p>WebSocket avoids STUN/TURN. Both modes need server access to Azure.</p></div>
         <div class="transport-control">
@@ -131,6 +144,19 @@
       </section>
       <section class="transcript-panel" aria-labelledby="transcript-title">
         <div class="panel-top"><h2 id="transcript-title">The conversation</h2><div class="transcript-actions"><button id="download-conversation" class="text-button" disabled>Download log + audio</button><button id="clear" class="text-button">Clear</button></div></div>
+        <section id="scenario-card" class="scenario-card" aria-labelledby="scenario-title" hidden>
+          <div class="scenario-hero">
+            <svg id="scenario-art-health" class="scenario-art" viewBox="0 0 120 100" fill="none" aria-hidden="true" hidden><rect x="18" y="14" width="84" height="72" rx="16" fill="currentColor" opacity=".12"/><path d="M60 25v28M46 39h28M28 69h19l7-10 11 18 8-8h19" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg id="scenario-art-banking" class="scenario-art" viewBox="0 0 120 100" fill="none" aria-hidden="true" hidden><rect x="10" y="24" width="90" height="59" rx="12" fill="currentColor" opacity=".12"/><path d="M22 43h65M26 66h15m10 0h10" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><circle cx="93" cy="27" r="17" fill="currentColor"/><path d="m85 27 6 6 10-12" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg id="scenario-art-home" class="scenario-art" viewBox="0 0 120 100" fill="none" aria-hidden="true" hidden><path d="M20 47 60 13l40 34v38H20Z" fill="currentColor" opacity=".12"/><path d="m14 47 46-36 46 36M27 49v34h66V49M50 83V57h20v26" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 12q12 0 18 10M83 22q6 0 9 5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+            <div><span class="scenario-kicker">INTERACTIVE DEMO</span><h3 id="scenario-title"></h3><p id="scenario-subtitle"></p></div>
+          </div>
+          <dl id="scenario-facts" class="scenario-facts"></dl>
+          <p class="scenario-disclaimer">Fictional starting state, not live data. Actions are simulated in conversation; these cards do not track changes.</p>
+          <p id="scenario-greeting" class="scenario-greeting"></p>
+          <div id="scenario-prompts" class="scenario-prompts" role="group" aria-label="Things to try"></div>
+          <p class="scenario-disclaimer">Tap an idea, then say it aloud. On non-GPT Live models, you can also send it as text after connecting.</p>
+        </section>
         <p id="history-help" class="history-help">Replies stream here as live drafts. After an interruption, only the service's retained text remains; unheard text is removed.</p>
         <div id="transcript" role="log" aria-live="polite" aria-relevant="additions text"><div id="empty"><span>“</span><h3>Good conversations start with hello.</h3><p>Your words and the agent’s replies will appear here.</p></div></div>
         <form id="text-form" class="text-composer">

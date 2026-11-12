@@ -32,6 +32,47 @@ notes, personalization, and advanced reset controls. The audio-processing notes
 distinguish requested browser processing from the saved Agent's Azure denoising;
 use **Show Agent settings** to inspect the actual saved definition.
 
+### Prebuilt conversation scenarios
+
+Choose a scenario above the call controls, then start a new conversation.
+The greeting, prompt and conversation-area illustration change together.
+Switching is disabled during setup or a call; switching between calls clears
+the on-screen transcript, not Azure recordings. **General assistant** restores
+the original experience.
+
+| Scenario | Typical demo tasks | Visual context |
+| --- | --- | --- |
+| Health coverage | Explain preventive-care benefits, explore fictional in-network providers, clarify a pending claim | Sample plan, preventive-visit benefit and claim status |
+| Everyday banking | Explore a EUR 2,000 to EUR 5,000 overdraft request, discuss required documents, compare account options without sales pressure | Fictional current account, existing limit and example request |
+| Connected home | Adjust room temperature, choose a wash cycle, draft an energy-saving routine | Illustrative air conditioner, washer and refrigerator starting state |
+
+All three are **unbranded, fictional demonstrations**. They do not mention
+company or caller names. Personalization name/context fields are ignored for
+scenario calls; language controls still apply. The cards show a labeled
+starting state, not live telemetry or completed actions. Tap a suggested topic
+to rehearse it aloud or populate the text composer; it is never sent automatically.
+
+The server owns the prompts and fictional facts in `scenarios.json`. Starting
+a scenario creates or reuses an isolated Agent named
+`voice-demo-<source-name-hash>-<scenario>` in the selected model's project.
+It copies the selected Agent's model and audio settings, replaces the prompt
+and greeting, and removes tools. GPT Live keeps its reasoning deployment but
+has no backend tools. No business integrations, web searches, real account
+changes or appliance commands are made by these scenario Agents.
+The original Agent and Live companion are not edited. Changing source settings
+publishes a new version of the owned scenario Agent; previous versions remain.
+Unrelated Agents at those names are never overwritten. This requires Agent
+creation/version/enable permissions and incurs normal model usage.
+
+Greetings are supplied before session startup for both protocols, with English
+and Spanish openings and the existing language policy. Azure Realtime Flash
+does not support a saved greeting, so the bridge requests its scenario greeting
+after startup configuration. Scenario recordings use the scenario Agent and
+the existing signed download mechanism; GPT Live WebRTC still has no recording.
+Healthcare prompts avoid diagnosis and coverage guarantees; banking prompts
+avoid approval promises and invented prices; home prompts avoid hazardous
+remote activation. These are demonstration guardrails, not production compliance.
+
 ### Weather-aware city scenery
 
 Use the **City scene** selector in the floating scenery controls to choose
@@ -190,7 +231,7 @@ with one question at a time. The existing structured-input language policy and
 untrusted personalization context remain appended, and the configured greeting
 opens the conversation without being repeated. The prompt requests human handoff,
 but this sample does not provide a handoff integration.
-The saved setup uses managed **gpt-realtime-2.1**, **mai-transcribe-2** input transcription,
+The saved setup uses managed **gpt-realtime-2.1**, **mai-transcribe-2-streaming** input transcription,
 and the selected Azure Speech HD output voice. Azure semantic turn detection
 keeps the headset noise-reduction processing on the service-owned audio path;
 GPT Realtime's upstream-owned `server_vad` rejects that denoiser.
@@ -289,6 +330,13 @@ GPT_LIVE_BACKEND_DEPLOYMENT=gpt-5.4
 DEFAULT_TRANSPORT=webrtc
 START_WITH_GPT_LIVE=true
 ```
+
+Use the **deployment name**, not just the model ID: a deployment named
+`gpt-live-1-test` requires `GPT_LIVE_DEPLOYMENT=gpt-live-1-test`, while the model
+selector still uses `gpt-live-1`. When changing `GPT_LIVE_PROJECT_ENDPOINT`, first verify
+that the destination project contains the owned Live companion and that its
+saved `definition.model` and Responses backend reference deployments there.
+Changing these environment variables does not rewrite an existing saved Agent.
 
 Keep `AZURE_VOICE_AGENT_NAME` pointed at the **realtime base Agent**.
 `START_WITH_GPT_LIVE=true` initially selects its existing `-live` companion,
@@ -411,7 +459,7 @@ signaling. See the
 for Live audio and session events.
 
 Use **Transcription model** to select input speech recognition independently of
-the Agent model, then select **Save new version**. **Transcription** shows the
+the Agent model, then select **Apply settings**. **Transcription** shows the
 actual saved model and updates only after a successful save. A transcription-only
 change preserves the existing prompt, AI greeting, tools, output voice, language,
 and turn detection. Switching the Agent model also retains the saved
@@ -430,7 +478,7 @@ applied VAD settings or include selectors. The transcript
 warns that interrupted text may include unheard output. Other realtime models
 continue using automatic truncation and authoritative retained-item events.
 
-New Agents default to **`mai-transcribe-2`**. Existing Agents retain their saved
+New Agents default to **`mai-transcribe-2-streaming`**. Existing Agents retain their saved
 choice until explicitly changed. The selector offers these exact IDs:
 `azure-speech`, `azure-speech-streaming`, `azure-llm-speech`, `mai-transcribe`,
 `mai-transcribe-2`, `mai-transcribe-2-streaming`, `gpt-live-transcribe`,
@@ -457,6 +505,44 @@ on ACA). It needs read/create permission for Toolboxes as well as Agent
 read/create/enable permission. An invoke-only identity is not sufficient for this UI workflow. The
 configured name is the only creation target, but anyone with access to the demo
 can trigger preparation; use Entra sign-in for deployments outside a controlled demo.
+
+### Compare before and after turn detection
+
+In **Agent & audio settings**, select any non-GPT Live model, then use
+**GPT Live 1-quality turn detection** and **Apply settings**. This demo preset is
+on by default for newly created Agents and stays on across non-GPT Live model
+switches. It does not change the Agent to the GPT Live protocol. Existing saved
+settings, including an explicit opt-out, are preserved.
+
+| Checkbox | Saved behavior |
+| --- | --- |
+| Checked: after | Applies [`enhanced-turn-detection.json`](enhanced-turn-detection.json) and `mai-transcribe-2-streaming`. Includes backchannel filtering, explicit interruption phrases, a three-word speech-start threshold while the assistant speaks, and `microsoft-decision-1` end-of-turn detection with the seven-digit account-number rule. |
+| Unchecked: before | Restores the exact turn-detection and transcription objects from the version saved before enabling the preset, rather than resetting to generic defaults. |
+
+The UI labels pending changes as **Not saved** until publication succeeds.
+Apply between calls, then start a new conversation. Changes affect the shared
+saved Agent for all visitors; they are not browser-only preferences. Prompts,
+tools, voice, other audio settings, and unrelated metadata are preserved.
+The transcription selector is locked while this preset is active because
+speech-start detection requires streaming transcription. Turn it off before
+changing transcription. GPT Live remains
+a separate Agent and does not use this checkbox.
+
+The original immutable version is referenced by `turn_detection_before_version`
+in Agent metadata. For new Agents without a previous version, the initial
+turn-detection and transcription objects are saved in `turn_detection_before_settings`
+instead; turning off the preset restores them, retaining streaming transcription
+as the new default. Keep referenced versions available for restoration. If the preset
+was applied outside this UI, an operator must record the verified original
+version in this metadata field or restore the original settings in Foundry
+first; the demo never guesses a baseline. Each toggle publishes a new version.
+The existing bridge still enables runtime automatic truncation and retained-item
+events in both modes for non-Flash realtime models, including when the original saved
+`auto_truncate` value was false. This preserves the demo's existing interruption
+history behavior; the checkbox compares the old and new turn-detection profiles,
+not that bridge override. Flash retains its existing `auto_truncate: false`
+exception even while this preset is enabled. Model availability and support for
+the preset remain service-dependent; unsupported configurations fail visibly.
 
 ### General web search through Foundry Toolbox
 

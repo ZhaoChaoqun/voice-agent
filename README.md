@@ -164,7 +164,7 @@ curl -fsS http://127.0.0.1:9527/healthz
 | Goal | Start here | What it owns |
 | --- | --- | --- |
 | Run the general Voice Agent UI | [`portal/README.md`](portal/README.md) | Agent editor, YAML version editing, Templates, voice playground, and standalone WebRTC page |
-| Run Python or .NET samples | [`samples/README.md`](samples/README.md) | Common Python setup, microphone samples, REST lifecycle, IQ, Toolbox, local functions, downloads, and the C# sample |
+| Choose a demo use case or run a sample | [`samples/README.md`](samples/README.md#choose-a-sample) | Project tables explaining the caller's goal and demonstrated outcome, grouped into customer experiences, industry workflows, developer integrations, and evaluation tools; includes Python, C#, and Java setup links |
 | Migrate Voice Live to Voice Agent | [`samples/voice_live_to_voice_agent/README.md`](samples/voice_live_to_voice_agent/README.md) | Two Python files with identical STT, GPT-4.1 mini, TTS, and audio settings; move from session configuration to a reusable agent |
 | Run realtime speech transcription | [`samples/realtime_stt/README.md`](samples/realtime_stt/README.md) | MAI Transcribe 2 or Azure Speech with VAD, microphone or WAV input, disabled LLM responses, and reported session usage |
 | Collect spoken identifiers with digit recognition | [`samples/digit_recognition/README.md`](samples/digit_recognition/README.md) | Server-managed transcript lookup, silent tool calls, complete digit readback, and caller confirmation with GPT Realtime and MAI Transcribe 2 |

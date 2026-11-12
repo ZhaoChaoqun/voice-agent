@@ -1,0 +1,37 @@
+{
+  "type": "azure_semantic_vad",
+  "auto_truncate": true,
+  "speech_start_detection": {
+    "while_assistant_speaking": {
+      "num_words": 3,
+      "acknowledgement_phrases": [
+        "mm-hmm", "mhm", "uh-huh", "mm", "hmm", "yeah", "yes", "yep",
+        "okay", "ok", "right", "sure", "i see", "got it", "okay i see",
+        "yeah yeah", "oh", "cool", "nice", "alright", "uh huh", "okay okay"
+      ],
+      "interruption_phrases": ["stop", "wait", "hold on", "hang on", "excuse me", "sorry", "pause"],
+      "turn_taking_classifier": {
+        "threshold": 0.5,
+        "criteria": {
+          "not_turn": "Backchannels such as okay, mm-hmm, right or I see are not a turn. Speech the user addresses to someone else nearby rather than to the assistant (a family member, a child, a passenger, a travel companion), such as asking them to grab keys, watch the bags, put a seatbelt on or open the door, is not a turn either. The caller is at home with family nearby and the TV on; asking a family member to unplug something, hold something or be quiet is not a turn."
+        }
+      }
+    },
+    "while_assistant_not_speaking": {"num_words": 0}
+  },
+  "threshold": 0.5,
+  "silence_duration_ms": 500,
+  "end_of_utterance_detection": {
+    "model": "microsoft-decision-1",
+    "threshold_level": "default",
+    "timeout_ms": 2000,
+    "instructions": "Decide whether the user has finished their conversational turn, so the assistant should respond now, or has only paused and is likely to keep talking. user_utterance is a live speech transcript up to the current pause; its punctuation is unreliable. Use assistant_last_utterance to judge what kind of answer the user is giving. When assistant_last_utterance is (none), judge from user_utterance alone. Account numbers always have exactly 7 digits; a shorter account number has not been finished.",
+    "criteria": {
+      "finished": "The user has said everything needed for the assistant to respond: a complete question, request or statement, or an answer to the assistant's question. A short reply that fully answers the assistant (yes, no, a day, a choice) is finished. A number, code or address is finished once it is as long as what the assistant asked for. In conversation a speaker often closes a complete statement with a trailing so, but, or, you know, I guess or a filler; that hands the turn over, so the turn is finished. A request is finished once the request itself has been said, even if it opened with a lead-in (I want to ask about, the thing is). Judge completeness by the words, not by how much detail they give: a sentence that is complete on its own is finished even if it is vague or general, because the assistant can ask for the details.",
+      "not_finished": "The utterance stops mid-thought: a clause is cut off (it stops on a preposition, article or possessive such as to, the, my), or a conjunction opens a new clause that has not been said yet (because, and then, so that, I was wondering if); the user is dictating a number, code, address or list and has given less than the assistant asked for; the user says they need a moment (let me check, hold on, let me think) and has not answered yet; or the user has only made a hesitation sound."
+    }
+  },
+  "remove_filler_words": true,
+  "create_response": true,
+  "interrupt_response": true
+}

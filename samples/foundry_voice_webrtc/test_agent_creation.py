@@ -9,9 +9,12 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp.test_utils import TestClient, TestServer
 
-from server import (ACTIVE, DEFAULT_AGENT_NAME, AgentPreparationError, Settings, create_app,
+from server import (ACTIVE, DEFAULT_AGENT_NAME, ENHANCED_TURN_DETECTION, TURN_DETECTION_BEFORE_SETTINGS,
+                    AgentPreparationError, Settings, configure_turn_detection, create_app,
                     inspect_configured_agent, load_settings, prepare_configured_agent, prepare_weather_toolbox,
                     recreate_configured_agent)
+from server import prepare_scenario_agent, scenario_settings
+from scenarios import scenario_definition
 
 
 _UNSET = object()
@@ -66,6 +69,43 @@ class CreationTests(unittest.IsolatedAsyncioTestCase):
         definition = json.loads(Path(__file__).with_name("personalized-agent.json").read_text())
         return {"versions": {"latest": {"version": "1", "definition": definition}}}
 
+    async def test_scenario_creation_readback_reuse_and_collision_protection(self):
+        cfg = self.config()
+        source = self.agent()["versions"]["latest"]
+        definition = scenario_definition(source["definition"], "health")
+        metadata = {"sample": "foundry_voice_webrtc", "scenario": "health", "scenario_source": cfg.agent}
+        saved = {"version": "1", "definition": definition, "metadata": metadata}
+        client = Client([], [Response(201, {"version": "1"}), Response(204)])
+        with patch("server.lookup_configured_agent", AsyncMock(side_effect=[None, None, saved])):
+            target, latest = await prepare_scenario_agent(client, cfg, {}, source, "health")
+        self.assertEqual(target, scenario_settings(cfg, "health"))
+        self.assertEqual(latest, saved)
+        self.assertEqual(client.writes[0][1]["json"], {"definition": definition, "metadata": metadata})
+        self.assertNotIn(cfg.agent + "/versions", client.writes[0][0])
+        reused = Client([], [Response(204)])
+        with patch("server.lookup_configured_agent", AsyncMock(return_value=saved)):
+            await prepare_scenario_agent(reused, cfg, {}, source, "health")
+        self.assertEqual(len(reused.writes), 1)
+        self.assertIn(":enable", reused.writes[0][0])
+        for existing in ({**saved, "metadata": {}}, {**saved, "metadata": {"scenario_source": "someone-else"}}):
+            rejected = Client([])
+            with patch("server.lookup_configured_agent", AsyncMock(return_value=existing)):
+                with self.assertRaisesRegex(AgentPreparationError, "belongs to another"):
+                    await prepare_scenario_agent(rejected, cfg, {}, source, "health")
+            self.assertEqual(rejected.writes, [])
+
+    async def test_scenario_concurrent_edit_and_bad_readback_fail_without_starting(self):
+        cfg = self.config()
+        source = self.agent()["versions"]["latest"]
+        for reads, posts, message in (
+                ([None, {"version": "2"}], [], "changed during"),
+                ([None, None, {"version": "1", "definition": {}}], [Response(201)], "could not be verified")):
+            client = Client([], posts)
+            with patch("server.lookup_configured_agent", AsyncMock(side_effect=reads)):
+                with self.assertRaisesRegex(AgentPreparationError, message):
+                    await prepare_scenario_agent(client, cfg, {}, source, "home")
+            self.assertFalse(any(":enable" in url for url, _ in client.writes))
+
     async def test_agent_name_is_optional_and_stable_across_settings_loads(self):
         endpoint = self.config().endpoint
         for environment in ({}, {"AZURE_VOICE_AGENT_NAME": ""}, {"AZURE_VOICE_AGENT_NAME": "  "}):
@@ -88,7 +128,8 @@ class CreationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(result["exists"], exists)
             self.assertEqual(result["model"], "gpt-realtime-2.1")
             self.assertEqual(result["version"], "1" if exists else None)
-            self.assertEqual(result["transcriptionModel"], "mai-transcribe-2")
+            self.assertEqual(result["transcriptionModel"], "mai-transcribe-2-streaming")
+            self.assertEqual(result["enhancedTurnDetection"], not exists)
             self.assertEqual(client.writes, [])
             self.assertEqual(client.removals, [])
         self.weather.assert_not_awaited()
@@ -119,6 +160,22 @@ class CreationTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result["exists"])
         self.assertEqual(result["agent"], first.agent)
         self.assertEqual(sum("/versions?" in url for url, _ in client.writes), 1)
+
+    async def test_new_agent_defaults_on_with_streaming_and_can_restore_its_original_settings(self):
+        client = Client([Response(404), Response(200)], [Response(201), Response(204)])
+        result = await prepare_configured_agent(client, self.config(), {})
+        self.assertTrue(result["enhancedTurnDetection"])
+        self.assertEqual(result["transcriptionModel"], "mai-transcribe-2-streaming")
+        saved = client.writes[0][1]["json"]
+        metadata = dict(saved["metadata"])
+        self.assertLessEqual(len(metadata[TURN_DETECTION_BEFORE_SETTINGS]), 512)
+        vad = saved["definition"]["audio"]["input"]["turn_detection"]
+        self.assertEqual({key: vad[key] for key in ENHANCED_TURN_DETECTION}, ENHANCED_TURN_DETECTION)
+        restored = await configure_turn_detection(client, self.config(), {}, saved["definition"], metadata, "1", False)
+        original = self.agent()["versions"]["latest"]["definition"]
+        self.assertEqual(restored, original)
+        self.assertNotIn(TURN_DETECTION_BEFORE_SETTINGS, metadata)
+        self.assertEqual(metadata, {"sample": "foundry_voice_webrtc"})
 
     async def test_status_api_works_before_creation_and_during_calls_without_mutation(self):
         for active in (False, True):
@@ -233,7 +290,9 @@ class CreationTests(unittest.IsolatedAsyncioTestCase):
         self.weather.assert_awaited_once()
         self.assertIn("/versions?", client.writes[0][0])
         definition = client.writes[0][1]["json"]["definition"]
-        self.assertEqual(client.writes[0][1]["json"]["metadata"], {"sample": "foundry_voice_webrtc"})
+        metadata = client.writes[0][1]["json"]["metadata"]
+        self.assertEqual(metadata["sample"], "foundry_voice_webrtc")
+        self.assertIn(TURN_DETECTION_BEFORE_SETTINGS, metadata)
         self.assertEqual(definition["audio"]["output"]["voice"], "en-US-Tyler:DragonHDLatestNeural")
         self.assertEqual(definition["audio"]["input"]["noise_reduction"]["type"],
                          "azure_deep_noise_suppression_headset")
@@ -257,6 +316,7 @@ class CreationTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("{{language_policy}}", definition["instructions"])
         self.assertIn("The configured greeting opens the conversation. Do not repeat it.", definition["instructions"])
         template = self.agent()["versions"]["latest"]["definition"]
+        template["audio"]["input"]["turn_detection"].update(ENHANCED_TURN_DETECTION)
         self.assertEqual(definition, {**template, "tools": [self.weather.return_value]})
         self.assertIn(":enable?", client.writes[1][0])
 

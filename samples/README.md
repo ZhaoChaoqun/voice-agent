@@ -22,6 +22,10 @@ an existing customer-hosted MCP does not need a local tunnel.
 
 ## Choose a sample
 
+Choose by **the use case you want to show**, then open the project link for
+setup, model choices, and an example conversation. The tables distinguish the
+caller's goal from what actually happens in the demonstration.
+
 | Sample | What it demonstrates |
 | --- | --- |
 | [Voice Agent Cost Lab](../tools/cost_calculator/README.md) | Standalone browser list-price calculator in `tools`: South India model prices, labeled Central India HD/Voice Live references, managed/BYOM model selection, prompt sensitivity, and CSV export. No Azure credentials required. |
@@ -102,10 +106,136 @@ an existing customer-hosted MCP does not need a local tunnel.
 | [`download_conversation_artifacts.py`](download_conversation_artifacts.py) | Download conversation JSON, per-turn WAV files, and the merged stereo WAV. |
 | [`download_conversation_traces.py`](download_conversation_traces.py) | Download correlated Application Insights rows by conversation ID. |
 
-Examples 5–34 call mock tools with fixed, fictional data on the public no-auth
-`/mcp/mock-tool-call` route by default, so they need no MCP setup and nothing
-real is booked, sent, or charged. To use your own systems, see
+For a mobile customer presentation or a general-purpose browser conversation,
+start with **First Voice**. For industry workflows in the Portal, use the
+numbered business templates below.
+
+- [Browser, mobile, and multimodal experiences](#browser-mobile-and-multimodal-experiences)
+- [Banking, support, and reception](#banking-support-and-reception)
+- [Sales, appointments, and travel](#sales-appointments-and-travel)
+- [Employee services, learning, and research](#employee-services-learning-and-research)
+- [Developer building blocks and integrations](#developer-building-blocks-and-integrations)
+- [Transcription, evaluation, and operations](#transcription-evaluation-and-operations)
+
+**Demo boundaries:** Examples 5-34 use mock tools with fictional results on the
+public no-auth `/mcp/mock-tool-call` route by default. They can demonstrate
+booking, messaging, or ticket creation, but nothing is booked, sent, charged,
+or filed in a real business system. Use fictional information only. Other
+samples have their own integration requirements and limitations, noted below
+and in their READMEs. To connect actual systems, see
 [Connect real tools](../docs/05_connect_real_tools.md).
+
+In the business templates, **handoff** normally means moving between stages
+of the agent's workflow, not transferring a telephone call to a person.
+Actual phone transfer requires a supporting telephony runtime.
+
+### Browser, mobile, and multimodal experiences
+
+| Sample project | Demo use case | What you will see or hear |
+| --- | --- | --- |
+| [First Voice: browser voice assistant](foundry_voice_webrtc/README.md) | A visitor wants to try a natural, interruptible voice conversation on mobile or desktop. | Creates or reuses a saved agent; includes fictional health, banking, and home-assistant scenarios, plus microphone and text input, spoken replies, transcripts, model/voice controls, and conversation downloads over WebSocket or WebRTC. |
+| [GPT Live browser English teacher](gpt_live/js/README.md) | A learner wants to practise English by speaking with an AI teacher. | A browser conversation backed by GPT Live and a Responses model or managed prompt agent. The managed-agent mode also demonstrates calculator and date/time tools. |
+| [Vehicle voice cockpit](vehicle_local_tools/README.md) | A driver wants to change cabin temperature, adjust music volume, or start navigation by voice. | A web dashboard updates simulated vehicle settings. The cloud agent chooses actions, but local code validates and executes them; no physical vehicle is controlled. |
+| [Voice with image and camera input](voice_agent_image_input/README.md) | A user wants to show an image or camera view and ask a question about it. | Upload an image or send sampled camera frames, ask a question, and hear an answer. Includes a local web UI and a latency-measuring CLI. |
+| [Pronunciation coach](language_learning/README.md) | A language learner wants feedback on how they pronounce a sentence. | The coach asks the learner to read aloud, uses Azure Speech Pronunciation Assessment, explains sentence- and word-level feedback, and offers spoken retries. |
+| [Knowledge, voice, and avatar agent](create_agent_with_iq_avatar_voice/README.md) | A user wants to ask questions of a knowledge-grounded assistant with a chosen voice and avatar. | A portal-first setup combining Foundry IQ, Andrew Dragon HD voice, and Harry Business avatar, with optional custom photo avatar and Personal Voice workflows. |
+| [Conference concierge: Ignite 2026](example35_conference_concierge/README.md) | An attendee wants relevant sessions, a clash-free agenda, and help finding event information. | Session recommendations, agenda checks, and answers grounded in the official catalog, FAQ, and event guide. No calendar or email integration; this sample requires its own conference MCP setup. |
+
+### Banking, support, and reception
+
+| Sample project | Demo use case | What the demo does |
+| --- | --- | --- |
+| [1: Finance - Realtime](example1_finance_with_handoff_realtime/README.md) | A lender calls a customer to discuss a personal-loan offer. | Walks through identity checks, indicative offer negotiation, charge disclosure, credit-bureau consent, and a loan-officer appointment using a realtime speech pipeline. |
+| [1: Finance - Cascade](example1_finance_with_handoff_cascade/README.md) | Show the same loan conversation with separate speech recognition, language model, and speech synthesis. | Runs the same business stages using GPT-4.1 mini and Azure Speech, including spoken acknowledgments during slower operations. |
+| [1: Finance - Realtime, Hindi](example1_finance_with_handoff_realtime_hi_in/README.md) | A Hindi-speaking customer discusses a personal-loan offer. | Preserves the Realtime finance workflow with Hindi input/output and the Swara voice. |
+| [1: Finance - Cascade, Hindi](example1_finance_with_handoff_cascade_hi_in/README.md) | Show the Hindi loan conversation with a cascaded speech pipeline. | Preserves the Cascade finance workflow with Hindi input/output and the Swara voice. |
+| [2: Finance with OTP and officer search](example2_finance_with_OTP_and_Officer_Search/README.md) | A customer verifies a test access code, discusses borrowing, and chooses a loan officer. | Demonstrates OTP verification, loan calculation, interest capture, officer lookup, and callback confirmation in one agent rather than a multi-stage handoff graph. |
+| [3: Elevator service](example3_elevator_service_with_safety_zendesk_and_handoff/README.md) | A caller reports faulty elevator doors or asks about an existing service ticket. | Performs five safety checks, reviews the issue with the caller, creates a mock Zendesk ticket only after confirmation, and looks up tickets by exact ID. |
+| [4: Front desk with fluency](example4_frontdesk_with_fluency_and_handoff/README.md) | A caller asks about the company, needs support, or wants to leave a callback message. | Answers FAQs, attempts grounded support search, and saves a confirmed callback message through the demo service. Browser calls offer a message instead of pretending to transfer; saving does not guarantee delivery. |
+| [5: Customer support](example5_customer_support/README.md) | A customer needs help with a product problem or an account question. | Uses mock help articles and CRM lookup, troubleshoots one step at a time, and creates a new mock support ticket after approval. No refund or account-plan change. |
+| [7: Receptionist and messaging](example7_receptionist_messaging/README.md) | A caller wants to reach an employee or leave a message. | Answers company questions, checks mock staff availability, and demonstrates SMS or email follow-up to a directory contact. |
+| [10: Collections and payment recovery](example10_collections_payment_recovery_agent/README.md) | A lender discusses a past-due balance with a customer who may need more time or hardship support. | Captures an arrangement or hardship request, finds a mock follow-up contact, and simulates a confirmation text. No payment is taken. |
+| [17: Insurance advisor](example17_insurance_advisor/README.md) | A customer wants to explore coverage and discuss an application with an adviser. | Explores needs and sample coverage, looks up a mock contact, and simulates booking an application-review call. |
+| [25: Order status and tracking](example25_order_status_tracking/README.md) | A shopper asks where an order is or wants help with a return or warranty issue. | Uses a mock order lookup and demonstrates logging return details on a support ticket and texting a summary. |
+| [32: Technical support](example32_technical_support_agent/README.md) | A cloud-product customer reports a technical fault that may need escalation. | Searches mock help articles, checks a mock contact, guides troubleshooting, and demonstrates ticket creation or a comment on an existing ticket. |
+
+### Sales, appointments, and travel
+
+All business-system actions in this table use mock tools by default.
+
+| Sample project | Demo use case | What the demo does |
+| --- | --- | --- |
+| [6: Appointment setter](example6_appointment_setter/README.md) | A sales team follows up a warm lead and offers a product demo. | Qualifies interest, finds an available time, simulates a 30-minute Teams booking, and creates a mock CRM lead. |
+| [8: Appointment scheduler](example8_appointment_scheduler/README.md) | A clinic caller wants to book, move, or cancel a visit. | Demonstrates availability lookup and mock calendar creation, rescheduling, or cancellation. |
+| [13: Healthcare receptionist](example13_healthcare_receptionist/README.md) | A patient needs help arranging a visit or changing an appointment. | Simulates booking a visit or filing a change request for the front desk, with emergency redirection. Does not provide medical advice. |
+| [14: Hotel reservations](example14_hotel_reservation_agent/README.md) | A guest wants to check rooms, arrange a stay, or change a reservation. | Answers hotel questions and uses mock availability, reservation lookup, creation, and cancellation tools. No real room is reserved or charged. |
+| [15: Inbound lead qualifier](example15_inbound_lead_qualifier/README.md) | An interested prospect asks whether a product fits their business. | Qualifies budget, decision authority, needs, and timing; then demonstrates a mock meeting invite and CRM lead capture. |
+| [22: Legal intake](example22_legal_intake_specialist/README.md) | A prospective client wants to explain a matter and request a consultation. | Screens the request, collects case facts, and simulates saving an intake lead and booking a consultation. Use fictional case details. |
+| [23: Marketing lead capture](example23_marketing_lead_capture_agent/README.md) | A campaign respondent wants more information or a sales conversation. | Captures interest, checks a mock contact, creates a mock lead, and simulates a sales-call booking. |
+| [26: Outbound sales](example26_outbound_sales_representative/README.md) | A sales representative calls a prospect to introduce a product and offer a demo. | Uses a permission-based opener, handles objections, and demonstrates mock calendar booking and CRM follow-up. |
+| [28: Real estate lead follow-up](example28_real_estate_lead_follow_up/README.md) | A prospective buyer wants to discuss properties and arrange a viewing. | Qualifies preferences, discusses sample listings, and demonstrates a mock showing invite and lead capture. |
+| [29: Restaurant phone orders](example29_restaurant_phone_order_taker/README.md) | A diner wants to assemble a pickup or delivery order. | Reads back items and a total, with an optional mock summary text. The order remains unsubmitted: it is not sent to or accepted by a kitchen, and no payment is taken. |
+| [30: Salon and spa receptionist](example30_salon_spa_beauty_receptionist/README.md) | A customer asks about services and wants an appointment. | Answers menu questions, finds a mock appointment slot, and demonstrates booking and an optional SMS reminder. |
+| [33: Travel agency trip planner](example33_travel_agency_trip_planner/README.md) | A traveler wants holiday ideas that fit their preferences and budget. | Discusses sample packages and ballpark prices, then creates a mock trip-request lead. Does not book travel, take payment, or email an itinerary. |
+
+### Employee services, learning, and research
+
+All business-system actions in this table use mock tools by default.
+
+| Sample project | Demo use case | What the demo does |
+| --- | --- | --- |
+| [9: Assessment and quiz](example9_assessment_quiz_agent/README.md) | An employee takes a spoken security-awareness quiz. | Asks ten questions one at a time, provides a pass or needs-work debrief, and simulates saving the score with consent. |
+| [11: Corporate role-play coach](example11_corporate_training_roleplay_coach/README.md) | A trainee wants to practise a difficult workplace conversation. | Role-plays the other person, switches to a scored coaching debrief, and simulates saving the results after agreement. |
+| [12: Education and tutoring](example12_education_tutoring/README.md) | A student wants help understanding a topic and practising problems. | Adjusts to the student's level, teaches step by step, and demonstrates a mock follow-up session booking. |
+| [16: Incident response coordinator](example16_incident_response_coordinator/README.md) | An employee reports an incident that may need urgent attention. | Classifies severity, simulates paging the on-call person or notifying an owner, and creates a mock incident ticket. No real responder is paged. |
+| [18: Internal knowledge assistant](example18_internal_knowledge_assistant/README.md) | An employee needs a company-policy or how-to answer. | Searches mock help-center content, explains an answer, and demonstrates filing a documentation-gap ticket when information is missing. |
+| [19: IT access requests](example19_it_access_request_agent/README.md) | An employee requests access to a system or resource. | Checks a mock employee record, applies sample access policy, and files a mock request ticket. Does not grant real access. |
+| [20: IT help desk](example20_it_help_desk_internal_support/README.md) | An employee needs help with a workplace IT problem. | Uses mock help articles, walks through one troubleshooting step at a time, and demonstrates creating or updating a support ticket. |
+| [21: Language practice tutor](example21_language_practice_tutor/README.md) | A learner wants conversation practice suited to their level. | Runs a guided conversation, recaps the session, and simulates booking the next practice session. For measured pronunciation feedback, use the separate pronunciation-coach sample above. |
+| [24: New-hire onboarding](example24_new_hire_onboarding_assistant/README.md) | A new employee wants guidance through their first day. | Explains role-specific onboarding, benefits, and contacts; simulates a manager 1:1 booking and a text with key contacts. |
+| [27: Personal voice assistant](example27_personal_voice_assistant/README.md) | An employee wants a quick answer, a note, or help reaching the right team. | Searches mock help content, simulates emailing a note, and demonstrates creating a follow-up ticket. |
+| [31: Survey and feedback](example31_survey_feedback_intake/README.md) | A customer agrees to a short feedback call. | Checks a mock customer record, asks four questions, and reads back the answers. Feedback remains unsubmitted because there is no feedback-write integration. |
+| [34: User research interviewer](example34_user_research_interviewer/README.md) | A product team wants to learn about a user's needs and experience. | Adapts the interview to available time and simulates saving recap notes only with the participant's agreement. No real research record is stored. |
+
+### Developer building blocks and integrations
+
+These are focused implementation examples, not complete industry applications.
+
+| Sample project | Use case | What it demonstrates |
+| --- | --- | --- |
+| [Basic Python voice agent](basic_voice_agent.py) | Start a first microphone conversation with a saved agent. | Creates and versions an agent or connects to an existing one, then streams speech. |
+| [REST agent lifecycle](simple_rest_lifecycle.py) | Manage an agent without starting a voice call. | Creates a simple agent or retrieves an existing one through REST. |
+| [C# voice agent](CSharp/README.md) | Add voice conversation to a .NET application. | Streams microphone/speaker audio, manages temporary or existing agents, and reads persisted conversations and recordings. |
+| [Java voice agent](java/README.md) | Add live voice interaction to a Java application. | Demonstrates asynchronous audio, interruption, conversation readback, and temporary-agent cleanup. |
+| [Voice Live to Voice Agent migration](voice_live_to_voice_agent/README.md) | Move an existing voice application to a reusable managed agent. | Compares the same Azure Speech / GPT-4.1 mini / TTS pipeline and local functions before and after migration. |
+| [Google ADK integration](adk_voice_agent/README.md) | Use an existing Foundry Voice Agent in an ADK live-audio application. | Switches between Gemini Live and Foundry through configuration while handling audio conversion, transcripts, and interruptions. |
+| [Add voice to an existing customer agent](existing_agent_voice_design/README.md) | Keep existing conversation logic while adding managed speech interaction. | An architecture guide using a Hosted Agent as the conversation engine. **Design guide only; not a runnable demo.** |
+| [Regional and Data Zone voice agents](realtime_datazone_voice_agent.md) | Demonstrate a voice conversation with explicit region and inference-routing requirements. | Documents supported project/model combinations and a hands-free microphone client; routing prerequisites differ by project and model. |
+| [GPT Live with Responses delegation](gpt_live/python/README.md) | Talk to an English teacher from the terminal. | Streams microphone audio through GPT Live and delegates responses to a model; reports the conversation ID after closing. |
+| [GPT Live with managed prompt-agent delegation](gpt_live/python/README.md#managed-prompt-agent-delegation) | Let a reusable prompt agent handle the voice assistant's reasoning. | Creates a prompt agent, pins its version, and connects it to GPT Live for spoken conversation. |
+| [GPT Live with prompt-agent tools](gpt_live/python/README.md#managed-prompt-agent-with-mcp-and-local-function-tools) | Ask the voice assistant to calculate a sum or report the current date/time. | Gives the delegated prompt agent an MCP calculator and a client-executed date/time function. |
+| [SIP voice agent with GPT Live](sip_voice_agent/README.md) | Reach a voice agent through an inbound SIP phone connection. | Sets up and binds a SIP connection, configures access controls, inspects call records, and removes test routing. Requires telephony configuration. |
+| [MCP tools](voice_agent_with_mcp.py) | Let a spoken request call a remote tool service. | Connects an agent to MCP and displays tool arguments and results during microphone conversation. |
+| [Foundry IQ knowledge](voice_agent_with_foundry_iq.py) | Answer spoken questions using a configured knowledge source. | Creates an IQ-enabled agent and shows knowledge-tool activity during the call. |
+| [Local function calls](voice_agent_with_local_function.py) | Let the agent ask the application to perform a calculation. | Executes `add_numbers` locally, returns the result to the agent, and speaks the answer. |
+| [Toolbox integration](voice_agent_with_toolbox.py) | Reuse a configured collection of tools in a voice conversation. | Attaches a Toolbox to an agent and displays tool activity while the user talks. |
+| [Prompt subagent](subagent/voice_subagent_prompt_basic/README.md) | Ask a general voice assistant for a poem. | Delegates poem writing to a specialized prompt subagent. |
+| [Hosted GitHub Copilot subagent](subagent/voice_subagent_hosted_agent/README.md) | Ask for research, learning, or coding help by voice. | Delegates the task to an existing hosted GitHub Copilot agent. |
+| [Long tool waits with spoken reminders](long_tool_wait/README.md) | Keep a caller informed while an operation takes time. | Speaks progress reminders during slow local tools with both realtime and cascaded pipelines. |
+| [Spoken identifiers with digit recognition](digit_recognition/README.md) | Capture a spoken numeric identifier accurately before continuing. | Recognizes digits, reads the full sequence back digit by digit, and asks for confirmation. |
+
+### Transcription, evaluation, and operations
+
+| Sample project | Use case | What it produces |
+| --- | --- | --- |
+| [Realtime speech transcription](realtime_stt/README.md) | Turn microphone or WAV audio into text without an assistant replying. | Live transcription using MAI Transcribe 2 or Azure Speech, plus final usage and completeness information. |
+| [Recording refinement and translation](audio_transcribe_and_translate/README.md) | Clean up or translate the transcript of a short recording. | Transcribes a WAV of up to 60 seconds and refines or translates it with a voice agent; includes guidance for adapting the instructions to summarization. |
+| [Conversation simulation and evaluation](simulation_evaluation/README.md) | Check whether an agent can complete a scenario without manually playing every caller. | Generates adaptive simulated conversations from user goals and scores task completion and coherence. Text is the default; cloud voice needs a supported configuration. |
+| [Create, converse, and evaluate](conversation_evaluation/README.md) | Measure successful and deliberately failed tasks using actual spoken exchanges. | Runs four three-turn audio sessions against one stored agent, grades transcripts, and exports WAV files and results. |
+| [Airline refund evaluation tutorial](foundry_evaluation/README.md) | Evaluate how an airline assistant explains refund eligibility. | An illustrated portal walkthrough with a mock reservation lookup, fixed 24-hour rule, and custom rubric. No cancellation or refund; the optional Python runner has documented compatibility issues. |
+| [Voice Agent Cost Lab](../tools/cost_calculator/README.md) | Estimate voice-agent list-price costs before running a demo. | A standalone browser calculator with model and pipeline comparisons, prompt-size sensitivity, and CSV export. No Azure credentials required; estimates are not a bill. |
+| [Conversation artifact download](download_conversation_artifacts.py) | Review the text and audio of a stored call. | Downloads conversation JSON, per-turn WAV files, and a merged stereo recording. |
+| [Conversation trace download](download_conversation_traces.py) | Investigate what happened during a particular call. | Downloads Application Insights trace rows correlated by conversation ID. |
 
 ### Realtime sample: Project region, model, and GPU routing
 

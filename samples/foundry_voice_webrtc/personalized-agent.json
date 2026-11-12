@@ -19,7 +19,7 @@
     "input": {
       "noise_reduction": {"type": "azure_deep_noise_suppression_headset"},
       "format": {"type": "audio/pcm", "rate": 24000},
-      "transcription": {"model": "mai-transcribe-2", "language": "en-US"},
+      "transcription": {"model": "mai-transcribe-2-streaming", "language": "en-US"},
       "turn_detection": {
         "type": "azure_semantic_vad",
         "languages": ["en", "es"],
