@@ -186,7 +186,7 @@ class PersonalizationTests(unittest.TestCase):
 
 class BridgeTests(unittest.IsolatedAsyncioTestCase):
     async def test_scenario_is_prepared_before_connect_and_download_reference_keeps_its_route(self):
-        for transport, scenario in product(("websocket", "webrtc"), ("banking", "loan", "property")):
+        for transport, scenario in product(("websocket", "webrtc"), ("banking", "loan", "property", "interview")):
             cfg = Settings("https://example.services.ai.azure.com/api/projects/demo", "demo")
             target = scenario_settings(cfg, scenario)
             source = {"version": "1", "definition": {"kind": "voice", "model": "gpt-realtime-2.1"}}

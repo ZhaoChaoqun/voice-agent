@@ -73,7 +73,7 @@ function renderScenario() {
   const preset = config?.scenarios?.[selectedScenario];
   $('scenario-card').hidden = !preset;
   $('scenario-card').className = `scenario-card scenario-${selectedScenario}`;
-  for (const id of ['health', 'banking', 'home', 'loan', 'property'])
+  for (const id of ['health', 'banking', 'home', 'loan', 'property', 'interview'])
     $('scenario-art-' + id).toggleAttribute('hidden', id !== preset?.visual);
   $('scenario-facts').replaceChildren();
   $('scenario-prompts').replaceChildren();

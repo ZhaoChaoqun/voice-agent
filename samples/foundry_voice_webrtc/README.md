@@ -47,8 +47,9 @@ the original experience.
 | Connected home | Adjust room temperature, choose a wash cycle, draft an energy-saving routine | Illustrative air conditioner, washer and refrigerator starting state |
 | Personal loans | Discuss a fictional personal loan, repayment choices and application requirements | Example amount and term; no interest rate or fees supplied |
 | Home buying | Explore a fictional apartment, discuss preferences and simulate a viewing request | Sample two-bedroom apartment, city and illustrative price |
+| Electrician interview | Practise answering questions about a hands-on field role, safety and teamwork | Fictional role, practice interview and focus areas |
 
-All five are **unbranded, fictional demonstrations**. They do not mention
+All six are **unbranded, fictional demonstrations**. They do not mention
 company or caller names. Personalization name/context fields are ignored for
 scenario calls; language controls still apply. The cards show a labeled
 starting state, not live telemetry or completed actions. Tap a suggested topic
@@ -76,7 +77,8 @@ Healthcare prompts avoid diagnosis and coverage guarantees; banking prompts
 avoid approval promises and invented prices; home prompts avoid hazardous
 remote activation. Loan and property prompts avoid fabricated rates or listing
 details and make clear that applications and viewings are not submitted or
-booked. These are demonstration guardrails, not production compliance.
+booked. Interview prompts avoid identifying details and hiring decisions. These
+are demonstration guardrails, not production compliance.
 
 ### Weather-aware city scenery
 

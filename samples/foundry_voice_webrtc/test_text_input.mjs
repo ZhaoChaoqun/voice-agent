@@ -76,7 +76,7 @@ test('scenario switching refreshes visuals and greeting, clears old context and 
       {configured:true, agent:'demo-agent', scenarios} : {exists:true, model:'gpt-realtime-2.1', version:'1'}}),
   });
   ui.stop();
-  const ids = ['health', 'banking', 'home', 'loan', 'property'];
+  const ids = ['health', 'banking', 'home', 'loan', 'property', 'interview'];
   for (const id of ids) {
     ui.element('transcript').append({textContent:'previous scenario'});
     ui.element('scenario-choice').value = id;
@@ -96,8 +96,8 @@ test('scenario switching refreshes visuals and greeting, clears old context and 
   ui.reconnect();
   ui.element('scenario-choice').value = 'health';
   ui.element('scenario-choice').onchange();
-  assert.equal(ui.element('scenario-choice').value, 'property');
-  assert.equal(ui.element('scenario-title').textContent, scenarios.property.title);
+  assert.equal(ui.element('scenario-choice').value, 'interview');
+  assert.equal(ui.element('scenario-title').textContent, scenarios.interview.title);
   ui.stop();
   ui.element('scenario-choice').value = '';
   ui.element('scenario-choice').onchange();
@@ -106,7 +106,7 @@ test('scenario switching refreshes visuals and greeting, clears old context and 
 });
 
 test('scenario startup forces anonymous context and includes the selected scenario in the socket route', async () => {
-  for (const scenario of ['banking', 'loan', 'property']) {
+  for (const scenario of ['banking', 'loan', 'property', 'interview']) {
     let socket;
     class Socket {
       static OPEN=1;
