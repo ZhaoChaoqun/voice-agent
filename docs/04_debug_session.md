@@ -196,9 +196,11 @@ cd VoiceAgent
 python samples/download_conversation_traces.py conv_...
 ```
 
-This requires `AZURE_VOICE_AGENTS_APP_INSIGHTS_RESOURCE_ID` and Log Analytics
-query permission. Preserve the local artifacts even when trace ingestion is
-delayed.
+This requires `AZURE_VOICE_AGENTS_APP_INSIGHTS_RESOURCE_ID` (the Project's
+connected Application Insights resource) and Log Analytics Reader or Owner on
+that resource; see
+[guide 01, section 8.4](./01_setup_subscription.md#84-application-insights-access).
+Preserve the local artifacts even when trace ingestion is delayed.
 
 For MCP or business tools, query the backend only after local events prove a
 call or target preparation reached that path. Check endpoint availability,

@@ -7,6 +7,15 @@ empty Azure subscription. It is the shared source of truth for subscription,
 Project endpoint, permissions, model mode, and region eligibility. Do not
 continue to an example until those values are verified.
 
+Access is the step most often left incomplete. Voice Agent work needs roles at
+four separate scopes, and a role at one scope grants nothing at another: the
+Foundry resource (build Agents, deploy models, change connections), the
+subscription (quota), the Application Insights resource connected to the
+Project (traces, monitoring, trace-based evaluation), and, for the Project
+managed identity, both the Foundry resource and Application Insights. Use
+[section 8](#8-assign-the-required-roles) when you create the Project and every
+time you add a teammate to an existing one.
+
 After completing the criteria below, choose the path you need:
 
 - Default Portal and Templates: follow the [Portal guide](../portal/README.md).
@@ -22,9 +31,17 @@ After completing the criteria below, choose the path you need:
 - The Voice Agent team has confirmed the subscription and region are eligible.
 - `Microsoft.CognitiveServices` reports `Registered`.
 - The resource group, AIServices account, and Project report `Succeeded`.
-- The deployment user has both management-plane and Agent data-plane access.
-- The Project managed identity has Agent data-plane access.
-- `PROJECT_ENDPOINT`, `PROJECT_ID`, and `FOUNDRY_SCOPE` are populated.
+- Every person who uses the Project has the roles in
+  [section 8](#8-assign-the-required-roles) for their work: Foundry User on the
+  Foundry resource; Foundry Account Owner on the Foundry resource and
+  Cognitive Services Usages Reader on the subscription to deploy models; and
+  Owner or Log Analytics Reader on the connected Application Insights resource
+  to see traces.
+- The Project managed identity has Foundry User on the Foundry resource and
+  Reader on the connected Application Insights resource.
+- Section 9 reports no `MISSING` role.
+- `PROJECT_ENDPOINT`, `PROJECT_ID`, `FOUNDRY_SCOPE`, and `APP_INSIGHTS_ID` are
+  populated.
 - The Finance definitions' `model_type` and exact `model` identifier match a
   mode available to the Project.
 
@@ -389,90 +406,342 @@ PROJECT_PRINCIPAL_ID="$(
 : "${PROJECT_PRINCIPAL_ID:?The Project has no managed identity principal ID}"
 ```
 
-## 8. Assign the required roles
-
-The examples need two permission planes:
-
-| Role | Why |
-| --- | --- |
-| `Cognitive Services Contributor` | Create and manage the Foundry account, Project, and Project connections |
-| `Cognitive Services User` | Call the AIServices Agent data-plane APIs, including Agent create/read/invoke |
-
-Assign both to the deployment user at the Foundry account scope:
+`USER_OBJECT_ID` is the identity signed in to Azure CLI. Section 8 grants roles
+to `ASSIGNEE_OBJECT_ID`, which defaults to that identity:
 
 ```bash
-az role assignment create \
-  --assignee-object-id "${USER_OBJECT_ID}" \
-  --assignee-principal-type User \
-  --role "Cognitive Services Contributor" \
-  --scope "${FOUNDRY_SCOPE}"
-
-az role assignment create \
-  --assignee-object-id "${USER_OBJECT_ID}" \
-  --assignee-principal-type User \
-  --role "Cognitive Services User" \
-  --scope "${FOUNDRY_SCOPE}"
+ASSIGNEE_OBJECT_ID="${USER_OBJECT_ID}"
 ```
 
-Give the Project managed identity Agent data-plane access:
+To grant access to a teammate instead, ask them to run the `USER_OBJECT_ID`
+snippet above while signed in as themselves and send you the value. An object
+ID is an identifier, not a credential. If your tenant allows Microsoft Graph
+reads, `az ad user show --id <their-sign-in-name> --query id --output tsv`
+returns the same value. Then set `ASSIGNEE_OBJECT_ID="<their-object-id>"`.
+
+## 8. Assign the required roles
+
+Run this section when you create the Project, and again for every teammate you
+add to an existing Project. Each row names its own scope; a role at one scope
+grants nothing at another.
+
+| Work | Role | Scope | Assign to |
+| --- | --- | --- | --- |
+| Create, publish, and run Voice Agents; use the playground; run the Portal and CLI samples; run conversation simulation | Foundry User | Foundry resource (`FOUNDRY_SCOPE`) | Every developer, and the Project managed identity |
+| Deploy or change model deployments, including simulator and evaluator models; create or change Project connections such as MCP and Application Insights | Foundry Account Owner | Foundry resource (`FOUNDRY_SCOPE`), not the Project | Developers who deploy models or change connections |
+| See available quota and pass deployment eligibility checks | Cognitive Services Usages Reader | Subscription (`SUBSCRIPTION_SCOPE`) | The same developers as the previous row |
+| Open **Traces** and the voice **Monitor** tab, review trace-based evaluation results, run `download_conversation_traces.py`, and grant this access to others | Owner | Connected Application Insights resource (`APP_INSIGHTS_ID`) | Project team members who manage access |
+| The same trace access, read-only | Log Analytics Reader | Connected Application Insights resource | Other developers who debug sessions |
+| Let trace-based evaluation read traces | Reader | Connected Application Insights resource | The Project managed identity |
+| Read trace content stored in protected tables | Privileged Monitoring Data Reader | Connected Application Insights resource | Each identity above that reads protected content |
+| Grant the roles in this table | Owner or Role Based Access Control Administrator | Each scope in this table | The person running this section |
+
+What the table does not make obvious:
+
+- **Model deployment belongs to the Foundry resource, not the Project.**
+  Foundry User, Foundry Project Manager, or an owner role on the Project does
+  not let a user deploy a model. Assign Foundry Account Owner on the parent
+  Foundry resource; some portals still call it Azure AI Account Owner.
+- **Foundry Account Owner cannot build Agents.** It has no Agent data-plane
+  permissions, so a developer who deploys models and builds Agents needs both
+  Foundry User and Foundry Account Owner. Foundry Owner (assigned on the
+  Foundry resource or its parent resource group) combines both in one
+  assignment, whereas Azure's built-in Owner and Contributor roles lack Agent
+  `dataActions` and cannot create or run Agents. Foundry Account Owner is also
+  broader than deployment (it can create Projects and grant some roles); use a
+  custom role if you need deployment-only access.
+- **Application Insights is often in another resource group or
+  subscription.** A role on the Foundry resource or its resource group does
+  not reach it, and **Traces** then fails with HTTP 401 and `does not have
+  authorization to perform action 'Microsoft.Insights/components/read'`.
+  Section 8.4 finds the actual resource. Granting roles on it needs Owner or
+  Role Based Access Control Administrator on that resource; owning the Foundry
+  resource is not enough, so ask the Application Insights owner.
+- **Quota needs a subscription-scope assignment.** Resource group, Foundry
+  resource, and Project assignments do not authorize the quota (Usages) API.
+- **"Publish" in these samples means creating an Agent version**, which
+  Foundry User covers. The *Publish agents* column of the Foundry RBAC article
+  refers to publishing an Agent application, which needs Foundry Project
+  Manager.
+- **Projects created with the CLI get no automatic role.** The Foundry portal
+  assigns Foundry User automatically only when someone who can assign roles
+  creates the Project in the portal.
+- **The Foundry roles were renamed** from Azure AI User, Azure AI Account
+  Owner, Azure AI Project Manager, and Azure AI Owner. The commands below use
+  role definition IDs, which did not change.
+- Earlier versions of this guide assigned Cognitive Services Contributor and
+  Cognitive Services User. Foundry RBAC guidance does not use Cognitive
+  Services roles except Cognitive Services Usages Reader, and neither old role
+  covers quota or traces. You can remove those assignments after section 9
+  passes.
+
+### 8.1 Set role IDs and scopes
+
+```bash
+FOUNDRY_USER_ROLE="53ca6127-db72-4b80-b1b0-d745d6d5456d"
+FOUNDRY_ACCOUNT_OWNER_ROLE="e47c6f54-e4a2-4754-9501-8e0985b135e1"
+FOUNDRY_OWNER_ROLE="c883944f-8b7b-4483-af10-35834be79c4a"
+USAGES_READER_ROLE="bba48692-92b0-4667-a9ad-c31c7b334ac2"
+OWNER_ROLE="8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+LOG_ANALYTICS_READER_ROLE="73c42c96-874c-492b-b04d-ab87d138a893"
+READER_ROLE="acdd72a7-3385-48ef-bd42-f606fba81ae7"
+PRIVILEGED_MONITORING_DATA_READER_ROLE="dbc9c667-e97f-4491-aee6-90b9cf960190"
+
+SUBSCRIPTION_SCOPE="/subscriptions/$(cut -d/ -f3 <<<"${FOUNDRY_SCOPE}")"
+
+: "${ASSIGNEE_OBJECT_ID:?Set ASSIGNEE_OBJECT_ID as described in section 7}"
+: "${PROJECT_PRINCIPAL_ID:?Run section 7 first}"
+```
+
+### 8.2 Developer roles
+
+```bash
+# Build, publish, and run Voice Agents.
+az role assignment create \
+  --assignee-object-id "${ASSIGNEE_OBJECT_ID}" \
+  --assignee-principal-type User \
+  --role "${FOUNDRY_USER_ROLE}" \
+  --scope "${FOUNDRY_SCOPE}"
+
+# Deploy models and change Project connections.
+az role assignment create \
+  --assignee-object-id "${ASSIGNEE_OBJECT_ID}" \
+  --assignee-principal-type User \
+  --role "${FOUNDRY_ACCOUNT_OWNER_ROLE}" \
+  --scope "${FOUNDRY_SCOPE}"
+
+# Read quota while deploying models.
+az role assignment create \
+  --assignee-object-id "${ASSIGNEE_OBJECT_ID}" \
+  --assignee-principal-type User \
+  --role "${USAGES_READER_ROLE}" \
+  --scope "${SUBSCRIPTION_SCOPE}"
+```
+
+Skip the last two commands for a developer who only builds and runs Agents
+against models someone else deploys. The subscription assignment needs Owner
+or Role Based Access Control Administrator on the subscription; ask the
+subscription administrator if you hold it only on the resource group.
+
+### 8.3 Project managed identity
+
+Once per Project:
 
 ```bash
 az role assignment create \
   --assignee-object-id "${PROJECT_PRINCIPAL_ID}" \
   --assignee-principal-type ServicePrincipal \
-  --role "Cognitive Services User" \
+  --role "${FOUNDRY_USER_ROLE}" \
   --scope "${FOUNDRY_SCOPE}"
 ```
 
-The person running these commands must have
-`Microsoft.Authorization/roleAssignments/write`. If an organization uses ABAC
-conditions or privileged identity management, an administrator may need to
-perform or activate the assignment.
+The identity's Application Insights role is in section 8.4.
 
-Organizations can replace these roles with custom least-privilege roles, but
-the replacement must include the corresponding management actions and
-`Microsoft.CognitiveServices/accounts/AIServices/agents/*` data actions.
+### 8.4 Application Insights access
+
+Foundry writes traces to the Application Insights resource connected to the
+Project; tracing stays off until one is connected. Resolve it from the
+Project's connections, falling back to the Foundry resource's connections:
+
+```bash
+CONNECTIONS_API_VERSION="2025-06-01"
+
+app_insights_connection() {
+  az rest \
+    --method get \
+    --url "https://management.azure.com$1/connections?api-version=${CONNECTIONS_API_VERSION}" \
+    --query "value[?properties.category=='AppInsights'] | [0] | properties.metadata.ResourceId || properties.target" \
+    --output tsv
+}
+
+APP_INSIGHTS_ID="$(app_insights_connection "${PROJECT_ID}")"
+if [ -z "${APP_INSIGHTS_ID}" ]; then
+  APP_INSIGHTS_ID="$(app_insights_connection "${FOUNDRY_SCOPE}")"
+fi
+: "${APP_INSIGHTS_ID:?No Application Insights resource is connected; connect one first}"
+
+LOG_ANALYTICS_WORKSPACE_ID="$(
+  az rest \
+    --method get \
+    --url "https://management.azure.com${APP_INSIGHTS_ID}?api-version=2020-02-02" \
+    --query properties.WorkspaceResourceId \
+    --output tsv
+)"
+
+printf 'APP_INSIGHTS_ID=%s\nLOG_ANALYTICS_WORKSPACE_ID=%s\n' \
+  "${APP_INSIGHTS_ID}" \
+  "${LOG_ANALYTICS_WORKSPACE_ID}"
+```
+
+If no resource is connected, connect one in the Foundry portal: open the
+Project and select **Build** > **Agents** > **Traces** > **Connect**, or
+**Manage** > **Project details** > **Connected resources** > **Add
+connection** > **Application Insights**. Connecting needs Foundry Account
+Owner (or Foundry Project Manager) on the Foundry resource and read access to
+the Application Insights resource. Then rerun the block above.
+
+Compare the resource group in `APP_INSIGHTS_ID` with `${RESOURCE_GROUP}`. When
+they differ, roles on the Foundry resource group do not cover traces.
+
+Grant the person and the Project managed identity their roles:
+
+```bash
+# Project team member: read traces and grant trace access to others.
+# For a read-only developer, use "${LOG_ANALYTICS_READER_ROLE}" instead.
+TRACE_ROLE="${OWNER_ROLE}"
+
+az role assignment create \
+  --assignee-object-id "${ASSIGNEE_OBJECT_ID}" \
+  --assignee-principal-type User \
+  --role "${TRACE_ROLE}" \
+  --scope "${APP_INSIGHTS_ID}"
+
+# Once per Project: let trace-based evaluation read traces.
+az role assignment create \
+  --assignee-object-id "${PROJECT_PRINCIPAL_ID}" \
+  --assignee-principal-type ServicePrincipal \
+  --role "${READER_ROLE}" \
+  --scope "${APP_INSIGHTS_ID}"
+```
+
+Two cases need more:
+
+- **Protected tables.** If captured trace content is stored in protected
+  tables, also assign `${PRIVILEGED_MONITORING_DATA_READER_ROLE}` on
+  `${APP_INSIGHTS_ID}` to each person and to the Project managed identity.
+  Owner does not include this access.
+- **Workspace permissions required.** If the linked workspace requires
+  workspace permissions, assign the same roles on
+  `${LOG_ANALYTICS_WORKSPACE_ID}`. This command prints `false` in that case:
+
+  ```bash
+  az rest \
+    --method get \
+    --url "https://management.azure.com${LOG_ANALYTICS_WORKSPACE_ID}?api-version=2022-10-01" \
+    --query properties.features.enableLogAccessUsingOnlyResourcePermissions \
+    --output tsv
+  ```
+
+`${APP_INSIGHTS_ID}` is also the value of
+`AZURE_VOICE_AGENTS_APP_INSIGHTS_RESOURCE_ID` used by
+[`download_conversation_traces.py`](../samples/download_conversation_traces.py).
+
+### 8.5 Customer-hosted MCP on Azure Container Apps
+
+Only for the optional Azure path in
+[guide 02](./02_mcp_settings.md#deploy-to-azure-container-apps):
+
+| Work | Role | Scope |
+| --- | --- | --- |
+| Create the MCP Project connections | Foundry Account Owner or Foundry Project Manager | Foundry resource |
+| Run `deploy.sh`, which also writes an `AcrPull` role assignment | Owner, or Contributor plus Role Based Access Control Administrator | Subscription, or the MCP resource group when it already exists |
+| Push a new image to an MCP someone else deployed, without rerunning `deploy.sh` | Contributor, and AcrPush | The MCP resource group, and its Container Registry |
+
+### 8.6 Add a teammate to an existing Project
+
+1. The teammate runs the `USER_OBJECT_ID` snippet in section 7 while signed in
+   as themselves and sends you the value.
+2. In your own shell, run the [Existing Project fast path](#existing-project-fast-path)
+   and section 7, then set `ASSIGNEE_OBJECT_ID` to the teammate's value.
+3. Run sections 8.1 and 8.2, and the person assignment in 8.4. Section 8.3
+   and the managed-identity assignment in 8.4 are once per Project.
+4. Run section 9. It checks `ASSIGNEE_OBJECT_ID`, so it verifies the teammate.
+5. After a few minutes, the teammate signs out of the Foundry portal, signs
+   back in, and reruns `az login`. A token issued before the assignment does
+   not carry it.
+
+### 8.7 Who can grant these roles
+
+The person running section 8 needs `Microsoft.Authorization/roleAssignments/write`
+at each scope, normally through Owner or Role Based Access Control
+Administrator. Foundry Account Owner can grant only Foundry User, ACR, and
+monitoring roles, and only where it is assigned. If an organization uses ABAC
+conditions or privileged identity management, an administrator may need to
+perform or activate the assignment; an eligible assignment grants nothing
+until it is activated.
+
+Organizations can replace these roles with custom least-privilege roles. A
+replacement must keep the Agent data actions
+(`Microsoft.CognitiveServices/accounts/AIServices/agents/*`), the model
+deployment actions (`Microsoft.CognitiveServices/accounts/deployments/*`) for
+whoever deploys models, `Microsoft.CognitiveServices/locations/usages/read` at
+subscription scope, and read and query access to Application Insights.
 
 ## 9. Verify roles and provisioning
 
 Use ARM REST for role verification. Unlike `az role assignment list`, these
 queries do not ask Microsoft Graph to resolve principal display information.
-The principal filter includes assignments inherited from parent scopes.
+`has_role` counts an assignment at the checked scope or at a parent scope.
+Run this as the person who granted the roles: a developer who holds only the
+roles above might not be allowed to list subscription-level assignments, which
+shows as `MISSING`.
 
 ```bash
 AUTHORIZATION_API_VERSION="2022-04-01"
+CHECK_OBJECT_ID="${ASSIGNEE_OBJECT_ID}"
+MISSING_ROLES=0
+# Owner and Contributor on the subscription also include quota read.
+CONTRIBUTOR_ROLE="b24988ac-6180-42a0-ab88-20f7382dd24c"
 
-role_definition_id() {
-  local role_name="$1"
-  az rest \
-    --method get \
-    --url "https://management.azure.com${FOUNDRY_SCOPE}/providers/Microsoft.Authorization/roleDefinitions?api-version=${AUTHORIZATION_API_VERSION}" \
-    --url-parameters "\$filter=roleName eq '${role_name}'" \
-    --query "value[0].id" \
-    --output tsv
+# Succeeds when the principal holds the role at the scope or a parent scope.
+has_role() {
+  local target_scope="${1,,}" principal_id="$2" role_guid="${3,,}"
+  local assigned_scope role_definition_id
+  while IFS=$'\t' read -r assigned_scope role_definition_id; do
+    assigned_scope="${assigned_scope,,}"
+    role_definition_id="${role_definition_id,,}"
+    [[ "${role_definition_id}" == */"${role_guid}" ]] || continue
+    if [[ "${target_scope}" == "${assigned_scope}" ||
+          "${target_scope}" == "${assigned_scope}"/* ||
+          "${assigned_scope}" == / ||
+          "${assigned_scope}" == /providers/microsoft.management/* ]]; then
+      return 0
+    fi
+  done < <(
+    az rest \
+      --method get \
+      --url "https://management.azure.com$1/providers/Microsoft.Authorization/roleAssignments?api-version=${AUTHORIZATION_API_VERSION}" \
+      --url-parameters "\$filter=principalId eq '${principal_id}'" \
+      --query "value[].[properties.scope, properties.roleDefinitionId]" \
+      --output tsv
+  )
+  return 1
 }
 
-principal_role_definition_ids() {
-  local principal_id="$1"
-  az rest \
-    --method get \
-    --url "https://management.azure.com${FOUNDRY_SCOPE}/providers/Microsoft.Authorization/roleAssignments?api-version=${AUTHORIZATION_API_VERSION}" \
-    --url-parameters "\$filter=principalId eq '${principal_id}'" \
-    --query "value[].properties.roleDefinitionId" \
-    --output tsv
+# Prints ok when the principal holds any of the listed roles.
+check_role() {
+  local label="$1" scope="$2" principal_id="$3" role_guid
+  shift 3
+  for role_guid in "$@"; do
+    if has_role "${scope}" "${principal_id}" "${role_guid}"; then
+      printf 'ok       %s\n' "${label}"
+      return
+    fi
+  done
+  printf 'MISSING  %s\n' "${label}"
+  MISSING_ROLES=1
 }
 
-CONTRIBUTOR_ROLE_ID="$(role_definition_id "Cognitive Services Contributor")"
-USER_ROLE_ID="$(role_definition_id "Cognitive Services User")"
-USER_ROLE_IDS="$(principal_role_definition_ids "${USER_OBJECT_ID}")"
-PROJECT_ROLE_IDS="$(principal_role_definition_ids "${PROJECT_PRINCIPAL_ID}")"
+check_role "Foundry User on the Foundry resource" \
+  "${FOUNDRY_SCOPE}" "${CHECK_OBJECT_ID}" \
+  "${FOUNDRY_USER_ROLE}" "${FOUNDRY_OWNER_ROLE}"
+check_role "Foundry Account Owner on the Foundry resource (deploy models)" \
+  "${FOUNDRY_SCOPE}" "${CHECK_OBJECT_ID}" \
+  "${FOUNDRY_ACCOUNT_OWNER_ROLE}" "${FOUNDRY_OWNER_ROLE}"
+check_role "Cognitive Services Usages Reader on the subscription (quota)" \
+  "${SUBSCRIPTION_SCOPE}" "${CHECK_OBJECT_ID}" \
+  "${USAGES_READER_ROLE}" "${OWNER_ROLE}" "${CONTRIBUTOR_ROLE}"
+check_role "Owner or Log Analytics Reader on Application Insights (traces)" \
+  "${APP_INSIGHTS_ID}" "${CHECK_OBJECT_ID}" \
+  "${OWNER_ROLE}" "${LOG_ANALYTICS_READER_ROLE}"
+check_role "Project identity: Foundry User on the Foundry resource" \
+  "${FOUNDRY_SCOPE}" "${PROJECT_PRINCIPAL_ID}" \
+  "${FOUNDRY_USER_ROLE}" "${FOUNDRY_OWNER_ROLE}"
+check_role "Project identity: Reader on Application Insights (trace evaluation)" \
+  "${APP_INSIGHTS_ID}" "${PROJECT_PRINCIPAL_ID}" \
+  "${READER_ROLE}" "${LOG_ANALYTICS_READER_ROLE}" "${OWNER_ROLE}"
 
-: "${CONTRIBUTOR_ROLE_ID:?Could not resolve Cognitive Services Contributor}"
-: "${USER_ROLE_ID:?Could not resolve Cognitive Services User}"
-
-grep -Fxiq "${CONTRIBUTOR_ROLE_ID}" <<<"${USER_ROLE_IDS}"
-grep -Fxiq "${USER_ROLE_ID}" <<<"${USER_ROLE_IDS}"
-grep -Fxiq "${USER_ROLE_ID}" <<<"${PROJECT_ROLE_IDS}"
+test "${MISSING_ROLES}" = 0
 
 az cognitiveservices account project show \
   --resource-group "${RESOURCE_GROUP}" \
@@ -482,11 +751,64 @@ az cognitiveservices account project show \
   --output json
 ```
 
-Role assignments can take several minutes to propagate. Wait and retry the
-data-plane operation before changing the role set. If the Azure CLI is signed
-in as the wrong identity or tenant, run `az login` again and reselect
-`${SUBSCRIPTION}`. Then restore the shell variables or rerun the capture
-commands above.
+Expected output when everything is in place:
+
+```text
+ok       Foundry User on the Foundry resource
+ok       Foundry Account Owner on the Foundry resource (deploy models)
+ok       Cognitive Services Usages Reader on the subscription (quota)
+ok       Owner or Log Analytics Reader on Application Insights (traces)
+ok       Project identity: Foundry User on the Foundry resource
+ok       Project identity: Reader on Application Insights (trace evaluation)
+```
+
+The Account Owner and Usages Reader lines may stay `MISSING` for a developer
+who does not deploy models. The check reads only direct assignments, so these
+cases also show `MISSING`:
+
+- **Roles granted through a Microsoft Entra group.** Check another person
+  with **Access control (IAM)** > **Check access** in the Azure portal. Check
+  yourself with the command below: `Microsoft.CognitiveServices/*` under
+  `actions` covers model deployment and connections, and under `dataActions`
+  covers Agents. Run it with `${APP_INSIGHTS_ID}` in place of
+  `${FOUNDRY_SCOPE}` to check trace access: `*` or `*/read` covers it.
+- **Assignments from an earlier version of this guide** (Cognitive Services
+  Contributor and Cognitive Services User). Add the Foundry roles.
+- **Built-in Azure Owner or Contributor inherited from the subscription or
+  resource group**, for the two Foundry rows: neither grants Agent
+  `dataActions`. Assign the Foundry roles (or Foundry Owner) explicitly.
+- **Any role on the Project only.** A Project-scope Owner or Foundry Project
+  Manager does not count for the Foundry resource rows, because it does not
+  reach the parent resource.
+
+```bash
+az rest \
+  --method get \
+  --url "https://management.azure.com${FOUNDRY_SCOPE}/providers/Microsoft.Authorization/permissions?api-version=${AUTHORIZATION_API_VERSION}" \
+  --query "value[].{actions:actions,dataActions:dataActions}" \
+  --output json
+```
+
+Role assignments can take several minutes to propagate. Wait, sign out of the
+Foundry portal and back in, and retry before changing the role set. An error
+ending in `If access was recently granted, please refresh your credentials`
+means the token predates the assignment. If the Azure CLI is signed in as the
+wrong identity or tenant, run `az login` again and reselect `${SUBSCRIPTION}`.
+Then restore the shell variables or rerun the capture commands above.
+
+### Access errors
+
+| Symptom | Missing access | Fix |
+| --- | --- | --- |
+| The Foundry portal does not let you deploy a model, or evaluation cannot add a simulator or evaluator model | Foundry Account Owner on the Foundry resource | Section 8.2 |
+| Deployment shows no quota or fails its eligibility check | Cognitive Services Usages Reader on the subscription | Section 8.2 |
+| **Traces** fails with HTTP 401 and `Microsoft.Insights/components/read` | Any role on the connected Application Insights resource, which is often in another resource group | Section 8.4 |
+| `download_conversation_traces.py` returns 403 | Log Analytics Reader or Owner on Application Insights, or on the workspace when it requires workspace permissions | Section 8.4 |
+| Trace content stored in protected tables cannot be read | Privileged Monitoring Data Reader | Section 8.4 |
+| Trace-based evaluation finds no trace data although **Traces** lists the conversation | Reader for the Project managed identity on Application Insights | Section 8.4; also wait for ingestion and widen the time range |
+| Agent publish or session start returns 401 or 403 | Foundry User on the Foundry resource for the identity actually in use | Section 8.2; confirm the identity with `az account show` |
+| Creating an MCP or Application Insights connection is denied | Foundry Account Owner or Foundry Project Manager on the Foundry resource | Section 8.2 |
+| Section 8 fails on `Microsoft.Authorization/roleAssignments/write` | Owner or Role Based Access Control Administrator at that scope | Ask that scope's owner, or activate an eligible assignment |
 
 ## 10. Preserve the non-secret outputs
 
@@ -502,6 +824,8 @@ FOUNDRY_PROJECT
 PROJECT_ENDPOINT
 PROJECT_ID
 FOUNDRY_SCOPE
+APP_INSIGHTS_ID
+LOG_ANALYTICS_WORKSPACE_ID
 ```
 
 They are identifiers, not bearer credentials, but they still disclose customer
@@ -511,7 +835,11 @@ topology and should not be added to a reusable public sample.
 
 Do not copy an endpoint from a demo, TIP, or another customer's subscription.
 Use the `${PROJECT_ENDPOINT}` produced above as
-`AZURE_AI_PROJECT_ENDPOINT` in the selected example's ignored `.env`.
+`AZURE_AI_PROJECT_ENDPOINT` in the selected example's ignored `.env`. To
+download traces with
+[`download_conversation_traces.py`](../samples/download_conversation_traces.py),
+also set `AZURE_VOICE_AGENTS_APP_INSIGHTS_RESOURCE_ID` to `${APP_INSIGHTS_ID}`
+(see [`samples/.env.example`](../samples/.env.example)).
 
 Continue in exactly one scenario README:
 
@@ -533,4 +861,6 @@ scenario prevents a shared guide from drifting away from its `agent.json` and
 
 - [Create Microsoft Foundry Projects](https://learn.microsoft.com/azure/foundry/how-to/create-projects)
 - [Microsoft Foundry RBAC](https://learn.microsoft.com/azure/foundry/concepts/rbac-foundry)
+- [Set up tracing for agents](https://learn.microsoft.com/azure/foundry/observability/how-to/trace-agent-setup)
+- [Voice agent tracing, monitoring, and evaluation](https://learn.microsoft.com/azure/foundry/agents/concepts/voice-agent-observability)
 - [Voice Agent quickstart](https://learn.microsoft.com/azure/ai-services/speech-service/voice-live-agents-quickstart)

@@ -4,11 +4,13 @@
 
 Start the [local Portal](../portal/README.md) to try the default Templates.
 They use the public no-auth MCP; no local MCP, Dev Tunnel, local E2E, or
-`setup-local-examples.sh` is required. Foundry project access is still required.
+`setup-local-examples.sh` is required. Foundry project access is still required;
+[guide 01, section 8](./01_setup_subscription.md#8-assign-the-required-roles)
+lists every role, including model deployment and trace access.
 
 The numbered guides are references, not a mandatory installation checklist:
 
-1. [Set up the subscription and Foundry Project](./01_setup_subscription.md).
+1. [Set up the subscription and Foundry Project, and grant access](./01_setup_subscription.md).
 2. [Optional: configure, host, or develop your own MCP for CLI samples](./02_mcp_settings.md).
 3. [Start and run the CLI samples or local Portal](./03_run_samples.md).
 4. [Debug a portal session](./04_debug_session.md).
@@ -62,6 +64,7 @@ documents own procedures.
 | Need or failure | Source of truth |
 | --- | --- |
 | Select a subscription, find or create a Project, or verify the exact managed realtime model and region support | [01: Subscription and Foundry Project](./01_setup_subscription.md) |
+| Grant a teammate access, or fix a permission error when deploying a model, reading quota, or opening traces | [01: Sections 8 and 9](./01_setup_subscription.md#8-assign-the-required-roles) |
 | Set up the optional customer-owned local MCP: package mirror, Dev Tunnel, Project connections, or `*.local.env` files | [02: MCP settings and E2E](./02_mcp_settings.md) |
 | Prepare Finance CLI environments for that optional local workflow (not the Portal installer) | [`setup-local-examples.sh`](../scripts/setup-local-examples.sh) and [03: Run samples](./03_run_samples.md) |
 | Install and start the local Portal UI | [Portal README](../portal/README.md) |

@@ -88,7 +88,10 @@ connection creation are not required.
   interactive login automatically.
 - Access to a Microsoft Foundry Project with a compatible versioned managed
   realtime model.
-- Permission to create Project connections and publish Voice Agents.
+- Foundry User on the Foundry resource to publish and run Voice Agents, and
+  Foundry Account Owner (or Foundry Project Manager) on the Foundry resource to
+  create the Project connections used by the local MCP. See
+  [guide 01, section 8](./01_setup_subscription.md#8-assign-the-required-roles).
 
 Azure Developer CLI is not required for this local workflow. It is required
 only by the Azure Container Apps deployment path in guide 02.
@@ -549,7 +552,7 @@ MCP route/tools, Portal bridge, and session recordings.
 | Tool returns `unknown_call` after a runtime replacement | The call started before state persistence was enabled, or `state/local/runtime` was removed | End that Voice Agent session and reconnect; retain the native state directory |
 | HTTP 401 from a customer-owned managed MCP | Request omitted the bearer token | Foundry supplies it from the configured connection; the default public no-auth MCP should not require this token |
 | Generated config is missing | Local E2E has not completed CLI connection setup | Run `e2e-local.sh` to its final success lines |
-| UI publish reports Agent write permission denied | UI used the wrong Azure identity | Set `AZURE_CREDENTIAL_MODE=cli`, run `az login` with the intended identity, and restart UI |
+| UI publish reports Agent write permission denied | UI used the wrong Azure identity, or that identity lacks Foundry User on the Foundry resource | Set `AZURE_CREDENTIAL_MODE=cli`, run `az login` with the intended identity, and restart UI; if it persists, check roles with [guide 01, section 9](./01_setup_subscription.md#9-verify-roles-and-provisioning) |
 | Port 18003 is already allocated | An older E2E/native process is still running | Stop the older owning script, then start the canonical E2E |
 | Agent check fingerprints differ | Active Agent was published with another tunnel/config | Republish using the current canonical `*.local.env` |
 | New immutable versions appear | Foundry Agent versions are append-only | Expected after each successful publish |

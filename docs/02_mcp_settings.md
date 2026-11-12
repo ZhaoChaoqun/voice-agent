@@ -124,7 +124,9 @@ Prerequisites:
 - Python 3.10 or later
 - OpenSSL and `curl`
 - Dev Tunnel CLI authenticated with GitHub for this local workflow
-- Permission to create connections in the target Foundry Project
+- Foundry Account Owner or Foundry Project Manager on the Foundry resource, to
+  create connections in the target Foundry Project (see
+  [guide 01, section 8](./01_setup_subscription.md#8-assign-the-required-roles))
 
 The local workflow uses Azure CLI for Project discovery and connection
 creation. It does not require Azure Developer CLI or `azd auth login`.
@@ -326,9 +328,15 @@ Prerequisites:
 
 - Azure CLI authenticated with `az login`
 - Azure Developer CLI authenticated with `azd auth login`
-- Permission to create a resource group, Container Registry, Log Analytics,
-  Container Apps resources, and an `AcrPull` role assignment
-- Permission to create connections in the target Foundry Project
+- Owner, or Contributor plus Role Based Access Control Administrator, on the
+  subscription or target resource group: the deployment creates a resource
+  group, Container Registry, Log Analytics, and Container Apps resources, and
+  writes an `AcrPull` role assignment
+- Foundry Account Owner or Foundry Project Manager on the Foundry resource, to
+  create connections in the target Foundry Project
+
+See [guide 01, section 8.5](./01_setup_subscription.md#85-customer-hosted-mcp-on-azure-container-apps)
+for these roles and for updating an MCP that someone else deployed.
 
 ```bash
 export AZURE_AI_PROJECT_ENDPOINT="https://<account>.services.ai.azure.com/api/projects/<project>"
