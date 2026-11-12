@@ -11,6 +11,7 @@ let agentAvailability = 'unknown';
 let savedModel = null, savedVersion = null, savedTranscription = null, latestDownload = null, downloading = false;
 let selectedAgent = null;
 let realtimeTranscription = null, transcriptionChanged = false;
+let transcriptionLanguageUpdateNeeded = false;
 let liveGreetingMissing = false;
 let savedEnhancedTurnDetection = false, pendingEnhancedTurnDetection = false;
 let selectedScenario = '';
@@ -47,6 +48,10 @@ function updateAgentControls() {
   $('enhanced-turn-detection').disabled = busy || agentAvailability !== 'ready' || !turnSupported;
   $('agent-transcription-choice').disabled = busy || agentAvailability !== 'ready' || live ||
     (savedEnhancedTurnDetection && !turnRepairNeeded) || turnChanged;
+  $('transcription-language-help').hidden = live;
+  $('transcription-language-help').textContent =
+    'Auto-detect except azure-speech and azure-speech-streaming (saved language; English by default).' +
+    (transcriptionLanguageUpdateNeeded ? " Apply settings to update this Agent's transcription language." : '');
   $('turn-detection-status').textContent = !turnSupported ? (
     live ? 'GPT Live: built-in turn detection.' :
     !enhancedTurnModels.includes(selectedModel) ?
@@ -64,7 +69,8 @@ function updateAgentControls() {
     !modelChoices.includes($('agent-model-choice').value) ||
     (!live && !$('agent-transcription-choice').value) ||
     ($('agent-model-choice').value === savedModel &&
-      (live ? !liveGreetingMissing : $('agent-transcription-choice').value === savedTranscription && !turnChanged && !turnRepairNeeded));
+      (live ? !liveGreetingMissing : $('agent-transcription-choice').value === savedTranscription &&
+        !turnChanged && !turnRepairNeeded && !transcriptionLanguageUpdateNeeded));
   $('save-model').textContent = live && savedModel === 'gpt-live-1' && liveGreetingMissing ?
     'Save greeting version' : 'Apply settings';
   $('show-settings').disabled = preparingAgent || agentAvailability !== 'ready';
@@ -129,6 +135,7 @@ function applyAgentDetails(result) {
   savedEnhancedTurnDetection = result.enhancedTurnDetection === true;
   pendingEnhancedTurnDetection = savedEnhancedTurnDetection;
   savedTranscription = typeof result.transcriptionModel === 'string' ? result.transcriptionModel : null;
+  transcriptionLanguageUpdateNeeded = result.transcriptionLanguageUpdateNeeded === true;
   if (savedModel !== 'gpt-live-1') realtimeTranscription = savedTranscription;
   transcriptionChanged = false;
   $('agent-transcription').textContent = savedModel === 'gpt-live-1' ? 'Built into GPT Live' : savedTranscription ?

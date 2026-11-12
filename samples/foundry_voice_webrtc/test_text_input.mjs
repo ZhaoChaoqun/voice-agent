@@ -777,6 +777,37 @@ test('A transcription-only selection publishes a new version and reports the act
   assert.equal(ui.element('save-model').disabled, true);
 });
 
+test('Existing language pins can be updated explicitly without changing models, including with enhanced turn detection', async () => {
+  for (const enhanced of [false, true]) {
+    for (const succeeds of [false, true]) {
+      const writes = [];
+      const model = enhanced ? 'gpt-realtime-2.1' : 'gpt-5.4';
+      const ui = await setup('websocket', {fetch:async (url, options)=>{
+        const saving = url === '/api/agent/model';
+        if (saving) writes.push(JSON.parse(options.body));
+        return {ok:!saving || succeeds, json:async()=>url === '/api/config' ? {configured:true} :
+          saving && !succeeds ? {error:'Language settings could not be saved'} :
+          {exists:true, model, version:saving ? '2' : '1', enhancedTurnDetection:enhanced,
+            transcriptionModel:'mai-transcribe-2-streaming', transcriptionLanguageUpdateNeeded:!saving}};
+      }});
+      assert.deepEqual(writes, []);
+      ui.element('agent-model-choice').onchange();
+      assert.equal(ui.element('save-model').disabled, true);
+      await ui.element('save-model').onclick();
+      assert.deepEqual(writes, []);
+      ui.stop();
+      assert.equal(ui.element('save-model').disabled, false);
+      assert.match(ui.element('transcription-language-help').textContent, /Apply settings/);
+      await ui.element('save-model').onclick();
+      assert.deepEqual(writes, [{model, version:'1', transcriptionModel:'mai-transcribe-2-streaming'}]);
+      assert.equal(ui.element('agent-version').textContent, succeeds ? '2' : '1');
+      assert.equal(ui.element('save-model').disabled, succeeds);
+      assert.equal(ui.element('transcription-language-help').textContent.includes('Apply settings'), !succeeds);
+      if (!succeeds) assert.match(ui.element('error').textContent, /Language settings could not be saved/);
+    }
+  }
+});
+
 test('Transcription defaults are planned before creation; active calls and save failures do not overwrite saved labels', async () => {
   const planned = await setup('websocket', {fetch:async url=>({ok:true, json:async()=>url === '/api/config' ?
     {configured:true} : {exists:false, model:'gpt-realtime-2.1', transcriptionModel:'mai-transcribe-2'}})});

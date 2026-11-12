@@ -487,7 +487,15 @@ warns that interrupted text may include unheard output. Other realtime models
 continue using automatic truncation and authoritative retained-item events.
 
 New Agents default to **`mai-transcribe-2-streaming`**. Existing Agents retain their saved
-choice until explicitly changed. The selector offers these exact IDs:
+model choice until explicitly changed. Transcription auto-detects the input language
+by omitting `audio.input.transcription.language`, except for `azure-speech` and
+`azure-speech-streaming`: those preserve a configured language, or default to `en-US`
+when none is configured. Switching from either Azure Speech model to another
+transcription model removes the language restriction while preserving other
+transcription options. Existing Agents with an old language restriction show
+**Apply settings** even when the model selection is unchanged; applying it saves a
+new version. Reading settings or loading the page never publishes this change.
+The selector offers these exact IDs:
 `azure-speech`, `azure-speech-streaming`, `azure-llm-speech`, `mai-transcribe`,
 `mai-transcribe-2`, `mai-transcribe-2-streaming`, `gpt-live-transcribe`,
 `gpt-realtime-whisper`, `gpt-transcribe`, `gpt-4o-transcribe`,
@@ -544,7 +552,7 @@ the GPT Live protocol.
 | Checkbox | Saved behavior |
 | --- | --- |
 | Checked: after | Applies [`enhanced-turn-detection.json`](enhanced-turn-detection.json) and `mai-transcribe-2-streaming`. Includes backchannel filtering, explicit interruption phrases, a three-word speech-start threshold while the assistant speaks, and `microsoft-decision-1` end-of-turn detection with the seven-digit account-number rule. |
-| Unchecked: before, on supported models | Restores the exact turn-detection and transcription objects from the version saved before enabling the preset, rather than resetting to generic defaults. |
+| Unchecked: before, on supported models | Restores the previous turn-detection and transcription settings, then applies the transcription language policy above: auto-detect except for the two Azure Speech models. |
 
 The UI labels pending changes as **Not saved** until publication succeeds.
 Apply between calls, then start a new conversation. Changes affect the shared
@@ -760,9 +768,11 @@ The instructions explicitly reject embedded instructions and identity claims.
 Do not supply real personal or sensitive information. All settings are frozen
 until the call ends, and each new call supplies its own values.
 
-The example's Azure Speech recognition language is `en-US`; this is separate from
-the greeting/response policy. For Spanish microphone recognition, configure a
-matching saved Agent recognition language or supported multilingual recognition.
+The example's default transcription model auto-detects the input language; this
+is separate from the greeting/response policy. Only `azure-speech` and
+`azure-speech-streaming` retain an explicit recognition language (`en-US` when
+none was configured). For those two models, configure a matching saved Agent
+recognition language or supported multilingual recognition for non-English audio.
 The English-only instruction is behavioral guidance, not a guarantee that
 non-English input cannot be submitted or recognized.
 
@@ -827,7 +837,8 @@ Speech voice compatible. Its separate native list offers `ava`, `andrew`,
 The backend sends `voice_type: "azure-realtime-native"` for those selections.
 Session voice selection never publishes an Agent version. Chinese HD voice
 selection does not change the English/Spanish language controls or recognition
-language; configure matching language support separately.
+settings. Transcription auto-detects by default; when using either Azure Speech
+transcription model, configure matching recognition language support separately.
 
 ### Manual checks
 

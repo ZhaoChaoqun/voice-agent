@@ -141,7 +141,7 @@ class PersonalizationTests(unittest.TestCase):
         })
         self.assertIn("Display name: {{display_name}}", definition["instructions"])
         self.assertIn("{{language_policy}}", definition["instructions"])
-        self.assertEqual(definition["audio"]["input"]["transcription"]["language"], "en-US")
+        self.assertNotIn("language", definition["audio"]["input"]["transcription"])
         self.assertEqual(definition["audio"]["input"]["noise_reduction"],
                          {"type": "azure_deep_noise_suppression_headset"})
         self.assertEqual(definition["model_type"], "managed")

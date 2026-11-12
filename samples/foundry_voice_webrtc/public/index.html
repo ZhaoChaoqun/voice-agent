@@ -73,7 +73,7 @@
           <label for="agent-model-choice">Change model</label><select id="agent-model-choice" disabled><option value="gpt-realtime-2.1">gpt-realtime-2.1</option><option value="gpt-realtime-2.1-mini">gpt-realtime-2.1-mini</option><option value="azure-realtime">azure-realtime</option><option value="azure-realtime-flash-2026-10-14">azure-realtime-flash-2026-10-14</option><option value="gpt-5.4">gpt-5.4</option><option value="gpt-live-1">gpt-live-1</option></select>
           <p id="live-model-hint" hidden>GPT Live uses a separate Agent, its saved voice, built-in transcription and web search. Switching back selects the original Agent. WebRTC calls aren't recorded or downloadable.</p>
           <label for="agent-transcription-choice">Transcription</label>
-          <select id="agent-transcription-choice" disabled>
+          <select id="agent-transcription-choice" disabled aria-describedby="transcription-language-help">
             <option value="" disabled>Choose a transcription model</option>
             <option value="azure-speech">azure-speech</option>
             <option value="azure-speech-streaming">azure-speech-streaming</option>
@@ -89,6 +89,7 @@
             <option value="gpt-4o-transcribe-diarize">gpt-4o-transcribe-diarize</option>
             <option value="whisper-1">whisper-1</option>
           </select>
+          <p id="transcription-language-help">Auto-detect except azure-speech and azure-speech-streaming (saved language; English by default).</p>
           <label class="checkbox" for="enhanced-turn-detection"><input id="enhanced-turn-detection" type="checkbox" checked disabled aria-describedby="turn-detection-help"> GPT Live 1-quality turn detection</label>
           <p id="turn-detection-help">Better turn-taking with streaming transcription. On by default for supported new Agents; turn off to restore previous settings.</p>
           <p id="turn-detection-status" role="status"></p>

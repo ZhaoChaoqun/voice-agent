@@ -39,6 +39,7 @@ class ModelTests(unittest.IsolatedAsyncioTestCase):
         audio_input = latest["definition"]["audio"]["input"]
         audio_input["turn_detection"].update(copy.deepcopy(ENHANCED_TURN_DETECTION))
         audio_input["transcription"]["model"] = "mai-transcribe-2-streaming"
+        audio_input["transcription"].pop("language", None)
         return result
 
     async def test_turn_detection_round_trip_preserves_custom_baseline_and_unrelated_edits(self):
@@ -51,6 +52,7 @@ class ModelTests(unittest.IsolatedAsyncioTestCase):
         after = self.enhanced_agent(original)
         restored = copy.deepcopy(original)
         restored["versions"]["latest"]["version"] = "3"
+        restored["versions"]["latest"]["definition"]["audio"]["input"]["transcription"].pop("language")
         for item in (after, restored):
             item["versions"]["latest"]["definition"]["instructions"] = "A later prompt edit must survive restoration."
         initial_after = self.enhanced_agent(original)
@@ -283,14 +285,29 @@ class ModelTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(set(re.findall(r'<option value="([^"]+)"', select)), expected)
         self.assertIn('<option value="mai-transcribe-2-streaming" selected>', select)
         original = self.definition()
+        original["audio"]["input"]["transcription"].update(language="es-ES", phrase_list=["Fabrikam"])
+        snapshot = copy.deepcopy(original)
         for choice in expected:
             changed = model_definition(original, original["model"], choice)
             self.assertEqual(transcription_model(changed), choice)
-            self.assertEqual(changed["audio"]["input"]["transcription"]["language"], "en-US")
+            settings = changed["audio"]["input"]["transcription"]
+            if choice in {"azure-speech", "azure-speech-streaming"}:
+                self.assertEqual(settings["language"], "es-ES")
+            else:
+                self.assertNotIn("language", settings)
+            self.assertEqual(settings["phrase_list"], ["Fabrikam"])
             self.assertEqual(changed["instructions"], original["instructions"])
             self.assertEqual(changed["audio"]["output"], original["audio"]["output"])
             for model in MODELS:
                 self.assertEqual(transcription_model(model_definition(changed, model)), choice)
+        self.assertEqual(original, snapshot)
+
+    def test_selecting_azure_speech_from_auto_detection_defaults_to_english(self):
+        original = self.definition()
+        for choice in ("azure-speech", "azure-speech-streaming"):
+            changed = model_definition(original, original["model"], choice)
+            self.assertEqual(changed["audio"]["input"]["transcription"]["language"], "en-US")
+        self.assertNotIn("language", original["audio"]["input"]["transcription"])
 
     def test_standard_voice_models_and_model_catalog_match_ui(self):
         import re
@@ -398,9 +415,13 @@ class ModelTests(unittest.IsolatedAsyncioTestCase):
                                               "format": {"type": "audio/pcm", "rate": 24000}}
                 original["audio"]["input"]["transcription"]["model"] = (
                     "azure-speech" if choice == "whisper-1" else "whisper-1")
+                original["audio"]["input"]["transcription"]["language"] = "en-US"
                 saved = copy.deepcopy(agent)
                 saved["versions"]["latest"]["version"] = "2"
-                saved["versions"]["latest"]["definition"]["audio"]["input"]["transcription"]["model"] = choice
+                settings = saved["versions"]["latest"]["definition"]["audio"]["input"]["transcription"]
+                settings["model"] = choice
+                if choice not in {"azure-speech", "azure-speech-streaming"}:
+                    settings.pop("language")
                 service = ServiceClient([Response(200, agent), Response(200, saved)],
                                         [Response(201, {"version": "2"}), Response(204)])
                 async with TestClient(TestServer(create_app(cfg, AsyncMock()))) as client:
@@ -415,9 +436,48 @@ class ModelTests(unittest.IsolatedAsyncioTestCase):
                 changed = service.writes[0][1]["json"]["definition"]
                 expected = copy.deepcopy(original)
                 expected["audio"]["input"]["transcription"]["model"] = choice
+                if choice not in {"azure-speech", "azure-speech-streaming"}:
+                    expected["audio"]["input"]["transcription"].pop("language")
                 self.assertEqual(changed, expected)
                 self.assertEqual(service.writes[0][1]["json"]["metadata"]["custom"], "keep")
                 self.assertEqual(service.removals, [])
+
+    async def test_existing_language_pin_is_read_only_until_saved_and_readback_must_be_auto(self):
+        cfg = Settings("https://example.services.ai.azure.com/api/projects/demo", "demo-agent")
+        for language in (None, "", "en-US"):
+            with self.subTest(readback_language=language):
+                original = self.agent()
+                original["versions"]["latest"]["definition"]["audio"]["input"]["transcription"]["language"] = "en-US"
+                saved = copy.deepcopy(original)
+                saved["versions"]["latest"]["version"] = "2"
+                settings = saved["versions"]["latest"]["definition"]["audio"]["input"]["transcription"]
+                if language is None:
+                    settings.pop("language")
+                else:
+                    settings["language"] = language
+                service = ServiceClient(
+                    [Response(200, original), Response(200, original), Response(200, saved)],
+                    [Response(201, {"version": "2"}), Response(204)])
+                async with TestClient(TestServer(create_app(cfg, AsyncMock()))) as client:
+                    with patch("server.aiohttp.ClientSession", return_value=service):
+                        response = await client.get("/api/agent")
+                        self.assertEqual(response.status, 200)
+                        self.assertTrue((await response.json())["transcriptionLanguageUpdateNeeded"])
+                        self.assertEqual(service.writes, [])
+                        response = await client.post("/api/agent/model",
+                            headers={"Origin": str(client.make_url("")).rstrip("/")},
+                            json={"model": "gpt-5.4", "version": "1",
+                                  "transcriptionModel": DEFAULT_TRANSCRIPTION_MODEL})
+                        result = await response.json()
+                self.assertNotIn("language", service.writes[0][1]["json"]["definition"]["audio"]["input"]["transcription"])
+                if language == "en-US":
+                    self.assertEqual(response.status, 502)
+                    self.assertIn("could not be verified", result["error"])
+                else:
+                    self.assertEqual(response.status, 200, result)
+                    self.assertFalse(result["transcriptionLanguageUpdateNeeded"])
+                    self.assertEqual(result["version"], "2")
+                self.assertEqual(original["versions"]["latest"]["definition"]["audio"]["input"]["transcription"]["language"], "en-US")
 
     async def test_same_transcription_is_idempotent_and_invalid_choices_never_request_credentials(self):
         cfg = Settings("https://example.services.ai.azure.com/api/projects/demo", "demo-agent")

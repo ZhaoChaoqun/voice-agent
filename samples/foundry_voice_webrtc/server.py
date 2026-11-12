@@ -683,6 +683,25 @@ def transcription_model(definition):
     return settings.get("model") if isinstance(settings, dict) else None
 
 
+def transcription_settings(settings, model):
+    updated = {**(settings if isinstance(settings, dict) else {}), "model": model}
+    if model in {"azure-speech", "azure-speech-streaming"}:
+        updated.setdefault("language", "en-US")
+    else:
+        updated.pop("language", None)
+    return updated
+
+
+def transcription_language_update_needed(definition):
+    settings = ((definition.get("audio") or {}).get("input") or {}).get("transcription")
+    model = transcription_model(definition)
+    if (definition.get("sub_protocol") == "live" or not isinstance(model, str)
+            or model not in TRANSCRIPTION_MODELS):
+        return False
+    expected = transcription_settings(settings, model)
+    return (settings.get("language") or "") != (expected.get("language") or "")
+
+
 def enhanced_turn_detection(definition, metadata):
     vad = ((definition.get("audio") or {}).get("input") or {}).get("turn_detection")
     return bool(metadata.get(TURN_DETECTION_BEFORE_VERSION) or metadata.get(TURN_DETECTION_BEFORE_SETTINGS)) or (
@@ -707,8 +726,7 @@ async def configure_turn_detection(client, cfg, headers, source, metadata, versi
         audio_input["turn_detection"] = {**(vad if isinstance(vad, dict) else {}),
                                          **copy.deepcopy(ENHANCED_TURN_DETECTION)}
         transcription = audio_input.get("transcription")
-        audio_input["transcription"] = {**(transcription if isinstance(transcription, dict) else {}),
-                                         "model": DEFAULT_TRANSCRIPTION_MODEL}
+        audio_input["transcription"] = transcription_settings(transcription, DEFAULT_TRANSCRIPTION_MODEL)
     elif active:
         if TURN_DETECTION_BEFORE_SETTINGS in metadata:
             backup = metadata[TURN_DETECTION_BEFORE_SETTINGS]
@@ -785,6 +803,8 @@ async def inspect_configured_agent(client, cfg, headers, expected_settings=None)
             "modelChoice": LIVE_MODEL if (definition or {}).get("sub_protocol") == "live" else
                 (demo if definition is None else definition).get("model"),
             "transcriptionModel": transcription_model(demo if definition is None else definition),
+            "transcriptionLanguageUpdateNeeded": transcription_language_update_needed(
+                demo if definition is None else definition),
             "enhancedTurnDetection": demo.get("model") in ENHANCED_TURN_MODELS if definition is None else
                 enhanced_turn_detection(definition, latest.get("metadata") or {}),
             "version": latest.get("version") if latest is not None else None,
@@ -853,6 +873,7 @@ async def prepare_configured_agent(client, cfg, headers):
             "model": definition.get("model"),
             "modelChoice": LIVE_MODEL if definition.get("sub_protocol") == "live" else definition.get("model"),
             "transcriptionModel": transcription_model(definition),
+            "transcriptionLanguageUpdateNeeded": transcription_language_update_needed(definition),
             "enhancedTurnDetection": enhanced_turn_detection(definition, metadata),
             "version": version,
             "weatherEnabled": weather_toolbox_attached(definition),
@@ -873,9 +894,9 @@ def model_definition(definition, model, transcription=None):
     input_audio, output = audio.setdefault("input", {}), audio.setdefault("output", {})
     if model == FLASH_MODEL and isinstance(input_audio.get("turn_detection"), dict):
         input_audio["turn_detection"]["auto_truncate"] = False
-    if transcription is not None:
-        settings = input_audio.get("transcription")
-        input_audio["transcription"] = {**(settings if isinstance(settings, dict) else {}), "model": transcription}
+    selected_transcription = transcription if transcription is not None else transcription_model(updated)
+    if isinstance(selected_transcription, str) and selected_transcription in TRANSCRIPTION_MODELS:
+        input_audio["transcription"] = transcription_settings(input_audio.get("transcription"), selected_transcription)
     if definition.get("model") == model and definition.get("model_type") == "managed":
         return updated
     # Azure owns turn detection so the requested headset denoiser remains usable.
@@ -1074,6 +1095,7 @@ async def change_agent_model(request):
                     expected_settings={"definition": definition, "metadata": metadata}
                     if "enhancedTurnDetection" in body or turn_repaired else None)
                 if (result.get("version") != expected_version or result.get("modelChoice") != body["model"]
+                        or (body["model"] != LIVE_MODEL and result.get("transcriptionLanguageUpdateNeeded"))
                         or (body["model"] in UNSUPPORTED_TURN_MODELS and result.get("enhancedTurnDetection"))
                         or ("enhancedTurnDetection" in body and
                             result.get("enhancedTurnDetection") is not body["enhancedTurnDetection"])
