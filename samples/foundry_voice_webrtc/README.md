@@ -45,8 +45,11 @@ the original experience.
 | Health coverage | Explain preventive-care benefits, explore fictional in-network providers, clarify a pending claim | Sample plan, preventive-visit benefit and claim status |
 | Everyday banking | Explore a EUR 2,000 to EUR 5,000 overdraft request, discuss required documents, compare account options without sales pressure | Fictional current account, existing limit and example request |
 | Connected home | Adjust room temperature, choose a wash cycle, draft an energy-saving routine | Illustrative air conditioner, washer and refrigerator starting state |
+| Personal loans | Discuss a fictional personal loan, repayment choices and application requirements | Example amount and term; no interest rate or fees supplied |
+| Home buying | Explore a fictional apartment, discuss preferences and simulate a viewing request | Sample two-bedroom apartment, city and illustrative price |
+| Electrician interview | Practise answering questions about a hands-on field role, safety and teamwork | Fictional role, practice interview and focus areas |
 
-All three are **unbranded, fictional demonstrations**. They do not mention
+All six are **unbranded, fictional demonstrations**. They do not mention
 company or caller names. Personalization name/context fields are ignored for
 scenario calls; language controls still apply. The cards show a labeled
 starting state, not live telemetry or completed actions. Tap a suggested topic
@@ -57,8 +60,9 @@ a scenario creates or reuses an isolated Agent named
 `voice-demo-<source-name-hash>-<scenario>` in the selected model's project.
 It copies the selected Agent's model and audio settings, replaces the prompt
 and greeting, and removes tools. GPT Live keeps its reasoning deployment but
-has no backend tools. No business integrations, web searches, real account
-changes or appliance commands are made by these scenario Agents.
+has no backend tools. No business integrations, web searches, real applications,
+property bookings, account changes or appliance commands are made by these
+scenario Agents.
 The original Agent and Live companion are not edited. Changing source settings
 publishes a new version of the owned scenario Agent; previous versions remain.
 Unrelated Agents at those names are never overwritten. This requires Agent
@@ -71,7 +75,10 @@ after startup configuration. Scenario recordings use the scenario Agent and
 the existing signed download mechanism; GPT Live WebRTC still has no recording.
 Healthcare prompts avoid diagnosis and coverage guarantees; banking prompts
 avoid approval promises and invented prices; home prompts avoid hazardous
-remote activation. These are demonstration guardrails, not production compliance.
+remote activation. Loan and property prompts avoid fabricated rates or listing
+details and make clear that applications and viewings are not submitted or
+booked. Interview prompts avoid identifying details and hiring decisions. These
+are demonstration guardrails, not production compliance.
 
 ### Weather-aware city scenery
 
@@ -512,16 +519,31 @@ In **Agent & audio settings**, select GPT Realtime 2.1, GPT Realtime 2.1 mini,
 or Azure Realtime, then use
 **GPT Live 1-quality turn detection** and **Apply settings**. This demo preset is
 on by default for newly created Agents using a supported model. The control is
-disabled for **Azure Realtime Flash** and **GPT-5.4**, where this feature is not
-yet supported. Switching back to a supported model requires **Apply settings**
-before the control becomes available. This UI restriction does not modify
-existing saved Agent settings or change the Agent to the GPT Live protocol.
-Existing saved settings, including an explicit opt-out, are preserved.
+unchecked and disabled for **Azure Realtime Flash** and **GPT-5.4**, where this
+feature is not yet supported. Switching back to a supported model requires
+**Apply settings** before the control becomes available; the preset stays off
+until explicitly re-enabled. Saving either unsupported model automatically
+removes the preset, including when saving the same model again. Call preparation
+also repairs older incompatible saved Agents before connecting, and scenario
+Agents use the same compatibility rules.
+
+Automatic compatibility repair restores the recorded baseline turn detection,
+then removes `speech_start_detection` and `end_of_utterance_detection`, which
+are not supported for these models. It preserves the currently selected
+transcription model (including MAI streaming), rather than restoring a
+potentially incompatible older transcription provider. For custom settings
+without a recorded baseline, only the incompatible fields are removed; the
+demo does not invent an original profile. Flash keeps `auto_truncate: false`.
+Repairs publish and verify a new version, preserving previous versions and
+unrelated settings. A missing or invalid recorded baseline fails explicitly
+instead of starting a call with incompatible settings. Supported models retain
+their saved settings and explicit opt-outs; this does not change the Agent to
+the GPT Live protocol.
 
 | Checkbox | Saved behavior |
 | --- | --- |
 | Checked: after | Applies [`enhanced-turn-detection.json`](enhanced-turn-detection.json) and `mai-transcribe-2-streaming`. Includes backchannel filtering, explicit interruption phrases, a three-word speech-start threshold while the assistant speaks, and `microsoft-decision-1` end-of-turn detection with the seven-digit account-number rule. |
-| Unchecked: before | Restores the exact turn-detection and transcription objects from the version saved before enabling the preset, rather than resetting to generic defaults. |
+| Unchecked: before, on supported models | Restores the exact turn-detection and transcription objects from the version saved before enabling the preset, rather than resetting to generic defaults. |
 
 The UI labels pending changes as **Not saved** until publication succeeds.
 Apply between calls, then start a new conversation. Changes affect the shared

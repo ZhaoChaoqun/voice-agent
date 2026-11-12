@@ -12,7 +12,7 @@ let savedModel = null, savedVersion = null, savedTranscription = null, latestDow
 let selectedAgent = null;
 let realtimeTranscription = null, transcriptionChanged = false;
 let liveGreetingMissing = false;
-let savedEnhancedTurnDetection = false;
+let savedEnhancedTurnDetection = false, pendingEnhancedTurnDetection = false;
 let selectedScenario = '';
 let savedWeatherEnabled = false;
 const enhancedTurnModels = ['gpt-realtime-2.1', 'gpt-realtime-2.1-mini', 'azure-realtime'];
@@ -38,25 +38,30 @@ function updateAgentControls() {
   const live = selectedModel === 'gpt-live-1';
   const turnSupported = enhancedTurnModels.includes(selectedModel) &&
     enhancedTurnModels.includes(savedModel);
-  const turnChanged = turnSupported && $('enhanced-turn-detection').checked !== savedEnhancedTurnDetection;
+  const turnChanged = turnSupported && pendingEnhancedTurnDetection !== savedEnhancedTurnDetection;
+  const turnRepairNeeded = !live && !enhancedTurnModels.includes(selectedModel) && savedEnhancedTurnDetection;
+  $('enhanced-turn-detection').checked = turnSupported && pendingEnhancedTurnDetection;
   $('enhanced-turn-detection').disabled = busy || agentAvailability !== 'ready' || !turnSupported;
   $('agent-transcription-choice').disabled = busy || agentAvailability !== 'ready' || live ||
-    savedEnhancedTurnDetection || turnChanged;
+    (savedEnhancedTurnDetection && !turnRepairNeeded) || turnChanged;
   $('turn-detection-status').textContent = !turnSupported ? (
     live ? 'GPT Live uses built-in turn detection.' :
     !enhancedTurnModels.includes(selectedModel) ?
-      'GPT Live 1-quality turn detection is not yet available for Azure Realtime Flash or GPT-5.4.' :
-      'Apply the selected supported model before changing turn detection.') :
+      'Not available for Azure Realtime Flash or GPT-5.4.' +
+        (savedEnhancedTurnDetection ? (selectedModel === savedModel ?
+          ' Apply settings or start a call to remove the preset; transcription stays the same.' :
+          ' Applying this model removes the preset; transcription stays the same.') : '') :
+      'Apply this model before changing turn detection.') :
     agentAvailability === 'missing' ? 'Default: on, using mai-transcribe-2-streaming (after setup).' :
-    turnChanged ? ($('enhanced-turn-detection').checked ?
-      'Not saved: after mode will use mai-transcribe-2-streaming.' :
-      'Not saved: before mode will restore the previous turn detection and transcription.') :
-    savedEnhancedTurnDetection ? 'Saved: after (enhanced), using mai-transcribe-2-streaming.' : 'Saved: before (original settings).';
+    turnChanged ? (pendingEnhancedTurnDetection ?
+      'Not saved: on uses mai-transcribe-2-streaming.' :
+      'Not saved: off restores previous settings.') :
+    savedEnhancedTurnDetection ? 'Saved: after (enhanced).' : 'Saved: before (original settings).';
   $('save-model').disabled = busy || agentAvailability !== 'ready' || !savedVersion ||
     !modelChoices.includes($('agent-model-choice').value) ||
     (!live && !$('agent-transcription-choice').value) ||
     ($('agent-model-choice').value === savedModel &&
-      (live ? !liveGreetingMissing : $('agent-transcription-choice').value === savedTranscription && !turnChanged));
+      (live ? !liveGreetingMissing : $('agent-transcription-choice').value === savedTranscription && !turnChanged && !turnRepairNeeded));
   $('save-model').textContent = live && savedModel === 'gpt-live-1' && liveGreetingMissing ?
     'Save greeting version' : 'Apply settings';
   $('show-settings').disabled = preparingAgent || agentAvailability !== 'ready';
@@ -68,7 +73,7 @@ function renderScenario() {
   const preset = config?.scenarios?.[selectedScenario];
   $('scenario-card').hidden = !preset;
   $('scenario-card').className = `scenario-card scenario-${selectedScenario}`;
-  for (const id of ['health', 'banking', 'home'])
+  for (const id of ['health', 'banking', 'home', 'loan', 'property', 'interview'])
     $('scenario-art-' + id).toggleAttribute('hidden', id !== preset?.visual);
   $('scenario-facts').replaceChildren();
   $('scenario-prompts').replaceChildren();
@@ -119,7 +124,7 @@ function applyAgentDetails(result) {
   savedVersion = typeof result.version === 'string' ? result.version : null;
   liveGreetingMissing = result.liveGreetingMissing === true;
   savedEnhancedTurnDetection = result.enhancedTurnDetection === true;
-  $('enhanced-turn-detection').checked = savedEnhancedTurnDetection;
+  pendingEnhancedTurnDetection = savedEnhancedTurnDetection;
   savedTranscription = typeof result.transcriptionModel === 'string' ? result.transcriptionModel : null;
   if (savedModel !== 'gpt-live-1') realtimeTranscription = savedTranscription;
   transcriptionChanged = false;
@@ -158,11 +163,11 @@ async function saveAgentModel() {
   $('error').hidden = true;
   try {
     const turnChanged = enhancedTurnModels.includes($('agent-model-choice').value) &&
-      enhancedTurnModels.includes(savedModel) && $('enhanced-turn-detection').checked !== savedEnhancedTurnDetection;
+      enhancedTurnModels.includes(savedModel) && pendingEnhancedTurnDetection !== savedEnhancedTurnDetection;
     const response = await fetch(agentPath('/api/agent/model'), {method:'POST', signal:AbortSignal.timeout(95000),
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:$('agent-model-choice').value, version:savedVersion,
-        ...(turnChanged ? {enhancedTurnDetection:$('enhanced-turn-detection').checked} :
+        ...(turnChanged ? {enhancedTurnDetection:pendingEnhancedTurnDetection} :
           $('agent-model-choice').value !== 'gpt-live-1' && (savedModel !== 'gpt-live-1' || transcriptionChanged) ?
           {transcriptionModel:$('agent-transcription-choice').value} : {})})});
     const result = await response.json();
@@ -288,6 +293,7 @@ async function prepareAgent(recreate = false) {
     agentAvailability = 'ready';
     applyAgentDetails(result);
     $('agent-preparation').textContent = result.recreated ? 'Your Agent has been reset and saved.' :
+      result.turnDetectionUpdated ? 'Unsupported turn-detection settings removed and saved in a new Agent version.' :
       result.toolboxReferenceUpdated ? 'Weather Toolbox reference corrected and saved in a new Agent version.' :
         'Your Agent is saved and ready.';
     state('Ready when you are', 'Start a conversation with your saved Agent.', 'Saved Agent');
@@ -743,6 +749,7 @@ $('agent-model-choice').onchange = () => {
 };
 $('agent-transcription-choice').onchange = () => { transcriptionChanged = true; updateAgentControls(); };
 $('enhanced-turn-detection').onchange = () => {
+  pendingEnhancedTurnDetection = $('enhanced-turn-detection').checked;
   $('agent-transcription-choice').value = savedTranscription || '';
   transcriptionChanged = false;
   updateAgentControls();

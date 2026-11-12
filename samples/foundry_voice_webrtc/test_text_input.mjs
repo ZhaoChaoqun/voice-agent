@@ -10,6 +10,7 @@ const source = await readFile(new URL('./public/app.js', import.meta.url), 'utf8
 const sessionCost = {amount:0.006344, currency:'USD', status:'complete',
   price_version:'azure-retail-prices-eastus2-2026-06-01', unpriced_components:[]};
 const scenarios = JSON.parse(await readFile(new URL('./scenarios.json', import.meta.url), 'utf8'));
+const page = await readFile(new URL('./public/index.html', import.meta.url), 'utf8');
 
 async function setup(transport, overrides = {}) {
   const elements = new Map();
@@ -62,20 +63,29 @@ async function setup(transport, overrides = {}) {
   return { ...context.api, element, session, sent, created };
 }
 
+test('every configured scenario has a picker option and illustration', () => {
+  for (const [id, preset] of Object.entries(scenarios)) {
+    assert.ok(page.includes(`<option value="${id}">${preset.title}</option>`), `${id} must be selectable`);
+    assert.ok(page.includes(`id="scenario-art-${preset.visual}"`), `${id} must have an illustration`);
+  }
+});
+
 test('scenario switching refreshes visuals and greeting, clears old context and never sends an idea', async () => {
   const ui = await setup('websocket', {
     fetch:async url => ({ok:true, json:async()=>url === '/api/config' ?
       {configured:true, agent:'demo-agent', scenarios} : {exists:true, model:'gpt-realtime-2.1', version:'1'}}),
   });
   ui.stop();
-  for (const id of ['health', 'banking', 'home']) {
+  const ids = ['health', 'banking', 'home', 'loan', 'property', 'interview'];
+  for (const id of ids) {
     ui.element('transcript').append({textContent:'previous scenario'});
     ui.element('scenario-choice').value = id;
     ui.element('scenario-choice').onchange();
     assert.equal(ui.element('scenario-card').hidden, false);
     assert.equal(ui.element('scenario-title').textContent, scenarios[id].title);
     assert.equal(ui.element('scenario-greeting').textContent, scenarios[id].greeting);
-    assert.equal(ui.element('scenario-art-' + id).hidden, false);
+    for (const visual of ids)
+      assert.equal(ui.element('scenario-art-' + visual).hidden, visual !== id);
     assert.equal(ui.element('scenario-facts').children.length, 3);
     assert.equal(ui.element('transcript').children.length, 0);
     assert.equal(ui.element('display-name').disabled, true);
@@ -86,8 +96,8 @@ test('scenario switching refreshes visuals and greeting, clears old context and 
   ui.reconnect();
   ui.element('scenario-choice').value = 'health';
   ui.element('scenario-choice').onchange();
-  assert.equal(ui.element('scenario-choice').value, 'home');
-  assert.equal(ui.element('scenario-title').textContent, scenarios.home.title);
+  assert.equal(ui.element('scenario-choice').value, 'interview');
+  assert.equal(ui.element('scenario-title').textContent, scenarios.interview.title);
   ui.stop();
   ui.element('scenario-choice').value = '';
   ui.element('scenario-choice').onchange();
@@ -96,38 +106,40 @@ test('scenario switching refreshes visuals and greeting, clears old context and 
 });
 
 test('scenario startup forces anonymous context and includes the selected scenario in the socket route', async () => {
-  let socket;
-  class Socket {
-    static OPEN=1;
-    constructor(url) { this.url=url; this.readyState=1; this.sent=[]; socket=this; }
-    send(frame) { this.sent.push(JSON.parse(frame)); }
-    close() {}
+  for (const scenario of ['banking', 'loan', 'property', 'interview']) {
+    let socket;
+    class Socket {
+      static OPEN=1;
+      constructor(url) { this.url=url; this.readyState=1; this.sent=[]; socket=this; }
+      send(frame) { this.sent.push(JSON.parse(frame)); }
+      close() {}
+    }
+    const ui = await setup('websocket', {
+      fetch:async url => ({ok:true, json:async()=>url === '/api/config' ?
+        {configured:true, agent:'demo-agent', scenarios} :
+        {exists:true, model:'gpt-realtime-2.1', version:'1'}}),
+      window:{isSecureContext:true, addEventListener(){}},
+      navigator:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[]})}},
+      location:{protocol:'http:',host:'localhost:8091'},
+      PcmAudio:class {resumePromise=Promise.resolve(); prepare(){} dispose(){}},
+      WebSocket:Socket,
+    });
+    ui.stop();
+    ui.element('display-name').value = 'Do not forward';
+    ui.element('user-context').value = 'Do not forward';
+    ui.element('personalize').checked = false;
+    ui.element('scenario-choice').value = scenario;
+    ui.element('scenario-choice').onchange();
+    await ui.start();
+    socket.onopen();
+    assert.match(socket.url, new RegExp(`scenario=${scenario}`));
+    assert.match(socket.url, /personalize=true/);
+    assert.equal(socket.sent[0].type, 'bridge.personalize');
+    assert.equal(socket.sent[0].display_name, '');
+    assert.equal(socket.sent[0].user_context, '');
+    assert.equal(ui.element('scenario-choice').disabled, true);
+    ui.stop();
   }
-  const ui = await setup('websocket', {
-    fetch:async url => ({ok:true, json:async()=>url === '/api/config' ?
-      {configured:true, agent:'demo-agent', scenarios} :
-      {exists:true, model:'gpt-realtime-2.1', version:'1'}}),
-    window:{isSecureContext:true, addEventListener(){}},
-    navigator:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[]})}},
-    location:{protocol:'http:',host:'localhost:8091'},
-    PcmAudio:class {resumePromise=Promise.resolve(); prepare(){} dispose(){}},
-    WebSocket:Socket,
-  });
-  ui.stop();
-  ui.element('display-name').value = 'Do not forward';
-  ui.element('user-context').value = 'Do not forward';
-  ui.element('personalize').checked = false;
-  ui.element('scenario-choice').value = 'banking';
-  ui.element('scenario-choice').onchange();
-  await ui.start();
-  socket.onopen();
-  assert.match(socket.url, /scenario=banking/);
-  assert.match(socket.url, /personalize=true/);
-  assert.equal(socket.sent[0].type, 'bridge.personalize');
-  assert.equal(socket.sent[0].display_name, '');
-  assert.equal(socket.sent[0].user_context, '');
-  assert.equal(ui.element('scenario-choice').disabled, true);
-  ui.stop();
 });
 
 for (const transport of ['websocket', 'webrtc']) {
@@ -850,9 +862,12 @@ test('New Agents preview the enabled streaming default and only supported models
     ui.stop();
     assert.equal(ui.element('enhanced-turn-detection').disabled,
       ['gpt-live-1', 'gpt-5.4', 'azure-realtime-flash-2026-10-14'].includes(model));
-    assert.equal(ui.element('enhanced-turn-detection').checked, model !== 'gpt-live-1');
+    assert.equal(ui.element('enhanced-turn-detection').checked,
+      !['gpt-live-1', 'gpt-5.4', 'azure-realtime-flash-2026-10-14'].includes(model));
     if (['gpt-5.4', 'azure-realtime-flash-2026-10-14'].includes(model)) {
-      assert.match(ui.element('turn-detection-status').textContent, /not yet available/);
+      assert.match(ui.element('turn-detection-status').textContent, /Not available/);
+      assert.match(ui.element('turn-detection-status').textContent, /Apply settings or start a call to remove the preset/);
+      assert.equal(ui.element('save-model').disabled, false);
       assert.doesNotMatch(ui.element('turn-detection-status').textContent, /GPT Live uses built-in/);
     }
   }
@@ -886,7 +901,14 @@ for (const unsupportedModel of ['azure-realtime-flash-2026-10-14', 'gpt-5.4']) {
     ui.element('agent-model-choice').value = unsupportedModel;
     ui.element('agent-model-choice').onchange();
     assert.equal(ui.element('enhanced-turn-detection').disabled, true);
-    assert.match(ui.element('turn-detection-status').textContent, /not yet available/);
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
+    assert.match(ui.element('turn-detection-status').textContent, /Not available/);
+    ui.element('agent-model-choice').value = 'gpt-realtime-2.1';
+    ui.element('agent-model-choice').onchange();
+    assert.equal(ui.element('enhanced-turn-detection').checked, true);
+    assert.match(ui.element('turn-detection-status').textContent, /Not saved/);
+    ui.element('agent-model-choice').value = unsupportedModel;
+    ui.element('agent-model-choice').onchange();
     assert.equal(ui.element('save-model').disabled, false);
     await ui.element('save-model').onclick();
     assert.equal(ui.element('enhanced-turn-detection').disabled, true);
@@ -894,8 +916,57 @@ for (const unsupportedModel of ['azure-realtime-flash-2026-10-14', 'gpt-5.4']) {
     ui.element('agent-model-choice').value = 'gpt-realtime-2.1';
     ui.element('agent-model-choice').onchange();
     assert.equal(ui.element('enhanced-turn-detection').disabled, true);
-    assert.match(ui.element('turn-detection-status').textContent, /Apply the selected supported model/);
+    assert.match(ui.element('turn-detection-status').textContent, /Apply this model before changing turn detection/);
     await ui.element('save-model').onclick();
+    assert.equal(ui.element('enhanced-turn-detection').disabled, false);
+    assert.deepEqual(writes, [
+      {model:unsupportedModel, version:'1', transcriptionModel:'mai-transcribe-2-streaming'},
+      {model:'gpt-realtime-2.1', version:'2', transcriptionModel:'mai-transcribe-2-streaming'},
+    ]);
+  });
+
+  test(`${unsupportedModel}: saving removes the preset and switching back leaves it off`, async () => {
+    let model = 'gpt-realtime-2.1', version = 1, enhancedTurnDetection = true;
+    const writes = [];
+    const ui = await setup('websocket', {fetch:async (url, options)=>{
+      if (url === '/api/agent/model') {
+        const body = JSON.parse(options.body);
+        writes.push(body);
+        model = body.model;
+        if (model === unsupportedModel) enhancedTurnDetection = false;
+        version++;
+      }
+      return {ok:true, json:async()=>url === '/api/config' ? {configured:true} :
+        {exists:true, model, version:String(version), enhancedTurnDetection,
+          transcriptionModel:'mai-transcribe-2-streaming'}};
+    }});
+    ui.stop();
+    ui.element('enhanced-turn-detection').checked = false;
+    ui.element('enhanced-turn-detection').onchange();
+    ui.element('agent-model-choice').value = unsupportedModel;
+    ui.element('agent-model-choice').onchange();
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
+    ui.element('agent-model-choice').value = 'gpt-realtime-2.1';
+    ui.element('agent-model-choice').onchange();
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
+    assert.match(ui.element('turn-detection-status').textContent, /Not saved/);
+    ui.element('enhanced-turn-detection').checked = true;
+    ui.element('enhanced-turn-detection').onchange();
+    ui.element('agent-model-choice').value = unsupportedModel;
+    ui.element('agent-model-choice').onchange();
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
+    assert.match(ui.element('turn-detection-status').textContent, /Applying this model removes the preset/);
+    assert.doesNotMatch(ui.element('turn-detection-status').textContent, /start a call/);
+    await ui.element('save-model').onclick();
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
+    assert.doesNotMatch(ui.element('turn-detection-status').textContent, /removes the preset/);
+    assert.equal(ui.element('agent-transcription-choice').disabled, false);
+    ui.element('agent-model-choice').value = 'gpt-realtime-2.1';
+    ui.element('agent-model-choice').onchange();
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
+    assert.equal(ui.element('enhanced-turn-detection').disabled, true);
+    await ui.element('save-model').onclick();
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
     assert.equal(ui.element('enhanced-turn-detection').disabled, false);
     assert.deepEqual(writes, [
       {model:unsupportedModel, version:'1', transcriptionModel:'mai-transcribe-2-streaming'},

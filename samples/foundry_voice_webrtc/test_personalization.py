@@ -54,7 +54,7 @@ class PersonalizationTests(unittest.TestCase):
                 self.assertEqual(values["greeting_text"], preset["greeting" if english else "greeting_es"])
                 self.assertNotIn("Alex", json.dumps(values))
                 greetings.add(values["greeting_text"])
-        self.assertEqual(len(greetings), 6)
+        self.assertEqual(len(greetings), 2 * len(SCENARIOS))
         with self.assertRaises(ValueError):
             personalization_header(frame(), "unknown")
 
@@ -186,9 +186,9 @@ class PersonalizationTests(unittest.TestCase):
 
 class BridgeTests(unittest.IsolatedAsyncioTestCase):
     async def test_scenario_is_prepared_before_connect_and_download_reference_keeps_its_route(self):
-        for transport in ("websocket", "webrtc"):
+        for transport, scenario in product(("websocket", "webrtc"), ("banking", "loan", "property", "interview")):
             cfg = Settings("https://example.services.ai.azure.com/api/projects/demo", "demo")
-            target = scenario_settings(cfg, "banking")
+            target = scenario_settings(cfg, scenario)
             source = {"version": "1", "definition": {"kind": "voice", "model": "gpt-realtime-2.1"}}
             observed = []
 
@@ -198,7 +198,7 @@ class BridgeTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(mode, transport)
                 values = json.loads(headers["x-ms-voice-structured-inputs"])
                 self.assertEqual(set(values), {"language_policy", "greeting_text"})
-                self.assertEqual(values["greeting_text"], SCENARIOS["banking"]["greeting"])
+                self.assertEqual(values["greeting_text"], SCENARIOS[scenario]["greeting"])
                 observed.append("connect")
                 yield object()
 
@@ -214,13 +214,13 @@ class BridgeTests(unittest.IsolatedAsyncioTestCase):
                 async with TestClient(TestServer(create_app(cfg, tokens))) as client:
                     origin = str(client.make_url("")).rstrip("/")
                     async with client.ws_connect(
-                            f"/api/voice?transport={transport}&scenario=banking&personalize=true",
+                            f"/api/voice?transport={transport}&scenario={scenario}&personalize=true",
                             headers={"Origin": origin}) as ws:
                         await ws.send_json(frame())
                         result = await ws.receive_json()
                         self.assertEqual(result["type"], "bridge.conversation")
                         self.assertEqual(result["agent"], "demo")
-                        self.assertEqual(result["scenario"], "banking")
+                        self.assertEqual(result["scenario"], scenario)
                         from server import verify_download_token, DOWNLOAD_SECRET
                         self.assertEqual(verify_download_token(client.server.app[DOWNLOAD_SECRET],
                                                                target.agent, result["downloadToken"]), "conversation_demo")

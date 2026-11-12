@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, patch
 import yaml
 from aiohttp.test_utils import TestClient, TestServer
 
-from server import (ACTIVE, DEFAULT_TRANSCRIPTION_MODEL, ENHANCED_TURN_DETECTION, FLASH_MODEL, LIVE_MODEL, MODELS,
+from server import (ACTIVE, DEFAULT_TRANSCRIPTION_MODEL, ENHANCED_TURN_DETECTION, ENHANCED_TURN_MODELS, FLASH_MODEL, LIVE_MODEL, MODELS,
                     TRANSCRIPTION_MODELS, TURN_DETECTION_BEFORE_VERSION, Settings, create_app,
-                    model_definition, redact_settings, transcription_model)
+                    compatible_turn_detection, model_definition, redact_settings, transcription_model)
 from test_agent_creation import Client, Response
 
 
@@ -80,6 +80,8 @@ class ModelTests(unittest.IsolatedAsyncioTestCase):
             for extra in ({"enhancedTurnDetection": "true"}, {"enhancedTurnDetection": 1},
                           {"enhancedTurnDetection": None}, {"enhancedTurnDetection": []},
                           {"enhancedTurnDetection": True, "model": "gpt-live-1"},
+                          {"enhancedTurnDetection": True, "model": FLASH_MODEL},
+                          {"enhancedTurnDetection": True, "model": "gpt-5.4"},
                           {"enhancedTurnDetection": True, "transcriptionModel": "whisper-1"}):
                 response = await client.post("/api/agent/model",
                     headers={"Origin": str(client.make_url("")).rstrip("/")},
@@ -123,9 +125,9 @@ class ModelTests(unittest.IsolatedAsyncioTestCase):
                     self.assertEqual(response.status, status, await response.json())
             self.assertFalse(any("/versions" in url for url, _ in service.writes))
 
-    async def test_turn_detection_stays_enabled_across_all_non_live_model_switches(self):
+    async def test_turn_detection_stays_enabled_across_supported_model_switches(self):
         cfg = Settings("https://example.services.ai.azure.com/api/projects/demo", "demo-agent")
-        for model in MODELS:
+        for model in ENHANCED_TURN_MODELS:
             after = self.enhanced_agent(self.agent("gpt-realtime-2.1"))
             # Switching back from Flash must restore truncation for other models.
             after["versions"]["latest"]["definition"]["model"] = FLASH_MODEL
@@ -151,6 +153,84 @@ class ModelTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(result["transcriptionModel"], DEFAULT_TRANSCRIPTION_MODEL)
             self.assertEqual(service.writes[0][1]["json"],
                              {key: latest[key] for key in ("definition", "metadata")})
+
+    async def test_unsupported_model_switch_and_same_model_save_restore_vad_but_keep_transcription(self):
+        cfg = Settings("https://example.services.ai.azure.com/api/projects/demo", "demo-agent")
+        for model in (FLASH_MODEL, "gpt-5.4"):
+            for same_model in (False, True):
+                with self.subTest(model=model, same_model=same_model):
+                    original = self.agent(model if same_model else "gpt-realtime-2.1")
+                    baseline = original["versions"]["latest"]
+                    baseline["definition"]["audio"]["input"]["turn_detection"]["threshold"] = 0.7
+                    baseline["definition"]["audio"]["input"]["transcription"]["model"] = "azure-speech-streaming"
+                    source = self.enhanced_agent(original)
+                    source["versions"]["latest"]["definition"]["instructions"] = "Keep the latest prompt."
+                    snapshot = copy.deepcopy(source)
+                    target = copy.deepcopy(source)
+                    latest = target["versions"]["latest"]
+                    latest["version"] = "3"
+                    latest["metadata"].pop(TURN_DETECTION_BEFORE_VERSION)
+                    latest["definition"]["audio"]["input"]["turn_detection"] = copy.deepcopy(
+                        baseline["definition"]["audio"]["input"]["turn_detection"])
+                    if model == FLASH_MODEL:
+                        latest["metadata"]["flash_greeting"] = json.dumps(latest["definition"]["greeting"])
+                    latest["definition"] = model_definition(latest["definition"], model)
+                    service = ServiceClient([
+                        Response(200, source), Response(200, baseline), Response(200, source), Response(200, target)],
+                        [Response(201, {"version": "3"}), Response(204)])
+                    async with TestClient(TestServer(create_app(cfg, AsyncMock()))) as client:
+                        with patch("server.aiohttp.ClientSession", return_value=service):
+                            response = await client.post("/api/agent/model",
+                                headers={"Origin": str(client.make_url("")).rstrip("/")},
+                                json={"model": model, "version": "2",
+                                      **({"enhancedTurnDetection": False} if same_model else {})})
+                            result = await response.json()
+                    self.assertEqual(response.status, 200, result)
+                    self.assertFalse(result["enhancedTurnDetection"])
+                    self.assertEqual(result["transcriptionModel"], DEFAULT_TRANSCRIPTION_MODEL)
+                    self.assertEqual(service.writes[0][1]["json"],
+                                     {key: latest[key] for key in ("definition", "metadata")})
+                    self.assertEqual(source, snapshot)
+
+    async def test_automatic_repair_rejects_missing_baseline_concurrent_edit_and_bad_readback(self):
+        cfg = Settings("https://example.services.ai.azure.com/api/projects/demo", "demo-agent")
+        original = self.agent("gpt-5.4")
+        source = self.enhanced_agent(original)
+        changed = copy.deepcopy(source)
+        changed["versions"]["latest"]["version"] = "3"
+        baseline = Response(200, original["versions"]["latest"])
+        for gets, posts, status in (
+                ([Response(404)], [], 502),
+                ([baseline, Response(200, changed)], [], 409),
+                ([baseline, Response(200, source), Response(200, changed)],
+                 [Response(201, {"version": "3"}), Response(204)], 502)):
+            service = ServiceClient([Response(200, source), *gets], posts)
+            async with TestClient(TestServer(create_app(cfg, AsyncMock()))) as client:
+                with patch("server.aiohttp.ClientSession", return_value=service):
+                    response = await client.post("/api/agent/model",
+                        headers={"Origin": str(client.make_url("")).rstrip("/")},
+                        json={"model": "gpt-5.4", "version": "2"})
+                    self.assertEqual(response.status, status, await response.json())
+            if not posts:
+                self.assertEqual(service.writes, [])
+
+    async def test_custom_unsupported_settings_remove_only_incompatible_fields_without_guessing_a_baseline(self):
+        original = self.definition()
+        vad = original["audio"]["input"]["turn_detection"]
+        vad.update(speech_start_detection={"custom": True}, end_of_utterance_detection={"custom": True},
+                   threshold=0.8, remove_filler_words=False)
+        metadata = {"custom": "keep"}
+        expected = copy.deepcopy(original)
+        expected_vad = expected["audio"]["input"]["turn_detection"]
+        expected_vad.pop("speech_start_detection")
+        expected_vad.pop("end_of_utterance_detection")
+        service = ServiceClient([])
+        for model in (FLASH_MODEL, "gpt-5.4"):
+            result = await compatible_turn_detection(service, None, {}, original, metadata, "1", model)
+            self.assertEqual(result, expected)
+        self.assertIn("speech_start_detection", vad)
+        self.assertEqual(metadata, {"custom": "keep"})
+        self.assertEqual(service.writes, [])
 
     async def test_turn_detection_readback_must_match_full_preset_not_only_version_or_metadata(self):
         cfg = Settings("https://example.services.ai.azure.com/api/projects/demo", "demo-agent")

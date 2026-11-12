@@ -36,12 +36,15 @@
   <main id="app-content">
     <section class="intro"><p class="eyebrow">YOUR FIRST VOICE AGENT</p><h1>A little more human.</h1><p>Speak or type. Hear a reply. Interrupt naturally.</p><div class="weather-controls"><span id="weather-status" role="status">Loading Seattle weather...</span><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Weather: Open-Meteo</a></div></section>
     <section class="scenario-picker" aria-labelledby="scenario-label">
-      <div><label id="scenario-label" for="scenario-choice">Choose a conversation</label><p>Three ready-to-try demos. No real accounts or devices connected.</p></div>
+      <div><label id="scenario-label" for="scenario-choice">Choose a conversation</label><p>Six fictional demos. No real transactions, bookings, hiring decisions or device changes.</p></div>
       <select id="scenario-choice" disabled>
         <option value="">General assistant</option>
         <option value="health">Health coverage</option>
         <option value="banking">Everyday banking</option>
         <option value="home">Connected home</option>
+        <option value="loan">Personal loans</option>
+        <option value="property">Home buying</option>
+        <option value="interview">Electrician interview</option>
       </select>
       <p id="scenario-switch-note" role="status">Choose a scenario before starting a call.</p>
     </section>
@@ -81,9 +84,9 @@
             <option value="whisper-1">whisper-1</option>
           </select>
           <label class="checkbox" for="enhanced-turn-detection"><input id="enhanced-turn-detection" type="checkbox" checked disabled aria-describedby="turn-detection-help"> GPT Live 1-quality turn detection</label>
-          <p id="turn-detection-help">Available for GPT Realtime 2.1, GPT Realtime 2.1 mini and Azure Realtime; disabled for Azure Realtime Flash and GPT-5.4 until supported. Default on for new Agents using a supported model. Uses streaming transcription, interruption filtering and end-of-turn detection. Uncheck to restore the previous settings and transcription model. Click Apply settings between calls. This changes the shared saved Agent, not just this browser.</p>
+          <p id="turn-detection-help">Improves turn-taking and interruptions using streaming transcription. On by default for new Agents using GPT Realtime 2.1 (including mini) or Azure Realtime. Turn off to restore previous settings.</p>
           <p id="turn-detection-status" role="status"></p>
-          <p>Realtime model or transcription changes create a new version without deleting previous versions. GPT Live switches to a separate saved Agent. New Agents default to mai-transcribe-2-streaming. Azure Realtime uses native Ava; switching back uses Tyler HD if the saved voice is native. Model availability depends on your project.</p>
+          <p>Apply between calls. Changes create a shared Agent version; previous versions stay. GPT Live uses a separate Agent. New Agents use mai-transcribe-2-streaming. Azure Realtime uses Ava; switching back from a native voice uses Tyler HD. Available models vary by project.</p>
           <div class="agent-actions"><button id="save-model" disabled>Apply settings</button><button id="show-settings" disabled>Show Agent settings</button></div>
         </div>
         <div class="transport-control"><label for="transport">Connection</label><select id="transport"><option value="websocket">WebSocket — audio over HTTPS</option><option value="webrtc">WebRTC — direct audio</option></select><p>WebSocket avoids STUN/TURN. Both modes need server access to Azure.</p></div>
@@ -149,6 +152,9 @@
             <svg id="scenario-art-health" class="scenario-art" viewBox="0 0 120 100" fill="none" aria-hidden="true" hidden><rect x="18" y="14" width="84" height="72" rx="16" fill="currentColor" opacity=".12"/><path d="M60 25v28M46 39h28M28 69h19l7-10 11 18 8-8h19" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <svg id="scenario-art-banking" class="scenario-art" viewBox="0 0 120 100" fill="none" aria-hidden="true" hidden><rect x="10" y="24" width="90" height="59" rx="12" fill="currentColor" opacity=".12"/><path d="M22 43h65M26 66h15m10 0h10" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><circle cx="93" cy="27" r="17" fill="currentColor"/><path d="m85 27 6 6 10-12" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <svg id="scenario-art-home" class="scenario-art" viewBox="0 0 120 100" fill="none" aria-hidden="true" hidden><path d="M20 47 60 13l40 34v38H20Z" fill="currentColor" opacity=".12"/><path d="m14 47 46-36 46 36M27 49v34h66V49M50 83V57h20v26" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M84 12q12 0 18 10M83 22q6 0 9 5" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+            <svg id="scenario-art-loan" class="scenario-art" viewBox="0 0 120 100" fill="none" aria-hidden="true" hidden><rect x="14" y="20" width="90" height="65" rx="14" fill="currentColor" opacity=".12"/><path d="M27 39h43M27 53h29M27 68h16m12 0h13M78 62l7-8 7 4 10-14" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="91" cy="25" r="16" fill="currentColor"/><path d="M85 20h12m-12 5h12m-12-5c8 0 8 10 0 10l9 9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg id="scenario-art-property" class="scenario-art" viewBox="0 0 120 100" fill="none" aria-hidden="true" hidden><rect x="19" y="12" width="64" height="76" rx="9" fill="currentColor" opacity=".12"/><path d="M26 86V20h50v66M16 86h70M37 33h9m11 0h9M37 47h9m11 0h9M37 61h9m11 0h9M44 86V72h14v14" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="92" cy="35" r="16" fill="currentColor"/><circle cx="88" cy="31" r="3" stroke="white" stroke-width="2.5"/><path d="m90 33 8 8m-3-3-2 2m4 0-2 2" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+            <svg id="scenario-art-interview" class="scenario-art" viewBox="0 0 120 100" fill="none" aria-hidden="true" hidden><circle cx="39" cy="35" r="17" fill="currentColor" opacity=".12"/><path d="M39 22a13 13 0 1 0 0 26 13 13 0 0 0 0-26ZM16 81c0-15 9-25 23-25s23 10 23 25" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M66 20h34a8 8 0 0 1 8 8v22a8 8 0 0 1-8 8H82l-11 9v-9h-5a8 8 0 0 1-8-8V28a8 8 0 0 1 8-8Z" fill="currentColor" opacity=".12"/><path d="M72 33h22M72 43h16" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>
             <div><span class="scenario-kicker">INTERACTIVE DEMO</span><h3 id="scenario-title"></h3><p id="scenario-subtitle"></p></div>
           </div>
           <dl id="scenario-facts" class="scenario-facts"></dl>
