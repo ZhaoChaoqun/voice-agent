@@ -45,8 +45,10 @@ the original experience.
 | Health coverage | Explain preventive-care benefits, explore fictional in-network providers, clarify a pending claim | Sample plan, preventive-visit benefit and claim status |
 | Everyday banking | Explore a EUR 2,000 to EUR 5,000 overdraft request, discuss required documents, compare account options without sales pressure | Fictional current account, existing limit and example request |
 | Connected home | Adjust room temperature, choose a wash cycle, draft an energy-saving routine | Illustrative air conditioner, washer and refrigerator starting state |
+| Personal loans | Discuss a fictional personal loan, repayment choices and application requirements | Example amount and term; no interest rate or fees supplied |
+| Home buying | Explore a fictional apartment, discuss preferences and simulate a viewing request | Sample two-bedroom apartment, city and illustrative price |
 
-All three are **unbranded, fictional demonstrations**. They do not mention
+All five are **unbranded, fictional demonstrations**. They do not mention
 company or caller names. Personalization name/context fields are ignored for
 scenario calls; language controls still apply. The cards show a labeled
 starting state, not live telemetry or completed actions. Tap a suggested topic
@@ -57,8 +59,9 @@ a scenario creates or reuses an isolated Agent named
 `voice-demo-<source-name-hash>-<scenario>` in the selected model's project.
 It copies the selected Agent's model and audio settings, replaces the prompt
 and greeting, and removes tools. GPT Live keeps its reasoning deployment but
-has no backend tools. No business integrations, web searches, real account
-changes or appliance commands are made by these scenario Agents.
+has no backend tools. No business integrations, web searches, real applications,
+property bookings, account changes or appliance commands are made by these
+scenario Agents.
 The original Agent and Live companion are not edited. Changing source settings
 publishes a new version of the owned scenario Agent; previous versions remain.
 Unrelated Agents at those names are never overwritten. This requires Agent
@@ -71,7 +74,9 @@ after startup configuration. Scenario recordings use the scenario Agent and
 the existing signed download mechanism; GPT Live WebRTC still has no recording.
 Healthcare prompts avoid diagnosis and coverage guarantees; banking prompts
 avoid approval promises and invented prices; home prompts avoid hazardous
-remote activation. These are demonstration guardrails, not production compliance.
+remote activation. Loan and property prompts avoid fabricated rates or listing
+details and make clear that applications and viewings are not submitted or
+booked. These are demonstration guardrails, not production compliance.
 
 ### Weather-aware city scenery
 

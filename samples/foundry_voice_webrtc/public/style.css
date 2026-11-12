@@ -107,7 +107,7 @@ footer{margin-bottom:96px}
 .scenario-picker label{font-size:15px;font-weight:650;color:#24362f}.scenario-picker p{font-size:12px;margin:5px 0;color:#42564a}.scenario-picker select{width:100%;min-height:48px;padding:10px 12px;font:inherit;font-size:14px;color:#24362f;border:1px solid #a9bcae;border-radius:10px;background:white}.scenario-picker select:focus-visible{outline:3px solid #658d4a;outline-offset:3px}
 #scenario-switch-note{grid-column:1/-1}
 .scenario-card{--scenario-ink:#186b83;--scenario-bg:#e9f5fa;margin:18px 20px 4px;padding:20px;border-radius:16px;border:1px solid #ffffff;background:var(--scenario-bg);color:var(--scenario-ink)}
-.scenario-banking{--scenario-ink:#725618;--scenario-bg:#fcf4de}.scenario-home{--scenario-ink:#3657a0;--scenario-bg:#edf1ff}
+.scenario-banking{--scenario-ink:#725618;--scenario-bg:#fcf4de}.scenario-home{--scenario-ink:#3657a0;--scenario-bg:#edf1ff}.scenario-loan{--scenario-ink:#6d468d;--scenario-bg:#f5edfb}.scenario-property{--scenario-ink:#176658;--scenario-bg:#e9f6f1}
 .scenario-hero{display:flex;gap:14px;align-items:center}.scenario-art{width:92px;height:84px;flex:none}.scenario-card [hidden]{display:none}
 .scenario-kicker{font-size:9px;letter-spacing:1.8px;font-weight:700}.scenario-card h3{font-size:22px;margin:6px 0;letter-spacing:-.5px}.scenario-hero p{font-size:12px;margin:0;color:#33493b}
 .scenario-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:18px 0 10px}.scenario-facts>div{background:#ffffffb8;padding:12px 9px;border-radius:10px}.scenario-facts dt{font-size:10px;color:#4e5d60}.scenario-facts dd{margin:6px 0 0;font-size:12px;font-weight:650;color:#24362f;overflow-wrap:anywhere}

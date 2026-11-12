@@ -47,14 +47,16 @@ function updateAgentControls() {
   $('turn-detection-status').textContent = !turnSupported ? (
     live ? 'GPT Live uses built-in turn detection.' :
     !enhancedTurnModels.includes(selectedModel) ?
-      'GPT Live 1-quality turn detection is not yet available for Azure Realtime Flash or GPT-5.4.' +
-        (savedEnhancedTurnDetection ? ' Saving an unsupported model removes the preset; existing unsupported saved Agents are repaired before calls.' : '') :
-      'Apply the selected supported model before changing turn detection.') :
+      'Not available for Azure Realtime Flash or GPT-5.4.' +
+        (savedEnhancedTurnDetection ? (selectedModel === savedModel ?
+          ' Apply settings or start a call to remove the preset; transcription stays the same.' :
+          ' Applying this model removes the preset; transcription stays the same.') : '') :
+      'Apply this model before changing turn detection.') :
     agentAvailability === 'missing' ? 'Default: on, using mai-transcribe-2-streaming (after setup).' :
     turnChanged ? (pendingEnhancedTurnDetection ?
-      'Not saved: after mode will use mai-transcribe-2-streaming.' :
-      'Not saved: before mode will restore the previous turn detection and transcription.') :
-    savedEnhancedTurnDetection ? 'Saved: after (enhanced), using mai-transcribe-2-streaming.' : 'Saved: before (original settings).';
+      'Not saved: on uses mai-transcribe-2-streaming.' :
+      'Not saved: off restores previous settings.') :
+    savedEnhancedTurnDetection ? 'Saved: after (enhanced).' : 'Saved: before (original settings).';
   $('save-model').disabled = busy || agentAvailability !== 'ready' || !savedVersion ||
     !modelChoices.includes($('agent-model-choice').value) ||
     (!live && !$('agent-transcription-choice').value) ||
@@ -71,7 +73,7 @@ function renderScenario() {
   const preset = config?.scenarios?.[selectedScenario];
   $('scenario-card').hidden = !preset;
   $('scenario-card').className = `scenario-card scenario-${selectedScenario}`;
-  for (const id of ['health', 'banking', 'home'])
+  for (const id of ['health', 'banking', 'home', 'loan', 'property'])
     $('scenario-art-' + id).toggleAttribute('hidden', id !== preset?.visual);
   $('scenario-facts').replaceChildren();
   $('scenario-prompts').replaceChildren();
