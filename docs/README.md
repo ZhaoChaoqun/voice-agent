@@ -15,6 +15,23 @@ The numbered guides are references, not a mandatory installation checklist:
 5. [Use real tools with Templates that use mock tools](./05_connect_real_tools.md).
 6. [Create Salesforce, Zendesk, and Work IQ MCP servers with Azure Logic Apps](./06_logic_apps_mcp_servers.md).
 
+## Find a demo use case
+
+Use the [sample project catalog](../samples/README.md#choose-a-sample) to see
+**what each demo is for, what happens in the conversation, and which actions
+are simulated**. Each project links to its own setup instructions.
+
+| What you want to demonstrate | Sample projects and descriptions |
+| --- | --- |
+| A customer-facing mobile or browser experience | [AVA banking, First Voice, English teaching, vehicle controls, image input, pronunciation, avatars, and conference help](../samples/README.md#browser-mobile-and-multimodal-experiences) |
+| Banking or customer-service conversations | [Loan offers, verification, elevator faults, reception, support, collections, insurance, and order tracking](../samples/README.md#banking-support-and-reception) |
+| Sales or reservation workflows | [Lead qualification, appointment scheduling, healthcare reception, hotels, legal intake, property viewings, restaurants, salons, and travel](../samples/README.md#sales-appointments-and-travel) |
+| Employee assistance or guided learning | [IT support and access, incident triage, knowledge Q&A, onboarding, quizzes, coaching, tutoring, surveys, and interviews](../samples/README.md#employee-services-learning-and-research) |
+| How to build or integrate a voice agent | [SDK starters, migration, ADK, regional models, GPT Live, SIP, tools, knowledge, and subagents](../samples/README.md#developer-building-blocks-and-integrations) |
+| How to transcribe, evaluate, estimate cost, or debug | [Transcription, recording translation, simulated callers, audio evaluation, cost estimates, recordings, and traces](../samples/README.md#transcription-evaluation-and-operations) |
+
+## Finance workflow references
+
 The scenario-specific source of truth remains with each example:
 
 - [Example 1: Finance with Handoff - Realtime](../samples/example1_finance_with_handoff_realtime/README.md)

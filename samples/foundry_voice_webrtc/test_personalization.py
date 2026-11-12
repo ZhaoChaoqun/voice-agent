@@ -9,7 +9,9 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp.test_utils import TestClient, TestServer
 
-from server import HD_VOICES, MAI_FLASH_VOICES, NATIVE_VOICES, Settings, create_app, personalization_header, validate_client_frame
+from server import (HD_VOICES, MAI_FLASH_VOICES, NATIVE_VOICES, Settings, create_app,
+                    personalization_header, scenario_settings, validate_client_frame)
+from scenarios import SCENARIOS, scenario_definition
 
 
 def frame(**changes):
@@ -21,6 +23,41 @@ def frame(**changes):
 
 
 class PersonalizationTests(unittest.TestCase):
+    def test_scenarios_replace_persona_and_tools_without_changing_model_audio_or_source(self):
+        from live import live_definition
+        source = json.loads(Path(__file__).with_name("personalized-agent.json").read_text())
+        for original in (source, live_definition(source, "gpt-live-test", "reasoning")):
+            snapshot = json.dumps(original)
+            for scenario in SCENARIOS:
+                result = scenario_definition(original, scenario)
+                self.assertEqual(result["model"], original["model"])
+                self.assertEqual(result["audio"], original["audio"])
+                self.assertFalse(result.get("tools"))
+                self.assertNotIn("WEB SEARCH", result["instructions"])
+                self.assertNotIn("{{display_name}}", result["instructions"])
+                self.assertIn(SCENARIOS[scenario]["instructions"], result["instructions"])
+                self.assertEqual(set(result["structured_inputs"]), {"language_policy", "greeting_text"})
+                if "delegation" in result:
+                    backend = result["delegation"]["responses"]
+                    self.assertEqual(backend["tools"], [])
+                    self.assertNotIn("web_search", json.dumps(backend))
+                    self.assertEqual(backend["model"], "reasoning")
+                self.assertEqual(json.dumps(original), snapshot)
+
+    def test_scenario_greetings_are_distinct_localized_and_ignore_names_and_context(self):
+        greetings = set()
+        for scenario, preset in SCENARIOS.items():
+            for english in (False, True):
+                values = json.loads(personalization_header(frame(user_context="Call me by name", english_only=english), scenario))
+                self.assertEqual(values["display_name"], "")
+                self.assertEqual(values["user_context"], "")
+                self.assertEqual(values["greeting_text"], preset["greeting" if english else "greeting_es"])
+                self.assertNotIn("Alex", json.dumps(values))
+                greetings.add(values["greeting_text"])
+        self.assertEqual(len(greetings), 6)
+        with self.assertRaises(ValueError):
+            personalization_header(frame(), "unknown")
+
     def test_voice_choices_match_requested_catalog(self):
         expected = {f"en-US-{name}:DragonHDLatestNeural" for name in ("Tessa", "Tyler", "Paige", "Colin", "Brian", "Emma")} | {
             "en-IN-Diya:DragonHDLatestNeural", "zh-CN-Xiaoqi:DragonHDFlashLatestNeural", "zh-CN-Xiaoke:DragonHDFlashLatestNeural"}
@@ -109,7 +146,7 @@ class PersonalizationTests(unittest.TestCase):
                          {"type": "azure_deep_noise_suppression_headset"})
         self.assertEqual(definition["model_type"], "managed")
         self.assertEqual(definition["model"], "gpt-realtime-2.1")
-        self.assertEqual(definition["audio"]["input"]["transcription"]["model"], "mai-transcribe-2")
+        self.assertEqual(definition["audio"]["input"]["transcription"]["model"], "mai-transcribe-2-streaming")
         self.assertEqual(definition["audio"]["input"]["turn_detection"]["type"], "azure_semantic_vad")
         instructions = definition["instructions"]
         self.assertIn("You are Riley, a general-purpose voice assistant.", instructions)
@@ -148,6 +185,48 @@ class PersonalizationTests(unittest.TestCase):
 
 
 class BridgeTests(unittest.IsolatedAsyncioTestCase):
+    async def test_scenario_is_prepared_before_connect_and_download_reference_keeps_its_route(self):
+        for transport in ("websocket", "webrtc"):
+            cfg = Settings("https://example.services.ai.azure.com/api/projects/demo", "demo")
+            target = scenario_settings(cfg, "banking")
+            source = {"version": "1", "definition": {"kind": "voice", "model": "gpt-realtime-2.1"}}
+            observed = []
+
+            @asynccontextmanager
+            async def connect(client, selected, headers, mode):
+                self.assertEqual(selected, target)
+                self.assertEqual(mode, transport)
+                values = json.loads(headers["x-ms-voice-structured-inputs"])
+                self.assertEqual(set(values), {"language_policy", "greeting_text"})
+                self.assertEqual(values["greeting_text"], SCENARIOS["banking"]["greeting"])
+                observed.append("connect")
+                yield object()
+
+            async def relay(browser, upstream, mode, on_conversation):
+                await on_conversation("conversation_demo")
+
+            tokens = AsyncMock()
+            tokens.get_token.return_value = "test"
+            prepare = AsyncMock(return_value=(target, source))
+            with patch("server.lookup_configured_agent", AsyncMock(return_value=source)), \
+                    patch("server.prepare_scenario_agent", prepare), \
+                    patch("server.connect_voice", connect), patch("server.relay", relay):
+                async with TestClient(TestServer(create_app(cfg, tokens))) as client:
+                    origin = str(client.make_url("")).rstrip("/")
+                    async with client.ws_connect(
+                            f"/api/voice?transport={transport}&scenario=banking&personalize=true",
+                            headers={"Origin": origin}) as ws:
+                        await ws.send_json(frame())
+                        result = await ws.receive_json()
+                        self.assertEqual(result["type"], "bridge.conversation")
+                        self.assertEqual(result["agent"], "demo")
+                        self.assertEqual(result["scenario"], "banking")
+                        from server import verify_download_token, DOWNLOAD_SECRET
+                        self.assertEqual(verify_download_token(client.server.app[DOWNLOAD_SECRET],
+                                                               target.agent, result["downloadToken"]), "conversation_demo")
+            prepare.assert_awaited_once()
+            self.assertEqual(observed, ["connect"])
+
     async def test_initialization_precedes_azure_connect_for_both_transports(self):
         for transport, voice in product(("websocket", "webrtc"), sorted(HD_VOICES | MAI_FLASH_VOICES | NATIVE_VOICES)):
             observed = []

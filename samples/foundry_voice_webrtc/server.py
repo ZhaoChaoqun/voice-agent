@@ -28,6 +28,7 @@ from dotenv import load_dotenv
 
 from auth import AuthenticationError, AzureTokenProvider, authentication_mode, find_azure_cli
 from live import LIVE_VOICES, LiveSessionError, connect_live, live_definition, with_live_greeting
+from scenarios import SCENARIOS, scenario_definition, scenario_name
 
 ROOT = Path(__file__).resolve().parent
 LOGGER = logging.getLogger(__name__)
@@ -133,7 +134,11 @@ TRANSCRIPTION_MODELS = {
     "gpt-live-transcribe", "gpt-realtime-whisper", "gpt-transcribe",
     "gpt-4o-transcribe", "gpt-4o-mini-transcribe", "gpt-4o-transcribe-diarize", "whisper-1",
 }
-DEFAULT_TRANSCRIPTION_MODEL = "mai-transcribe-2"
+DEFAULT_TRANSCRIPTION_MODEL = "mai-transcribe-2-streaming"
+ENHANCED_TURN_MODELS = MODELS
+TURN_DETECTION_BEFORE_VERSION = "turn_detection_before_version"
+TURN_DETECTION_BEFORE_SETTINGS = "turn_detection_before_settings"
+ENHANCED_TURN_DETECTION = json.loads((ROOT / "enhanced-turn-detection.json").read_text())
 MAX_RECORDING_BYTES = 128 * 1024 * 1024
 MAX_LOG_BYTES = 16 * 1024 * 1024
 
@@ -260,6 +265,11 @@ async def download_conversation(request):
     if not allowed_origin(request):
         return web.json_response({"error": "Open the page on this server."}, status=403)
     cfg = selected_settings(request)
+    scenario = request.query.get("scenario", "")
+    if scenario:
+        if scenario not in SCENARIOS:
+            return web.json_response({"error": "Choose a supported demo scenario."}, status=400)
+        cfg = scenario_settings(cfg, scenario)
     try:
         body = await request.json()
     except ValueError:
@@ -296,7 +306,7 @@ async def download_conversation(request):
         return web.json_response({"error": "Could not download the stored conversation. Check Azure access and retry after the recording is finalized."}, status=502)
 
 
-def personalization_header(frame):
+def personalization_header(frame, scenario=""):
     if not isinstance(frame, dict) or set(frame) != {"type", "display_name", "user_context", "client_language", "english_only"}:
         raise ValueError("Invalid personalization fields.")
     if frame["type"] != "bridge.personalize" or type(frame["english_only"]) is not bool:
@@ -336,6 +346,12 @@ def personalization_header(frame):
         ),
         "greeting_text": greeting,
     }
+    if scenario:
+        if scenario not in SCENARIOS:
+            raise ValueError("Choose a supported demo scenario.")
+        values["display_name"] = ""
+        values["user_context"] = ""
+        values["greeting_text"] = SCENARIOS[scenario]["greeting" if english or language == "en-US" else "greeting_es"]
     encoded = json.dumps(values, ensure_ascii=True, separators=(",", ":"))
     if len(encoded) > 16000:
         raise ValueError("Encoded personalization exceeds the 16 KiB limit.")
@@ -517,6 +533,9 @@ async def public_config(request):
                               "liveVoices": sorted(LIVE_VOICES),
                               "transcriptionModels": sorted(TRANSCRIPTION_MODELS),
                               "defaultTranscriptionModel": DEFAULT_TRANSCRIPTION_MODEL,
+                              "scenarios": {key: {field: value for field, value in preset.items()
+                                                   if field not in {"instructions", "greeting_es"}}
+                                            for key, preset in SCENARIOS.items()},
                               "transports": ["websocket", "webrtc"], "defaultTransport": cfg.default_transport})
 
 
@@ -526,6 +545,39 @@ async def health(request):
 
 class AgentPreparationError(Exception):
     """A safe error from the configured Agent's lifecycle operations."""
+
+
+def scenario_settings(cfg, scenario):
+    return replace(cfg, agent=scenario_name(cfg.agent, scenario),
+                   companion_for="", personalization_required=False)
+
+
+async def prepare_scenario_agent(client, cfg, headers, source, scenario):
+    target = scenario_settings(cfg, scenario)
+    definition = scenario_definition(source["definition"], scenario)
+    metadata = {"sample": "foundry_voice_webrtc", "scenario": scenario, "scenario_source": cfg.agent}
+    latest = await lookup_configured_agent(client, target, headers, include_version=True)
+    if latest and latest.get("metadata") != metadata:
+        raise AgentPreparationError("The scenario Agent name belongs to another Agent. It was not changed.")
+    if latest is None or latest["definition"] != definition:
+        current = await lookup_configured_agent(client, target, headers, include_version=True)
+        if current != latest:
+            raise AgentPreparationError("The scenario Agent changed during setup. Retry the call.")
+        url = f"{target.project_url()}/agents/{target.agent}/versions?{urlencode({'api-version': target.api_version})}"
+        async with client.post(url, headers=headers, json={"definition": definition, "metadata": metadata},
+                               allow_redirects=False) as response:
+            if response.status not in {200, 201}:
+                raise AgentPreparationError(f"Scenario publication failed (HTTP {response.status}). No call was started.")
+            published = await response.json()
+        latest = await lookup_configured_agent(client, target, headers, include_version=True)
+        if (not latest or latest.get("version") != published.get("version")
+                or latest.get("definition") != definition or latest.get("metadata") != metadata):
+            raise AgentPreparationError("The saved scenario could not be verified. Retry before starting a call.")
+    url = f"{target.project_url()}/agents/{target.agent}:enable?{urlencode({'api-version': target.api_version})}"
+    async with client.post(url, headers=headers, allow_redirects=False) as response:
+        if response.status != 204:
+            raise AgentPreparationError(f"Scenario enable failed (HTTP {response.status}). Retry the call.")
+    return target, latest
 
 
 def weather_toolbox_attached(definition):
@@ -627,8 +679,74 @@ def transcription_model(definition):
     return settings.get("model") if isinstance(settings, dict) else None
 
 
-async def inspect_configured_agent(client, cfg, headers):
+def enhanced_turn_detection(definition, metadata):
+    vad = ((definition.get("audio") or {}).get("input") or {}).get("turn_detection")
+    return bool(metadata.get(TURN_DETECTION_BEFORE_VERSION) or metadata.get(TURN_DETECTION_BEFORE_SETTINGS)) or (
+        isinstance(vad, dict) and all(vad.get(key) == value for key, value in ENHANCED_TURN_DETECTION.items()))
+
+
+async def configure_turn_detection(client, cfg, headers, source, metadata, version, enabled):
+    updated = copy.deepcopy(source)
+    audio_input = updated.setdefault("audio", {}).setdefault("input", {})
+    active = enhanced_turn_detection(source, metadata)
+    if enabled:
+        if not active:
+            if version is None:
+                before = json.dumps({key: audio_input[key] for key in ("turn_detection", "transcription")
+                                     if key in audio_input}, separators=(",", ":"))
+                if len(before) > 512:
+                    raise AgentPreparationError("The default turn-detection backup exceeds the Agent metadata limit.")
+                metadata[TURN_DETECTION_BEFORE_SETTINGS] = before
+            else:
+                metadata[TURN_DETECTION_BEFORE_VERSION] = version
+        vad = audio_input.get("turn_detection")
+        audio_input["turn_detection"] = {**(vad if isinstance(vad, dict) else {}),
+                                         **copy.deepcopy(ENHANCED_TURN_DETECTION)}
+        transcription = audio_input.get("transcription")
+        audio_input["transcription"] = {**(transcription if isinstance(transcription, dict) else {}),
+                                         "model": DEFAULT_TRANSCRIPTION_MODEL}
+    elif active:
+        if TURN_DETECTION_BEFORE_SETTINGS in metadata:
+            backup = metadata[TURN_DETECTION_BEFORE_SETTINGS]
+            if not isinstance(backup, str):
+                raise AgentPreparationError("The original turn-detection settings are invalid. No version was saved.")
+            before = json.loads(backup)
+            if (not isinstance(before, dict) or set(before) - {"turn_detection", "transcription"}
+                    or any(value is not None and not isinstance(value, dict) for value in before.values())):
+                raise AgentPreparationError("The original turn-detection settings are invalid. No version was saved.")
+        else:
+            previous = metadata.get(TURN_DETECTION_BEFORE_VERSION)
+            if not isinstance(previous, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", previous):
+                raise AgentPreparationError(
+                    "The original turn-detection version is not recorded. Restore it in Foundry before using this toggle.")
+            url = f"{cfg.project_url()}/agents/{quote(cfg.agent, safe='')}/versions/{quote(previous, safe='')}"
+            async with client.get(url, params={"api-version": cfg.api_version}, headers=headers,
+                                  allow_redirects=False) as response:
+                if response.status != 200:
+                    raise AgentPreparationError(
+                        f"Cannot restore the original turn-detection version (HTTP {response.status}). No version was saved.")
+                baseline = await response.json()
+            if (not isinstance(baseline, dict) or baseline.get("version") != previous
+                    or not isinstance(baseline.get("definition"), dict)
+                    or baseline["definition"].get("kind") != "voice"):
+                raise AgentPreparationError(
+                    "The original turn-detection version could not be verified. No version was saved.")
+            before = ((baseline["definition"].get("audio") or {}).get("input") or {})
+        for key in ("turn_detection", "transcription"):
+            if key in before:
+                audio_input[key] = copy.deepcopy(before[key])
+            else:
+                audio_input.pop(key, None)
+        metadata.pop(TURN_DETECTION_BEFORE_VERSION, None)
+        metadata.pop(TURN_DETECTION_BEFORE_SETTINGS, None)
+    return updated
+
+
+async def inspect_configured_agent(client, cfg, headers, expected_settings=None):
     latest = await lookup_configured_agent(client, cfg, headers, include_version=True)
+    if expected_settings is not None and (latest is None or
+            any(latest.get(key) != value for key, value in expected_settings.items())):
+        raise AgentPreparationError("The saved settings changed or could not be verified. Reload before retrying.")
     if latest is None and cfg.companion_for:
         raise AgentPreparationError(
             "The GPT Live companion is missing. Set START_WITH_GPT_LIVE=false, "
@@ -641,6 +759,8 @@ async def inspect_configured_agent(client, cfg, headers):
             "modelChoice": LIVE_MODEL if (definition or {}).get("sub_protocol") == "live" else
                 (demo if definition is None else definition).get("model"),
             "transcriptionModel": transcription_model(demo if definition is None else definition),
+            "enhancedTurnDetection": definition is None or
+                enhanced_turn_detection(definition, latest.get("metadata") or {}),
             "version": latest.get("version") if latest is not None else None,
             "weatherEnabled": definition is not None and weather_toolbox_attached(definition),
             "liveGreetingMissing": (definition or {}).get("sub_protocol") == "live" and "greeting" not in definition,
@@ -652,6 +772,7 @@ async def prepare_configured_agent(client, cfg, headers):
     latest = await lookup_configured_agent(client, cfg, headers, include_version=True)
     definition = latest["definition"] if latest is not None else None
     version = latest.get("version") if latest is not None else None
+    metadata = copy.deepcopy(latest.get("metadata") or {}) if latest else {"sample": "foundry_voice_webrtc"}
     created = definition is None
     repaired = False
     if created:
@@ -662,6 +783,7 @@ async def prepare_configured_agent(client, cfg, headers):
         if not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?", cfg.agent):
             raise AgentPreparationError("The configured Agent name must be 1-63 alphanumeric/hyphen characters, starting and ending with an alphanumeric character.")
         definition["tools"] = [await prepare_weather_toolbox(client, cfg, headers)]
+        definition = await configure_turn_detection(client, cfg, headers, definition, metadata, None, True)
     else:
         resolved = await resolve_weather_toolbox_references(client, cfg, headers, definition)
         repaired = resolved != definition
@@ -674,7 +796,7 @@ async def prepare_configured_agent(client, cfg, headers):
         url = f"{cfg.project_url()}/agents/{quote(cfg.agent, safe='')}/versions?{urlencode({'api-version': cfg.api_version})}"
         async with client.post(url, headers=headers, json={
             "definition": definition,
-            "metadata": {"sample": "foundry_voice_webrtc"} if created else latest.get("metadata", {})
+            "metadata": metadata
         }, allow_redirects=False) as publish:
             if publish.status not in {200, 201}:
                 raise AgentPreparationError(f"Agent publication failed (HTTP {publish.status}). Check permissions and model/voice availability.")
@@ -691,6 +813,7 @@ async def prepare_configured_agent(client, cfg, headers):
             "model": definition.get("model"),
             "modelChoice": LIVE_MODEL if definition.get("sub_protocol") == "live" else definition.get("model"),
             "transcriptionModel": transcription_model(definition),
+            "enhancedTurnDetection": enhanced_turn_detection(definition, metadata),
             "version": version,
             "weatherEnabled": weather_toolbox_attached(definition),
             "liveGreetingMissing": definition.get("sub_protocol") == "live" and "greeting" not in definition,
@@ -778,12 +901,17 @@ async def change_agent_model(request):
         body = await request.json()
     except ValueError:
         return web.json_response({"error": "Choose a model and the current Agent version."}, status=400)
-    if (not isinstance(body, dict) or set(body) not in ({"model", "version"}, {"model", "version", "transcriptionModel"})
+    if (not isinstance(body, dict) or not {"model", "version"}.issubset(body)
+            or set(body) - {"model", "version", "transcriptionModel", "enhancedTurnDetection"}
             or not isinstance(body["model"], str) or body["model"] not in MODELS | {LIVE_MODEL}
             or not isinstance(body["version"], str) or not body["version"]
+            or ("enhancedTurnDetection" in body and (
+                type(body["enhancedTurnDetection"]) is not bool or body["model"] not in ENHANCED_TURN_MODELS
+                or "transcriptionModel" in body))
             or ("transcriptionModel" in body and (
                 not isinstance(body["transcriptionModel"], str) or body["transcriptionModel"] not in TRANSCRIPTION_MODELS))):
-        return web.json_response({"error": "Choose supported Agent/transcription models and the current Agent version."}, status=400)
+        return web.json_response({"error": "Choose supported Agent/transcription models and the current Agent version. "
+                                  "The turn-detection toggle manages transcription; save it separately."}, status=400)
     async with request.app[PREPARATION]:
         if request.app[ACTIVE].active:
             return web.json_response({"error": "End the conversation before changing its model."}, status=409)
@@ -798,6 +926,7 @@ async def change_agent_model(request):
                     return web.json_response({"error": "The Agent version changed. Reload the page before saving."}, status=409)
                 expected_version = latest["version"]
                 metadata = copy.deepcopy(latest.get("metadata") or {})
+                destination_metadata = copy.deepcopy(metadata)
                 source = latest["definition"]
                 was_live = source.get("sub_protocol") == "live"
                 switched_agent = False
@@ -816,6 +945,7 @@ async def change_agent_model(request):
                         if companion is not None:
                             definition = copy.deepcopy(companion["definition"])
                             metadata = copy.deepcopy(companion.get("metadata") or {})
+                            destination_metadata = copy.deepcopy(metadata)
                             expected_version = companion["version"]
                             destination_definition = companion["definition"]
                         else:
@@ -837,16 +967,32 @@ async def change_agent_model(request):
                             raise AgentPreparationError("The original realtime Agent is unavailable. No Agent was changed.")
                         source = realtime["definition"]
                         metadata = copy.deepcopy(realtime.get("metadata") or {})
+                        destination_metadata = copy.deepcopy(metadata)
                         expected_version = realtime["version"]
                         destination_definition = source
                         switched_agent = True
+                    if "enhancedTurnDetection" in body:
+                        if was_live:
+                            raise AgentPreparationError("Switch to the realtime Agent before changing turn detection.")
+                        source = await configure_turn_detection(
+                            client, cfg, headers, source, metadata, expected_version, body["enhancedTurnDetection"])
+                    if enhanced_turn_detection(source, metadata):
+                        if "transcriptionModel" in body and body["transcriptionModel"] != "mai-transcribe-2-streaming":
+                            raise AgentPreparationError("Turn off GPT Live 1-quality turn detection before changing transcription.")
                     if body["model"] == FLASH_MODEL and "greeting" in source:
                         metadata.setdefault("flash_greeting", json.dumps(source["greeting"]))
                     elif body["model"] != FLASH_MODEL and "flash_greeting" in metadata:
                         source = copy.deepcopy(source)
                         source["greeting"] = json.loads(metadata.pop("flash_greeting"))
                     definition = model_definition(source, body["model"], body.get("transcriptionModel"))
-                if definition != destination_definition:
+                    if enhanced_turn_detection(source, metadata):
+                        definition["audio"]["input"]["turn_detection"]["auto_truncate"] = body["model"] != FLASH_MODEL
+                if definition != destination_definition or metadata != destination_metadata:
+                    if "enhancedTurnDetection" in body:
+                        current = await lookup_configured_agent(client, cfg, headers, include_version=True)
+                        if current != latest:
+                            return web.json_response(
+                                {"error": "The Agent changed during setup. Reload before saving."}, status=409)
                     url = f"{cfg.project_url()}/agents/{quote(cfg.agent, safe='')}/versions"
                     async with client.post(url, params={"api-version": cfg.api_version}, headers=headers,
                                            json={"definition": definition, "metadata": metadata},
@@ -876,8 +1022,12 @@ async def change_agent_model(request):
                                        allow_redirects=False) as response:
                     if response.status != 204:
                         raise AgentPreparationError("The model version was saved but could not be enabled. Retry setup before starting a call.")
-                result = await inspect_configured_agent(client, cfg, headers)
+                result = await inspect_configured_agent(client, cfg, headers,
+                    expected_settings={"definition": definition, "metadata": metadata}
+                    if "enhancedTurnDetection" in body else None)
                 if (result.get("version") != expected_version or result.get("modelChoice") != body["model"]
+                        or ("enhancedTurnDetection" in body and
+                            result.get("enhancedTurnDetection") is not body["enhancedTurnDetection"])
                         or ("transcriptionModel" in body and result.get("transcriptionModel") != body["transcriptionModel"])):
                     raise AgentPreparationError("The saved settings changed or could not be verified. Reload before retrying.")
                 return web.json_response({**result, "switchedAgent": switched_agent})
@@ -1084,7 +1234,7 @@ async def forward_browser(browser, upstream, transport, configuration):
             raise ValueError("Send JSON events; binary frames are not supported.")
 
 
-async def forward_upstream(upstream, browser, transport, configuration, on_conversation=None):
+async def forward_upstream(upstream, browser, transport, configuration, on_conversation=None, greeting=None):
     announced = False
     try:
         async with asyncio.timeout(30) as deadline:
@@ -1100,6 +1250,9 @@ async def forward_upstream(upstream, browser, transport, configuration, on_conve
                         await browser.send_str(message.data)
                     if acknowledged:
                         deadline.reschedule(None)
+                        if greeting:
+                            await upstream.send_json({"type": "response.create", "response": {
+                                "instructions": "Open the demo with this greeting, without adding a name: " + greeting}})
                         await browser.send_json({"type": "bridge.ready"})
                     if frame.get("type") == "session.closed":
                         configuration.closed.set()
@@ -1108,10 +1261,10 @@ async def forward_upstream(upstream, browser, transport, configuration, on_conve
         raise SessionConfigurationError("Timed out waiting for Azure to acknowledge retained-history session configuration.") from None
 
 
-async def relay(browser, upstream, transport, on_conversation=None):
+async def relay(browser, upstream, transport, on_conversation=None, greeting=None):
     configuration = SessionConfiguration()
     tasks = [asyncio.create_task(forward_browser(browser, upstream, transport, configuration)),
-             asyncio.create_task(forward_upstream(upstream, browser, transport, configuration, on_conversation))]
+             asyncio.create_task(forward_upstream(upstream, browser, transport, configuration, on_conversation, greeting))]
     try:
         done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         for task in done:
@@ -1227,6 +1380,10 @@ async def bridge(request):
     if transport not in TRANSPORTS:
         raise web.HTTPBadRequest(text="Choose websocket or webrtc.")
     cfg = selected_settings(request)
+    scenario = request.query.get("scenario", "")
+    if scenario and scenario not in SCENARIOS:
+        raise web.HTTPBadRequest(text="Choose a supported demo scenario.")
+    base_agent = cfg.agent
     if not cfg.configured:
         raise web.HTTPServiceUnavailable(text="Configure .env first.")
     # One active local call prevents accidental duplicate usage.
@@ -1245,25 +1402,32 @@ async def bridge(request):
             raise LiveSessionError("Use the GPT Live protocol for the companion Agent.")
         if voice and voice not in (LIVE_VOICES if live else HD_VOICES | MAI_FLASH_VOICES | NATIVE_VOICES):
             raise ValueError("Choose a supported demo output voice.")
-        if cfg.personalization_required and request.query.get("personalize") != "true":
+        if (cfg.personalization_required or scenario) and request.query.get("personalize") != "true":
             raise ValueError("This Agent requires session personalization.")
         if request.query.get("personalize") == "true":
             message = await browser.receive(timeout=10)
             if message.type != aiohttp.WSMsgType.TEXT:
                 raise ValueError("Expected session personalization before connecting.")
-            structured = personalization_header(json.loads(message.data))
+            structured = personalization_header(json.loads(message.data), scenario)
         cfg.project_url()  # Validate before acquiring credentials.
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=35)) as client:
             token = await request.app[TOKENS].get_token(client)
             headers = {"Authorization": f"Bearer {token}", "Foundry-Features": cfg.features}
+            latest = None
+            if scenario:
+                source = await lookup_configured_agent(client, cfg, headers, include_version=True)
+                if source is None or (source["definition"].get("sub_protocol") == "live") != live:
+                    raise AgentPreparationError("Prepare the selected model before starting a scenario.")
+                cfg, latest = await prepare_scenario_agent(client, cfg, headers, source, scenario)
             async def announce_conversation(conversation):
                 await browser.send_json({
                     "type": "bridge.conversation", "conversationId": conversation,
-                    "agent": cfg.agent,
+                    "agent": base_agent,
+                    **({"scenario": scenario} if scenario else {}),
                     "downloadToken": conversation_download_token(request.app[DOWNLOAD_SECRET], cfg.agent, conversation),
                 })
             if live:
-                latest = await lookup_configured_agent(client, cfg, headers, include_version=True)
+                latest = latest or await lookup_configured_agent(client, cfg, headers, include_version=True)
                 if latest is None or latest["definition"].get("sub_protocol") != "live":
                     raise LiveSessionError("Save the GPT Live model version before starting a live session.")
                 saved_voice = ((latest["definition"].get("audio") or {}).get("output") or {}).get("voice")
@@ -1276,14 +1440,20 @@ async def bridge(request):
                                    input_names=(latest["definition"].get("structured_inputs") or {}).keys())
                 return browser
             if structured is not None:
-                headers["x-ms-voice-structured-inputs"] = structured
+                headers["x-ms-voice-structured-inputs"] = json.dumps({
+                    key: value for key, value in json.loads(structured).items()
+                    if not scenario or key in {"language_policy", "greeting_text"}
+                })
             if voice:
                 headers["x-ms-voice-session-override"] = json.dumps({
                     "audio": {"output": {"voice": voice, "voice_type":
                         "azure-realtime-native" if voice in NATIVE_VOICES else "azure-standard"}}
                 })
             async with connect_voice(client, cfg, headers, transport) as upstream:
-                await relay(browser, upstream, transport, on_conversation=announce_conversation)
+                options = {}
+                if scenario and latest["definition"].get("model") == FLASH_MODEL:
+                    options["greeting"] = json.loads(structured)["greeting_text"]
+                await relay(browser, upstream, transport, on_conversation=announce_conversation, **options)
     except Exception as exc:
         # Never send auth exceptions, headers or tokens to the browser or logs.
         LOGGER.warning("Voice bridge failed (%s)", type(exc).__name__)

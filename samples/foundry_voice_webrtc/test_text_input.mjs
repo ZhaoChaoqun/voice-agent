@@ -9,6 +9,7 @@ import { returnedCallCost } from './public/call-cost.mjs';
 const source = await readFile(new URL('./public/app.js', import.meta.url), 'utf8');
 const sessionCost = {amount:0.006344, currency:'USD', status:'complete',
   price_version:'azure-retail-prices-eastus2-2026-06-01', unpriced_components:[]};
+const scenarios = JSON.parse(await readFile(new URL('./scenarios.json', import.meta.url), 'utf8'));
 
 async function setup(transport, overrides = {}) {
   const elements = new Map();
@@ -19,6 +20,7 @@ async function setup(transport, overrides = {}) {
     replaceChildren(...children) { this.children = children; },
     remove() { if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this); },
     setAttribute() {}, pause() {}, click() { this.clicked = true; },
+    toggleAttribute(name, value) { this[name] = value; },
     showModal() { this.open = true; }, close() { this.open = false; },
   });
   const element = id => {
@@ -59,6 +61,74 @@ async function setup(transport, overrides = {}) {
   })()`, context).then(api => context.api = api);
   return { ...context.api, element, session, sent, created };
 }
+
+test('scenario switching refreshes visuals and greeting, clears old context and never sends an idea', async () => {
+  const ui = await setup('websocket', {
+    fetch:async url => ({ok:true, json:async()=>url === '/api/config' ?
+      {configured:true, agent:'demo-agent', scenarios} : {exists:true, model:'gpt-realtime-2.1', version:'1'}}),
+  });
+  ui.stop();
+  for (const id of ['health', 'banking', 'home']) {
+    ui.element('transcript').append({textContent:'previous scenario'});
+    ui.element('scenario-choice').value = id;
+    ui.element('scenario-choice').onchange();
+    assert.equal(ui.element('scenario-card').hidden, false);
+    assert.equal(ui.element('scenario-title').textContent, scenarios[id].title);
+    assert.equal(ui.element('scenario-greeting').textContent, scenarios[id].greeting);
+    assert.equal(ui.element('scenario-art-' + id).hidden, false);
+    assert.equal(ui.element('scenario-facts').children.length, 3);
+    assert.equal(ui.element('transcript').children.length, 0);
+    assert.equal(ui.element('display-name').disabled, true);
+    ui.element('scenario-prompts').children[0].onclick();
+    assert.equal(ui.element('text-input').value, scenarios[id].prompts[0]);
+    assert.equal(ui.sent.length, 0);
+  }
+  ui.reconnect();
+  ui.element('scenario-choice').value = 'health';
+  ui.element('scenario-choice').onchange();
+  assert.equal(ui.element('scenario-choice').value, 'home');
+  assert.equal(ui.element('scenario-title').textContent, scenarios.home.title);
+  ui.stop();
+  ui.element('scenario-choice').value = '';
+  ui.element('scenario-choice').onchange();
+  assert.equal(ui.element('scenario-card').hidden, true);
+  assert.equal(ui.element('display-name').disabled, false);
+});
+
+test('scenario startup forces anonymous context and includes the selected scenario in the socket route', async () => {
+  let socket;
+  class Socket {
+    static OPEN=1;
+    constructor(url) { this.url=url; this.readyState=1; this.sent=[]; socket=this; }
+    send(frame) { this.sent.push(JSON.parse(frame)); }
+    close() {}
+  }
+  const ui = await setup('websocket', {
+    fetch:async url => ({ok:true, json:async()=>url === '/api/config' ?
+      {configured:true, agent:'demo-agent', scenarios} :
+      {exists:true, model:'gpt-realtime-2.1', version:'1'}}),
+    window:{isSecureContext:true, addEventListener(){}},
+    navigator:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[]})}},
+    location:{protocol:'http:',host:'localhost:8091'},
+    PcmAudio:class {resumePromise=Promise.resolve(); prepare(){} dispose(){}},
+    WebSocket:Socket,
+  });
+  ui.stop();
+  ui.element('display-name').value = 'Do not forward';
+  ui.element('user-context').value = 'Do not forward';
+  ui.element('personalize').checked = false;
+  ui.element('scenario-choice').value = 'banking';
+  ui.element('scenario-choice').onchange();
+  await ui.start();
+  socket.onopen();
+  assert.match(socket.url, /scenario=banking/);
+  assert.match(socket.url, /personalize=true/);
+  assert.equal(socket.sent[0].type, 'bridge.personalize');
+  assert.equal(socket.sent[0].display_name, '');
+  assert.equal(socket.sent[0].user_context, '');
+  assert.equal(ui.element('scenario-choice').disabled, true);
+  ui.stop();
+});
 
 for (const transport of ['websocket', 'webrtc']) {
   test(`${transport}: failed responses display the Azure session ID and retain it after stopping`, async () => {
@@ -712,6 +782,83 @@ test('Transcription defaults are planned before creation; active calls and save 
   assert.equal(ui.element('agent-version').textContent, '1');
 });
 
+test('Turn detection checkbox saves before/after without sending a conflicting transcription selection', async () => {
+  let enhanced = false, version = 1;
+  const writes = [];
+  const ui = await setup('webrtc', {fetch:async (url, options)=>{
+    if (url === '/api/agent/model') {
+      const body = JSON.parse(options.body);
+      writes.push(body);
+      enhanced = body.enhancedTurnDetection;
+      version++;
+    }
+    return {ok:true, json:async()=>url === '/api/config' ? {configured:true} :
+      {exists:true, model:'gpt-realtime-2.1', version:String(version), enhancedTurnDetection:enhanced,
+        transcriptionModel:enhanced ? 'mai-transcribe-2-streaming' : 'whisper-1'}};
+  }});
+  ui.element('enhanced-turn-detection').onchange();
+  assert.equal(ui.element('enhanced-turn-detection').disabled, true);
+  ui.stop();
+  for (const checked of [true, false]) {
+    assert.equal(ui.element('enhanced-turn-detection').disabled, false);
+    ui.element('enhanced-turn-detection').checked = checked;
+    ui.element('enhanced-turn-detection').onchange();
+    assert.equal(ui.element('save-model').disabled, false);
+    assert.equal(ui.element('agent-transcription-choice').disabled, true);
+    assert.match(ui.element('turn-detection-status').textContent, /Not saved/);
+    await ui.element('save-model').onclick();
+    assert.equal(ui.element('enhanced-turn-detection').checked, checked);
+    assert.equal(ui.element('agent-transcription-choice').value, checked ? 'mai-transcribe-2-streaming' : 'whisper-1');
+    assert.match(ui.element('turn-detection-status').textContent, checked ? /Saved: after/ : /Saved: before/);
+    assert.equal(ui.element('save-model').disabled, true);
+  }
+  assert.deepEqual(writes, [
+    {model:'gpt-realtime-2.1', version:'1', enhancedTurnDetection:true},
+    {model:'gpt-realtime-2.1', version:'2', enhancedTurnDetection:false},
+  ]);
+  ui.element('agent-model-choice').value = 'gpt-live-1';
+  ui.element('agent-model-choice').onchange();
+  assert.equal(ui.element('enhanced-turn-detection').disabled, true);
+});
+
+test('A failed turn-detection save remains pending and does not change the saved version or transcription', async () => {
+  const ui = await setup('websocket', {fetch:async url=>({
+    ok:url !== '/api/agent/model',
+    json:async()=>url === '/api/config' ? {configured:true} : url === '/api/agent/model' ?
+      {error:'Original version is unavailable'} :
+      {exists:true, model:'gpt-realtime-2.1', version:'9', enhancedTurnDetection:true,
+        transcriptionModel:'mai-transcribe-2-streaming'},
+  })});
+  ui.stop();
+  assert.equal(ui.element('enhanced-turn-detection').checked, true);
+  ui.element('enhanced-turn-detection').checked = false;
+  ui.element('enhanced-turn-detection').onchange();
+  await ui.element('save-model').onclick();
+  assert.match(ui.element('error').textContent, /Original version is unavailable/);
+  assert.match(ui.element('turn-detection-status').textContent, /Not saved/);
+  assert.equal(ui.element('agent-version').textContent, '9');
+  assert.equal(ui.element('agent-transcription').textContent, 'mai-transcribe-2-streaming');
+  assert.equal(ui.element('save-model').disabled, false);
+});
+
+test('New Agents preview the enabled streaming default and all non-Live models expose the toggle', async () => {
+  for (const model of ['gpt-realtime-2.1', 'gpt-realtime-2.1-mini', 'gpt-5.4',
+    'azure-realtime', 'azure-realtime-flash-2026-10-14', 'gpt-live-1']) {
+    const ui = await setup('webrtc', {fetch:async url=>({ok:true, json:async()=>url === '/api/config' ?
+      {configured:true} : {exists:true, model, version:'1', enhancedTurnDetection:model !== 'gpt-live-1',
+        transcriptionModel:model === 'gpt-live-1' ? null : 'mai-transcribe-2-streaming'}})});
+    ui.stop();
+    assert.equal(ui.element('enhanced-turn-detection').disabled, model === 'gpt-live-1');
+    assert.equal(ui.element('enhanced-turn-detection').checked, model !== 'gpt-live-1');
+  }
+  const ui = await setup('websocket', {fetch:async url=>({ok:true, json:async()=>url === '/api/config' ?
+    {configured:true} : {exists:false, model:'gpt-realtime-2.1', enhancedTurnDetection:true,
+      transcriptionModel:'mai-transcribe-2-streaming'}})});
+  assert.equal(ui.element('enhanced-turn-detection').checked, true);
+  assert.equal(ui.element('agent-transcription-choice').value, 'mai-transcribe-2-streaming');
+  assert.match(ui.element('turn-detection-status').textContent, /Default: on/);
+});
+
 test('Conversation download waits for End and posts only its session capability', async () => {
   const writes = [], blobs = [];
   const ui = await setup('websocket', {
@@ -737,6 +884,29 @@ test('Conversation download waits for End and posts only its session capability'
   assert.equal(link.download, 'conversation-conv_test.zip');
   assert.equal(link.clicked, true);
   assert.match(ui.element('download-status').textContent, /conversation.json and audio.wav/);
+});
+
+test('Scenario download stays bound to the finished scenario after the picker changes', async () => {
+  const writes = [];
+  const ui = await setup('websocket', {
+    URL:{createObjectURL:()=> 'blob:recording', revokeObjectURL(){}},
+    fetch:async (url, options)=>{
+      if (url.startsWith('/api/conversation/download')) {
+        writes.push([url, JSON.parse(options.body)]);
+        return {ok:true, headers:{get:()=>'application/zip'}, blob:async()=>new Blob(['archive'])};
+      }
+      return {ok:true, json:async()=>url === '/api/config' ?
+        {configured:true, agent:'demo-agent', scenarios} : {exists:true}};
+    },
+  });
+  await ui.handleEvent(ui.session, {type:'bridge.conversation', agent:'demo-agent-live', scenario:'health',
+    conversationId:'conv_health', downloadToken:'health-token'});
+  ui.stop();
+  ui.element('scenario-choice').value = 'home';
+  ui.element('scenario-choice').onchange();
+  await ui.element('download-conversation').onclick();
+  assert.deepEqual(writes, [['/api/conversation/download?scenario=health&agent=demo-agent-live',
+    {downloadToken:'health-token'}]]);
 });
 
 test('Scenery controls remain outside the panels they hide', async () => {

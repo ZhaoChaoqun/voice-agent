@@ -12,6 +12,10 @@ let savedModel = null, savedVersion = null, savedTranscription = null, latestDow
 let selectedAgent = null;
 let realtimeTranscription = null, transcriptionChanged = false;
 let liveGreetingMissing = false;
+let savedEnhancedTurnDetection = false;
+let selectedScenario = '';
+let savedWeatherEnabled = false;
+const enhancedTurnModels = modelChoices.filter(model => model !== 'gpt-live-1');
 
 function agentPath(path, agent = selectedAgent) {
   return agent && agent !== config?.agent ?
@@ -20,23 +24,74 @@ function agentPath(path, agent = selectedAgent) {
 
 function updateAgentControls() {
   const busy = Boolean(call) || preparingAgent;
+  $('scenario-choice').disabled = busy || !config?.scenarios;
+  $('scenario-switch-note').textContent = busy ?
+    'End the call before changing scenarios. The current conversation keeps its context.' :
+    selectedScenario ? 'Ready for a new demo call. Switching scenarios clears only the on-screen conversation.' :
+    'Choose a scenario before starting a call.';
   $('start').disabled = busy || !config?.configured || agentAvailability === 'unknown';
   $('start').textContent = agentAvailability === 'missing' ? 'Create Agent & start' :
     agentAvailability === 'error' ? 'Retry setup & start' : 'Start conversation';
   $('recreate-agent').disabled = busy || !config?.configured || !config?.agentRecreateAllowed || agentAvailability !== 'ready' || savedModel === 'gpt-live-1';
   $('agent-model-choice').disabled = busy || agentAvailability !== 'ready';
   const live = $('agent-model-choice').value === 'gpt-live-1';
-  $('agent-transcription-choice').disabled = busy || agentAvailability !== 'ready' || live;
+  const turnSupported = enhancedTurnModels.includes($('agent-model-choice').value) &&
+    enhancedTurnModels.includes(savedModel);
+  const turnChanged = turnSupported && $('enhanced-turn-detection').checked !== savedEnhancedTurnDetection;
+  $('enhanced-turn-detection').disabled = busy || agentAvailability !== 'ready' || !turnSupported;
+  $('agent-transcription-choice').disabled = busy || agentAvailability !== 'ready' || live ||
+    savedEnhancedTurnDetection || turnChanged;
+  $('turn-detection-status').textContent = !turnSupported ? 'GPT Live uses built-in turn detection. Apply a non-GPT Live model to use this setting.' :
+    agentAvailability === 'missing' ? 'Default: on, using mai-transcribe-2-streaming (after setup).' :
+    turnChanged ? ($('enhanced-turn-detection').checked ?
+      'Not saved: after mode will use mai-transcribe-2-streaming.' :
+      'Not saved: before mode will restore the previous turn detection and transcription.') :
+    savedEnhancedTurnDetection ? 'Saved: after (enhanced), using mai-transcribe-2-streaming.' : 'Saved: before (original settings).';
   $('save-model').disabled = busy || agentAvailability !== 'ready' || !savedVersion ||
     !modelChoices.includes($('agent-model-choice').value) ||
     (!live && !$('agent-transcription-choice').value) ||
     ($('agent-model-choice').value === savedModel &&
-      (live ? !liveGreetingMissing : $('agent-transcription-choice').value === savedTranscription));
+      (live ? !liveGreetingMissing : $('agent-transcription-choice').value === savedTranscription && !turnChanged));
   $('save-model').textContent = live && savedModel === 'gpt-live-1' && liveGreetingMissing ?
-    'Save greeting version' : 'Apply model';
+    'Save greeting version' : 'Apply settings';
   $('show-settings').disabled = preparingAgent || agentAvailability !== 'ready';
   $('download-conversation').disabled = Boolean(call) || downloading || !latestDownload;
   $('transport').disabled = busy;
+}
+
+function renderScenario() {
+  const preset = config?.scenarios?.[selectedScenario];
+  $('scenario-card').hidden = !preset;
+  $('scenario-card').className = `scenario-card scenario-${selectedScenario}`;
+  for (const id of ['health', 'banking', 'home'])
+    $('scenario-art-' + id).toggleAttribute('hidden', id !== preset?.visual);
+  $('scenario-facts').replaceChildren();
+  $('scenario-prompts').replaceChildren();
+  $('display-name').disabled = Boolean(preset);
+  $('user-context').disabled = Boolean(preset);
+  $('weather-tool-hint').hidden = Boolean(preset) || !savedWeatherEnabled;
+  if (!preset) return;
+  $('scenario-title').textContent = preset.title;
+  $('scenario-subtitle').textContent = preset.subtitle;
+  $('scenario-greeting').textContent = preset.greeting;
+  for (const [label, value] of preset.facts) {
+    const group = document.createElement('div');
+    const term = document.createElement('dt');
+    const detail = document.createElement('dd');
+    term.textContent = label; detail.textContent = value;
+    group.append(term, detail); $('scenario-facts').append(group);
+  }
+  for (const prompt of preset.prompts) {
+    const button = document.createElement('button');
+    button.type = 'button'; button.textContent = prompt;
+    button.onclick = () => {
+      $('text-input').value = prompt;
+      $('scenario-switch-note').textContent = call?.live ?
+        `Say aloud: ${prompt}` : `Try saying: ${prompt} You can also send it as text after connecting.`;
+      updateTextInput();
+    };
+    $('scenario-prompts').append(button);
+  }
 }
 
 function updateVoiceChoices(model) {
@@ -58,20 +113,23 @@ function applyAgentDetails(result) {
   savedModel = result.modelChoice || (typeof result.model === 'string' ? result.model : null);
   savedVersion = typeof result.version === 'string' ? result.version : null;
   liveGreetingMissing = result.liveGreetingMissing === true;
+  savedEnhancedTurnDetection = result.enhancedTurnDetection === true;
+  $('enhanced-turn-detection').checked = savedEnhancedTurnDetection;
   savedTranscription = typeof result.transcriptionModel === 'string' ? result.transcriptionModel : null;
   if (savedModel !== 'gpt-live-1') realtimeTranscription = savedTranscription;
   transcriptionChanged = false;
   $('agent-transcription').textContent = savedModel === 'gpt-live-1' ? 'Built into GPT Live' : savedTranscription ?
     savedTranscription + (result.exists === false ? ' (after setup)' : '') : 'Unavailable';
   $('agent-transcription-choice').value = savedTranscription ||
-    (savedModel === 'gpt-live-1' ? realtimeTranscription || config.defaultTranscriptionModel || 'mai-transcribe-2' : '');
+    (savedModel === 'gpt-live-1' ? realtimeTranscription || config.defaultTranscriptionModel || 'mai-transcribe-2-streaming' : '');
   $('agent-version').textContent = savedVersion || (result.exists === false ? 'Not created' : 'Unavailable');
   $('agent-model-choice').value = modelChoices.includes(savedModel) ?
     savedModel : 'gpt-realtime-2.1';
   updateVoiceChoices(savedModel);
   $('agent-model').textContent = typeof result.model === 'string' && result.model.trim() ?
     result.model + (result.exists === false ? ' (after setup)' : '') : 'Unavailable';
-  $('weather-tool-hint').hidden = !(result.weatherEnabled || result.exists === false);
+  savedWeatherEnabled = Boolean(result.weatherEnabled || result.exists === false);
+  $('weather-tool-hint').hidden = Boolean(selectedScenario) || !savedWeatherEnabled;
   $('text-help').textContent = savedModel === 'gpt-live-1' ?
     'GPT Live uses microphone input and spoken replies. Text-only replies are unavailable.' :
     "Start a conversation to send text. Press Enter or Send for a text-only reply; wait for the agent's response before sending another message. Mute the mic to use text only.";
@@ -94,10 +152,13 @@ async function saveAgentModel() {
   updateAgentControls();
   $('error').hidden = true;
   try {
+    const turnChanged = enhancedTurnModels.includes($('agent-model-choice').value) &&
+      enhancedTurnModels.includes(savedModel) && $('enhanced-turn-detection').checked !== savedEnhancedTurnDetection;
     const response = await fetch(agentPath('/api/agent/model'), {method:'POST', signal:AbortSignal.timeout(95000),
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:$('agent-model-choice').value, version:savedVersion,
-        ...($('agent-model-choice').value !== 'gpt-live-1' && (savedModel !== 'gpt-live-1' || transcriptionChanged) ?
+        ...(turnChanged ? {enhancedTurnDetection:$('enhanced-turn-detection').checked} :
+          $('agent-model-choice').value !== 'gpt-live-1' && (savedModel !== 'gpt-live-1' || transcriptionChanged) ?
           {transcriptionModel:$('agent-transcription-choice').value} : {})})});
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Could not save the model version.');
@@ -135,7 +196,8 @@ async function downloadConversation() {
   updateAgentControls();
   $('download-status').textContent = 'Preparing your log and audio. Azure may need a minute to finalize the recording...';
   try {
-    const response = await fetch(agentPath('/api/conversation/download', latestDownload.agent), {method:'POST',
+    const response = await fetch(agentPath('/api/conversation/download' +
+      (latestDownload.scenario ? `?scenario=${encodeURIComponent(latestDownload.scenario)}` : ''), latestDownload.agent), {method:'POST',
       headers:{'Content-Type':'application/json'}, signal:AbortSignal.timeout(95000),
       body:JSON.stringify({downloadToken:latestDownload.downloadToken})});
     if (!response.ok) {
@@ -403,7 +465,7 @@ function markReady(session) {
   }
 }
 function openSocket(session, onOpen) {
-  const path = agentPath(`/api/voice?transport=${session.transport}${session.live ? '&protocol=live' : ''}${session.personalization ? '&personalize=true' : ''}${session.voice ? `&voice=${encodeURIComponent(session.voice)}` : ''}`, session.agent);
+  const path = agentPath(`/api/voice?transport=${session.transport}${session.live ? '&protocol=live' : ''}${session.scenario ? `&scenario=${encodeURIComponent(session.scenario)}` : ''}${session.personalization ? '&personalize=true' : ''}${session.voice ? `&voice=${encodeURIComponent(session.voice)}` : ''}`, session.agent);
   const ws = session.ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}${path}`);
   ws.onopen = () => {
     if (call !== session) return;
@@ -499,7 +561,7 @@ async function handleEvent(session, event) {
       throw new Error('Invalid conversation download reference.');
     }
     latestDownload = {downloadToken:event.downloadToken, conversationId:event.conversationId,
-      agent:event.agent || session.agent};
+      agent:event.agent || session.agent, scenario:event.scenario || ''};
     $('download-status').textContent = 'Audio is being saved in Azure. End the conversation to download.';
     updateAgentControls();
   } else if (type === 'session.updated' && session.transport === 'websocket') {
@@ -570,13 +632,13 @@ async function start() {
     showError(error.message);
     return;
   }
-  const personalization = $('personalize').checked ? {
-    type:'bridge.personalize', display_name:$('display-name').value,
-    user_context:$('user-context').value, client_language:$('client-language').value,
+  const personalization = selectedScenario || $('personalize').checked ? {
+    type:'bridge.personalize', display_name:selectedScenario ? '' : $('display-name').value,
+    user_context:selectedScenario ? '' : $('user-context').value, client_language:$('client-language').value,
     english_only:$('english-only').checked,
   } : null;
   const session = {abort:new AbortController(), muted:false, transport:$('transport').value, ready:false, personalization,
-    model:savedModel, agent:selectedAgent,
+    model:savedModel, agent:selectedAgent, scenario:selectedScenario,
     live:savedModel === 'gpt-live-1',
     voice:savedModel === 'gpt-live-1' ? $('live-voice').value :
       savedModel === 'azure-realtime' ? $('native-voice').value : $('voice').value}; call = session;
@@ -655,11 +717,31 @@ async function start() {
   }
 }
 $('start').onclick = start;
+$('scenario-choice').onchange = () => {
+  if (call || preparingAgent) { $('scenario-choice').value = selectedScenario; return; }
+  const next = $('scenario-choice').value;
+  if (next && !config?.scenarios?.[next]) {
+    $('scenario-choice').value = selectedScenario;
+    showError('Choose a supported demo scenario.');
+    return;
+  }
+  selectedScenario = next;
+  messages.clear();
+  $('transcript').replaceChildren();
+  $('text-input').value = '';
+  renderScenario();
+  updateAgentControls();
+};
 $('agent-model-choice').onchange = () => {
   updateVoiceChoices($('agent-model-choice').value);
   updateAgentControls();
 };
 $('agent-transcription-choice').onchange = () => { transcriptionChanged = true; updateAgentControls(); };
+$('enhanced-turn-detection').onchange = () => {
+  $('agent-transcription-choice').value = savedTranscription || '';
+  transcriptionChanged = false;
+  updateAgentControls();
+};
 $('save-model').onclick = saveAgentModel;
 $('show-settings').onclick = showAgentSettings;
 $('close-settings').onclick = () => $('settings-dialog').close();
