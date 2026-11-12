@@ -105,9 +105,10 @@ caller's goal from what actually happens in the demonstration.
 | [Java live audio Voice Agent sample](java/README.md) | Create a temporary Agent and run an asynchronous microphone and speaker conversation with Enter-to-end, barge-in, persisted conversation readback, and cleanup. |
 | [`download_conversation_artifacts.py`](download_conversation_artifacts.py) | Download conversation JSON, per-turn WAV files, and the merged stereo WAV. |
 | [`download_conversation_traces.py`](download_conversation_traces.py) | Download correlated Application Insights rows by conversation ID. |
-For a mobile customer presentation, start with **AVA mobile banking**. For a
-first general-purpose browser conversation, start with **First Voice**. For
-industry workflows in the Portal, use the numbered business templates below.
+
+For a mobile customer presentation or a general-purpose browser conversation,
+start with **First Voice**. For industry workflows in the Portal, use the
+numbered business templates below.
 
 - [Browser, mobile, and multimodal experiences](#browser-mobile-and-multimodal-experiences)
 - [Banking, support, and reception](#banking-support-and-reception)
@@ -132,9 +133,7 @@ Actual phone transfer requires a supporting telephony runtime.
 
 | Sample project | Demo use case | What you will see or hear |
 | --- | --- | --- |
-| [AVA mobile banking](banking_ava/README.md) | A customer wants to raise an overdraft from EUR 2,000 to EUR 5,000 after unexpected expenses, then compare account options. | An iPhone-friendly conversation with GPT Realtime 2.1 and MAI Harper Flash, live captions, and a demo inbox. The request remains pending payslip and checks; no real application, account change, or invented product rates. Includes ACA deployment. |
-| [First Voice: browser voice assistant](foundry_voice_webrtc/README.md) | A visitor wants to ask questions and try natural, interruptible voice conversation in a browser. | Creates or reuses a saved agent; supports microphone and text input, spoken replies, transcripts, model/voice controls, and conversation downloads over WebSocket or WebRTC. |
-| [Home appliance voice: design preview](home_appliance_voice/README.md) | A household wants to control appliances and ask about product manuals. | A photorealistic home scene with simulated controls, clarification, and fictional manual citations. Previews GPT Realtime, GPT Live (default voice), and Azure Realtime Flash; childlike voices require compatibility validation. No microphone, model connection, or physical device access yet. |
+| [First Voice: browser voice assistant](foundry_voice_webrtc/README.md) | A visitor wants to try a natural, interruptible voice conversation on mobile or desktop. | Creates or reuses a saved agent; includes fictional health, banking, and home-assistant scenarios, plus microphone and text input, spoken replies, transcripts, model/voice controls, and conversation downloads over WebSocket or WebRTC. |
 | [GPT Live browser English teacher](gpt_live/js/README.md) | A learner wants to practise English by speaking with an AI teacher. | A browser conversation backed by GPT Live and a Responses model or managed prompt agent. The managed-agent mode also demonstrates calculator and date/time tools. |
 | [Vehicle voice cockpit](vehicle_local_tools/README.md) | A driver wants to change cabin temperature, adjust music volume, or start navigation by voice. | A web dashboard updates simulated vehicle settings. The cloud agent chooses actions, but local code validates and executes them; no physical vehicle is controlled. |
 | [Voice with image and camera input](voice_agent_image_input/README.md) | A user wants to show an image or camera view and ask a question about it. | Upload an image or send sampled camera frames, ask a question, and hear an answer. Includes a local web UI and a latency-measuring CLI. |
