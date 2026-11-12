@@ -512,16 +512,31 @@ In **Agent & audio settings**, select GPT Realtime 2.1, GPT Realtime 2.1 mini,
 or Azure Realtime, then use
 **GPT Live 1-quality turn detection** and **Apply settings**. This demo preset is
 on by default for newly created Agents using a supported model. The control is
-disabled for **Azure Realtime Flash** and **GPT-5.4**, where this feature is not
-yet supported. Switching back to a supported model requires **Apply settings**
-before the control becomes available. This UI restriction does not modify
-existing saved Agent settings or change the Agent to the GPT Live protocol.
-Existing saved settings, including an explicit opt-out, are preserved.
+unchecked and disabled for **Azure Realtime Flash** and **GPT-5.4**, where this
+feature is not yet supported. Switching back to a supported model requires
+**Apply settings** before the control becomes available; the preset stays off
+until explicitly re-enabled. Saving either unsupported model automatically
+removes the preset, including when saving the same model again. Call preparation
+also repairs older incompatible saved Agents before connecting, and scenario
+Agents use the same compatibility rules.
+
+Automatic compatibility repair restores the recorded baseline turn detection,
+then removes `speech_start_detection` and `end_of_utterance_detection`, which
+are not supported for these models. It preserves the currently selected
+transcription model (including MAI streaming), rather than restoring a
+potentially incompatible older transcription provider. For custom settings
+without a recorded baseline, only the incompatible fields are removed; the
+demo does not invent an original profile. Flash keeps `auto_truncate: false`.
+Repairs publish and verify a new version, preserving previous versions and
+unrelated settings. A missing or invalid recorded baseline fails explicitly
+instead of starting a call with incompatible settings. Supported models retain
+their saved settings and explicit opt-outs; this does not change the Agent to
+the GPT Live protocol.
 
 | Checkbox | Saved behavior |
 | --- | --- |
 | Checked: after | Applies [`enhanced-turn-detection.json`](enhanced-turn-detection.json) and `mai-transcribe-2-streaming`. Includes backchannel filtering, explicit interruption phrases, a three-word speech-start threshold while the assistant speaks, and `microsoft-decision-1` end-of-turn detection with the seven-digit account-number rule. |
-| Unchecked: before | Restores the exact turn-detection and transcription objects from the version saved before enabling the preset, rather than resetting to generic defaults. |
+| Unchecked: before, on supported models | Restores the exact turn-detection and transcription objects from the version saved before enabling the preset, rather than resetting to generic defaults. |
 
 The UI labels pending changes as **Not saved** until publication succeeds.
 Apply between calls, then start a new conversation. Changes affect the shared

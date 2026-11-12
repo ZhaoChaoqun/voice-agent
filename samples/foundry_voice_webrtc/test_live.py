@@ -336,6 +336,36 @@ class LiveTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(service.writes[0][1]["json"], {"definition": changed, "metadata": {"custom": "keep"}})
         self.assertEqual(service.removals, [])
 
+    async def test_switch_back_repairs_unsupported_destination_and_checks_its_concurrent_version(self):
+        cfg = self.config()
+        source = self.definition()
+        source["model"] = "gpt-5.4"
+        source["audio"]["input"]["turn_detection"]["speech_start_detection"] = {"num_words": 3}
+        live = live_definition(source, "live", "backend")
+        original = self.saved(source, "7", {"custom": "keep"})
+        repaired = copy.deepcopy(source)
+        repaired["audio"]["input"]["turn_detection"].pop("speech_start_detection")
+        for concurrent in (False, True):
+            current = self.saved(source, "8", {"custom": "keep"}) if concurrent else original
+            service = ServiceClient([
+                Response(200, self.companion(cfg, live, "2")), Response(200, original), Response(200, current),
+                *([] if concurrent else [Response(200, self.saved(repaired, "8", {"custom": "keep"}))])],
+                [] if concurrent else [Response(201, {"version": "8"}), Response(204)])
+            async with TestClient(TestServer(create_app(cfg, AsyncMock()))) as client:
+                with patch("server.aiohttp.ClientSession", return_value=service):
+                    response = await client.post("/api/agent/model?agent=demo-agent-live",
+                        headers={"Origin": str(client.make_url("")).rstrip("/")},
+                        json={"model": "gpt-5.4", "version": "2"})
+                    result = await response.json()
+            self.assertEqual(response.status, 409 if concurrent else 200, result)
+            if concurrent:
+                self.assertEqual(service.writes, [])
+            else:
+                self.assertEqual(service.writes[0][1]["json"],
+                                 {"definition": repaired, "metadata": {"custom": "keep"}})
+                self.assertTrue(all("/agents/demo-agent/" in url or "/agents/demo-agent:" in url
+                                    for url, _ in service.writes))
+
     async def test_directly_configured_live_agent_cannot_be_reset_to_realtime(self):
         cfg = self.config(allow_agent_recreate=True)
         live = live_definition(self.definition(), "live", "backend")

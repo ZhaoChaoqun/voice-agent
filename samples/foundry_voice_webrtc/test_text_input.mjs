@@ -850,9 +850,12 @@ test('New Agents preview the enabled streaming default and only supported models
     ui.stop();
     assert.equal(ui.element('enhanced-turn-detection').disabled,
       ['gpt-live-1', 'gpt-5.4', 'azure-realtime-flash-2026-10-14'].includes(model));
-    assert.equal(ui.element('enhanced-turn-detection').checked, model !== 'gpt-live-1');
+    assert.equal(ui.element('enhanced-turn-detection').checked,
+      !['gpt-live-1', 'gpt-5.4', 'azure-realtime-flash-2026-10-14'].includes(model));
     if (['gpt-5.4', 'azure-realtime-flash-2026-10-14'].includes(model)) {
       assert.match(ui.element('turn-detection-status').textContent, /not yet available/);
+      assert.match(ui.element('turn-detection-status').textContent, /unsupported saved Agents are repaired/);
+      assert.equal(ui.element('save-model').disabled, false);
       assert.doesNotMatch(ui.element('turn-detection-status').textContent, /GPT Live uses built-in/);
     }
   }
@@ -886,7 +889,14 @@ for (const unsupportedModel of ['azure-realtime-flash-2026-10-14', 'gpt-5.4']) {
     ui.element('agent-model-choice').value = unsupportedModel;
     ui.element('agent-model-choice').onchange();
     assert.equal(ui.element('enhanced-turn-detection').disabled, true);
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
     assert.match(ui.element('turn-detection-status').textContent, /not yet available/);
+    ui.element('agent-model-choice').value = 'gpt-realtime-2.1';
+    ui.element('agent-model-choice').onchange();
+    assert.equal(ui.element('enhanced-turn-detection').checked, true);
+    assert.match(ui.element('turn-detection-status').textContent, /Not saved/);
+    ui.element('agent-model-choice').value = unsupportedModel;
+    ui.element('agent-model-choice').onchange();
     assert.equal(ui.element('save-model').disabled, false);
     await ui.element('save-model').onclick();
     assert.equal(ui.element('enhanced-turn-detection').disabled, true);
@@ -896,6 +906,54 @@ for (const unsupportedModel of ['azure-realtime-flash-2026-10-14', 'gpt-5.4']) {
     assert.equal(ui.element('enhanced-turn-detection').disabled, true);
     assert.match(ui.element('turn-detection-status').textContent, /Apply the selected supported model/);
     await ui.element('save-model').onclick();
+    assert.equal(ui.element('enhanced-turn-detection').disabled, false);
+    assert.deepEqual(writes, [
+      {model:unsupportedModel, version:'1', transcriptionModel:'mai-transcribe-2-streaming'},
+      {model:'gpt-realtime-2.1', version:'2', transcriptionModel:'mai-transcribe-2-streaming'},
+    ]);
+  });
+
+  test(`${unsupportedModel}: saving removes the preset and switching back leaves it off`, async () => {
+    let model = 'gpt-realtime-2.1', version = 1, enhancedTurnDetection = true;
+    const writes = [];
+    const ui = await setup('websocket', {fetch:async (url, options)=>{
+      if (url === '/api/agent/model') {
+        const body = JSON.parse(options.body);
+        writes.push(body);
+        model = body.model;
+        if (model === unsupportedModel) enhancedTurnDetection = false;
+        version++;
+      }
+      return {ok:true, json:async()=>url === '/api/config' ? {configured:true} :
+        {exists:true, model, version:String(version), enhancedTurnDetection,
+          transcriptionModel:'mai-transcribe-2-streaming'}};
+    }});
+    ui.stop();
+    ui.element('enhanced-turn-detection').checked = false;
+    ui.element('enhanced-turn-detection').onchange();
+    ui.element('agent-model-choice').value = unsupportedModel;
+    ui.element('agent-model-choice').onchange();
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
+    ui.element('agent-model-choice').value = 'gpt-realtime-2.1';
+    ui.element('agent-model-choice').onchange();
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
+    assert.match(ui.element('turn-detection-status').textContent, /Not saved/);
+    ui.element('enhanced-turn-detection').checked = true;
+    ui.element('enhanced-turn-detection').onchange();
+    ui.element('agent-model-choice').value = unsupportedModel;
+    ui.element('agent-model-choice').onchange();
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
+    assert.match(ui.element('turn-detection-status').textContent, /removes the preset/);
+    await ui.element('save-model').onclick();
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
+    assert.doesNotMatch(ui.element('turn-detection-status').textContent, /removes the preset/);
+    assert.equal(ui.element('agent-transcription-choice').disabled, false);
+    ui.element('agent-model-choice').value = 'gpt-realtime-2.1';
+    ui.element('agent-model-choice').onchange();
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
+    assert.equal(ui.element('enhanced-turn-detection').disabled, true);
+    await ui.element('save-model').onclick();
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
     assert.equal(ui.element('enhanced-turn-detection').disabled, false);
     assert.deepEqual(writes, [
       {model:unsupportedModel, version:'1', transcriptionModel:'mai-transcribe-2-streaming'},

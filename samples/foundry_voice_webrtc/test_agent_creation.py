@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp.test_utils import TestClient, TestServer
 
-from server import (ACTIVE, DEFAULT_AGENT_NAME, ENHANCED_TURN_DETECTION, TURN_DETECTION_BEFORE_SETTINGS,
+from server import (ACTIVE, DEFAULT_AGENT_NAME, ENHANCED_TURN_DETECTION, FLASH_MODEL, TURN_DETECTION_BEFORE_SETTINGS,
                     AgentPreparationError, Settings, configure_turn_detection, create_app,
                     inspect_configured_agent, load_settings, prepare_configured_agent, prepare_weather_toolbox,
                     recreate_configured_agent)
@@ -210,6 +210,64 @@ class CreationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(client.writes), 1)
         self.assertIn(":enable?", client.writes[0][0])
         self.assertEqual(agent, before)
+
+    async def test_preparation_repairs_legacy_unsupported_agents_once_and_preserves_current_transcription(self):
+        for model in (FLASH_MODEL, "gpt-5.4"):
+            source = self.agent()["versions"]["latest"]
+            definition = source["definition"]
+            definition["model"] = model
+            definition.pop("tools")
+            baseline = json.loads(json.dumps(definition["audio"]["input"]))
+            baseline["transcription"]["model"] = "azure-speech-streaming"
+            source["metadata"] = {"custom": "keep", TURN_DETECTION_BEFORE_SETTINGS: json.dumps(
+                {key: baseline[key] for key in ("turn_detection", "transcription")})}
+            definition["audio"]["input"]["turn_detection"].update(ENHANCED_TURN_DETECTION)
+            saved = json.loads(json.dumps(source))
+            saved["version"] = "2"
+            saved["metadata"].pop(TURN_DETECTION_BEFORE_SETTINGS)
+            saved["definition"]["audio"]["input"]["turn_detection"] = baseline["turn_detection"]
+            client = Client([], [Response(201, {"version": "2"}), Response(204), Response(204)])
+            with patch("server.lookup_configured_agent", AsyncMock(side_effect=[source, source, saved, saved])):
+                repaired = await prepare_configured_agent(client, self.config(), {})
+                reused = await prepare_configured_agent(client, self.config(), {})
+            self.assertTrue(repaired["turnDetectionUpdated"])
+            self.assertFalse(repaired["enhancedTurnDetection"])
+            self.assertEqual(repaired["transcriptionModel"], "mai-transcribe-2-streaming")
+            self.assertFalse(reused["turnDetectionUpdated"])
+            self.assertEqual(client.writes[0][1]["json"],
+                             {key: saved[key] for key in ("definition", "metadata")})
+            self.assertEqual(sum("/versions?" in url for url, _ in client.writes), 1)
+            self.assertIn("speech_start_detection", definition["audio"]["input"]["turn_detection"])
+
+    async def test_compatibility_preparation_stops_on_concurrent_edits_or_invalid_readback(self):
+        source = self.agent()["versions"]["latest"]
+        source["definition"]["model"] = "gpt-5.4"
+        source["definition"].pop("tools")
+        source["definition"]["audio"]["input"]["turn_detection"]["speech_start_detection"] = {"num_words": 3}
+        changed = {**source, "version": "2"}
+        for reads, posts in (([source, changed], []),
+                             ([source, source, changed], [Response(201, {"version": "2"})])):
+            client = Client([], posts)
+            with patch("server.lookup_configured_agent", AsyncMock(side_effect=reads)):
+                with self.assertRaises(AgentPreparationError):
+                    await prepare_configured_agent(client, self.config(), {})
+            self.assertFalse(any(":enable" in url for url, _ in client.writes))
+
+    async def test_scenario_creation_removes_unsupported_settings_from_unrepaired_source(self):
+        source = self.agent()["versions"]["latest"]
+        source["definition"]["model"] = "gpt-5.4"
+        source["definition"]["audio"]["input"]["turn_detection"].update(ENHANCED_TURN_DETECTION)
+        expected = scenario_definition(source["definition"], "banking")
+        vad = expected["audio"]["input"]["turn_detection"]
+        vad.pop("speech_start_detection")
+        vad.pop("end_of_utterance_detection")
+        metadata = {"sample": "foundry_voice_webrtc", "scenario": "banking", "scenario_source": self.config().agent}
+        saved = {"version": "1", "definition": expected, "metadata": metadata}
+        client = Client([], [Response(201, {"version": "1"}), Response(204)])
+        with patch("server.lookup_configured_agent", AsyncMock(side_effect=[None, None, saved])):
+            await prepare_scenario_agent(client, self.config(), {}, source, "banking")
+        self.assertEqual(client.writes[0][1]["json"], {"definition": expected, "metadata": metadata})
+        self.assertIn("speech_start_detection", source["definition"]["audio"]["input"]["turn_detection"])
 
     async def test_missing_weather_version_is_repaired_without_replacing_agent_settings(self):
         agent = self.agent()

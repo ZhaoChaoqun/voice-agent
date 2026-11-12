@@ -135,7 +135,8 @@ TRANSCRIPTION_MODELS = {
     "gpt-4o-transcribe", "gpt-4o-mini-transcribe", "gpt-4o-transcribe-diarize", "whisper-1",
 }
 DEFAULT_TRANSCRIPTION_MODEL = "mai-transcribe-2-streaming"
-ENHANCED_TURN_MODELS = MODELS
+UNSUPPORTED_TURN_MODELS = {FLASH_MODEL, "gpt-5.4"}
+ENHANCED_TURN_MODELS = MODELS - UNSUPPORTED_TURN_MODELS
 TURN_DETECTION_BEFORE_VERSION = "turn_detection_before_version"
 TURN_DETECTION_BEFORE_SETTINGS = "turn_detection_before_settings"
 ENHANCED_TURN_DETECTION = json.loads((ROOT / "enhanced-turn-detection.json").read_text())
@@ -554,7 +555,10 @@ def scenario_settings(cfg, scenario):
 
 async def prepare_scenario_agent(client, cfg, headers, source, scenario):
     target = scenario_settings(cfg, scenario)
-    definition = scenario_definition(source["definition"], scenario)
+    compatible = await compatible_turn_detection(
+        client, cfg, headers, source["definition"], copy.deepcopy(source.get("metadata") or {}),
+        source["version"], source["definition"].get("model"))
+    definition = scenario_definition(compatible, scenario)
     metadata = {"sample": "foundry_voice_webrtc", "scenario": scenario, "scenario_source": cfg.agent}
     latest = await lookup_configured_agent(client, target, headers, include_version=True)
     if latest and latest.get("metadata") != metadata:
@@ -742,6 +746,28 @@ async def configure_turn_detection(client, cfg, headers, source, metadata, versi
     return updated
 
 
+async def compatible_turn_detection(client, cfg, headers, source, metadata, version, model):
+    if model not in UNSUPPORTED_TURN_MODELS:
+        return source
+    updated = copy.deepcopy(source)
+    if TURN_DETECTION_BEFORE_VERSION in metadata or TURN_DETECTION_BEFORE_SETTINGS in metadata:
+        updated = await configure_turn_detection(client, cfg, headers, source, metadata, version, False)
+        # Model compatibility changes VAD, not the caller's selected transcription provider.
+        original_input = (source.get("audio") or {}).get("input") or {}
+        restored_input = updated["audio"]["input"]
+        if "transcription" in original_input:
+            restored_input["transcription"] = copy.deepcopy(original_input["transcription"])
+        else:
+            restored_input.pop("transcription", None)
+    vad = ((updated.get("audio") or {}).get("input") or {}).get("turn_detection")
+    if isinstance(vad, dict):
+        vad.pop("speech_start_detection", None)
+        vad.pop("end_of_utterance_detection", None)
+        if model == FLASH_MODEL and vad.get("auto_truncate") is True:
+            vad["auto_truncate"] = False
+    return updated
+
+
 async def inspect_configured_agent(client, cfg, headers, expected_settings=None):
     latest = await lookup_configured_agent(client, cfg, headers, include_version=True)
     if expected_settings is not None and (latest is None or
@@ -759,7 +785,7 @@ async def inspect_configured_agent(client, cfg, headers, expected_settings=None)
             "modelChoice": LIVE_MODEL if (definition or {}).get("sub_protocol") == "live" else
                 (demo if definition is None else definition).get("model"),
             "transcriptionModel": transcription_model(demo if definition is None else definition),
-            "enhancedTurnDetection": definition is None or
+            "enhancedTurnDetection": demo.get("model") in ENHANCED_TURN_MODELS if definition is None else
                 enhanced_turn_detection(definition, latest.get("metadata") or {}),
             "version": latest.get("version") if latest is not None else None,
             "weatherEnabled": definition is not None and weather_toolbox_attached(definition),
@@ -775,6 +801,7 @@ async def prepare_configured_agent(client, cfg, headers):
     metadata = copy.deepcopy(latest.get("metadata") or {}) if latest else {"sample": "foundry_voice_webrtc"}
     created = definition is None
     repaired = False
+    turn_repaired = False
     if created:
         if cfg.companion_for:
             raise AgentPreparationError(
@@ -783,16 +810,23 @@ async def prepare_configured_agent(client, cfg, headers):
         if not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?", cfg.agent):
             raise AgentPreparationError("The configured Agent name must be 1-63 alphanumeric/hyphen characters, starting and ending with an alphanumeric character.")
         definition["tools"] = [await prepare_weather_toolbox(client, cfg, headers)]
-        definition = await configure_turn_detection(client, cfg, headers, definition, metadata, None, True)
+        if definition.get("model") in ENHANCED_TURN_MODELS:
+            definition = await configure_turn_detection(client, cfg, headers, definition, metadata, None, True)
+        else:
+            definition = await compatible_turn_detection(
+                client, cfg, headers, definition, metadata, None, definition.get("model"))
     else:
         resolved = await resolve_weather_toolbox_references(client, cfg, headers, definition)
         repaired = resolved != definition
-        if repaired:
+        compatible = await compatible_turn_detection(
+            client, cfg, headers, resolved, metadata, version, resolved.get("model"))
+        turn_repaired = compatible != resolved or metadata != (latest.get("metadata") or {})
+        if repaired or turn_repaired:
             current = await lookup_configured_agent(client, cfg, headers, include_version=True)
             if current != latest:
-                raise AgentPreparationError("The Agent changed during Toolbox setup. Retry preparation; it was not overwritten.")
-            definition = resolved
-    if created or repaired:
+                raise AgentPreparationError("The Agent changed during setup. Retry preparation; it was not overwritten.")
+        definition = compatible
+    if created or repaired or turn_repaired:
         url = f"{cfg.project_url()}/agents/{quote(cfg.agent, safe='')}/versions?{urlencode({'api-version': cfg.api_version})}"
         async with client.post(url, headers=headers, json={
             "definition": definition,
@@ -804,12 +838,18 @@ async def prepare_configured_agent(client, cfg, headers):
             if not isinstance(published, dict) or not isinstance(published.get("version"), str):
                 raise AgentPreparationError("The Agent was published but its version could not be verified. Retry setup without resetting.")
             version = published["version"]
+        if turn_repaired:
+            saved = await lookup_configured_agent(client, cfg, headers, include_version=True)
+            if (saved is None or saved.get("version") != version or saved.get("definition") != definition
+                    or saved.get("metadata") != metadata):
+                raise AgentPreparationError("The compatible turn-detection settings could not be verified. No call was started.")
     url = f"{cfg.project_url()}/agents/{quote(cfg.agent, safe='')}:enable?{urlencode({'api-version': cfg.api_version})}"
     async with client.post(url, headers=headers, allow_redirects=False) as enabled:
         if enabled.status != 204:
             raise AgentPreparationError(f"Agent enable failed (HTTP {enabled.status}). Retry preparation; an existing version will not be overwritten.")
     required = set(json.loads((ROOT / "personalized-agent.json").read_text())["structured_inputs"])
     return {"agent": cfg.agent, "created": created, "toolboxReferenceUpdated": repaired,
+            "turnDetectionUpdated": turn_repaired,
             "model": definition.get("model"),
             "modelChoice": LIVE_MODEL if definition.get("sub_protocol") == "live" else definition.get("model"),
             "transcriptionModel": transcription_model(definition),
@@ -906,7 +946,8 @@ async def change_agent_model(request):
             or not isinstance(body["model"], str) or body["model"] not in MODELS | {LIVE_MODEL}
             or not isinstance(body["version"], str) or not body["version"]
             or ("enhancedTurnDetection" in body and (
-                type(body["enhancedTurnDetection"]) is not bool or body["model"] not in ENHANCED_TURN_MODELS
+                type(body["enhancedTurnDetection"]) is not bool or body["model"] not in MODELS
+                or (body["enhancedTurnDetection"] and body["model"] not in ENHANCED_TURN_MODELS)
                 or "transcriptionModel" in body))
             or ("transcriptionModel" in body and (
                 not isinstance(body["transcriptionModel"], str) or body["transcriptionModel"] not in TRANSCRIPTION_MODELS))):
@@ -925,6 +966,8 @@ async def change_agent_model(request):
                 if latest.get("version") != body["version"]:
                     return web.json_response({"error": "The Agent version changed. Reload the page before saving."}, status=409)
                 expected_version = latest["version"]
+                destination_latest = latest
+                turn_repaired = False
                 metadata = copy.deepcopy(latest.get("metadata") or {})
                 destination_metadata = copy.deepcopy(metadata)
                 source = latest["definition"]
@@ -969,8 +1012,13 @@ async def change_agent_model(request):
                         metadata = copy.deepcopy(realtime.get("metadata") or {})
                         destination_metadata = copy.deepcopy(metadata)
                         expected_version = realtime["version"]
+                        destination_latest = realtime
                         destination_definition = source
                         switched_agent = True
+                    compatible = await compatible_turn_detection(
+                        client, cfg, headers, source, metadata, expected_version, body["model"])
+                    turn_repaired = compatible != source or metadata != destination_metadata
+                    source = compatible
                     if "enhancedTurnDetection" in body:
                         if was_live:
                             raise AgentPreparationError("Switch to the realtime Agent before changing turn detection.")
@@ -988,9 +1036,9 @@ async def change_agent_model(request):
                     if enhanced_turn_detection(source, metadata):
                         definition["audio"]["input"]["turn_detection"]["auto_truncate"] = body["model"] != FLASH_MODEL
                 if definition != destination_definition or metadata != destination_metadata:
-                    if "enhancedTurnDetection" in body:
+                    if "enhancedTurnDetection" in body or turn_repaired:
                         current = await lookup_configured_agent(client, cfg, headers, include_version=True)
-                        if current != latest:
+                        if current != destination_latest:
                             return web.json_response(
                                 {"error": "The Agent changed during setup. Reload before saving."}, status=409)
                     url = f"{cfg.project_url()}/agents/{quote(cfg.agent, safe='')}/versions"
@@ -1024,8 +1072,9 @@ async def change_agent_model(request):
                         raise AgentPreparationError("The model version was saved but could not be enabled. Retry setup before starting a call.")
                 result = await inspect_configured_agent(client, cfg, headers,
                     expected_settings={"definition": definition, "metadata": metadata}
-                    if "enhancedTurnDetection" in body else None)
+                    if "enhancedTurnDetection" in body or turn_repaired else None)
                 if (result.get("version") != expected_version or result.get("modelChoice") != body["model"]
+                        or (body["model"] in UNSUPPORTED_TURN_MODELS and result.get("enhancedTurnDetection"))
                         or ("enhancedTurnDetection" in body and
                             result.get("enhancedTurnDetection") is not body["enhancedTurnDetection"])
                         or ("transcriptionModel" in body and result.get("transcriptionModel") != body["transcriptionModel"])):
