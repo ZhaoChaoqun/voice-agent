@@ -34,7 +34,8 @@ use **Show Agent settings** to inspect the actual saved definition.
 
 ### Prebuilt conversation scenarios
 
-Choose a scenario above the call controls, then start a new conversation.
+Choose a scenario beside the introduction (below it on mobile), then start a
+new conversation.
 The greeting, prompt and conversation-area illustration change together.
 Switching is disabled during setup or a call; switching between calls clears
 the on-screen transcript, not Azure recordings. **General assistant** restores

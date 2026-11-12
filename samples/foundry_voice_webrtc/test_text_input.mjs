@@ -70,6 +70,10 @@ test('every configured scenario has a picker option and illustration', () => {
   }
 });
 
+test('the scenario picker is part of the introduction panel', () => {
+  assert.match(page, /<section class="intro">(?:(?!<\/section>)[\s\S])*<section class="scenario-picker"/);
+});
+
 test('scenario switching refreshes visuals and greeting, clears old context and never sends an idea', async () => {
   const ui = await setup('websocket', {
     fetch:async url => ({ok:true, json:async()=>url === '/api/config' ?
@@ -864,11 +868,14 @@ test('New Agents preview the enabled streaming default and only supported models
       ['gpt-live-1', 'gpt-5.4', 'azure-realtime-flash-2026-10-14'].includes(model));
     assert.equal(ui.element('enhanced-turn-detection').checked,
       !['gpt-live-1', 'gpt-5.4', 'azure-realtime-flash-2026-10-14'].includes(model));
+    if (model === 'gpt-live-1') {
+      assert.equal(ui.element('turn-detection-status').textContent, 'GPT Live: built-in turn detection.');
+    }
     if (['gpt-5.4', 'azure-realtime-flash-2026-10-14'].includes(model)) {
       assert.match(ui.element('turn-detection-status').textContent, /Not available/);
       assert.match(ui.element('turn-detection-status').textContent, /Apply settings or start a call to remove the preset/);
       assert.equal(ui.element('save-model').disabled, false);
-      assert.doesNotMatch(ui.element('turn-detection-status').textContent, /GPT Live uses built-in/);
+      assert.doesNotMatch(ui.element('turn-detection-status').textContent, /GPT Live: built-in/);
     }
   }
   const ui = await setup('websocket', {fetch:async url=>({ok:true, json:async()=>url === '/api/config' ?
@@ -1057,12 +1064,36 @@ test('Recording notice is visible before the conversation controls', async () =>
   const html = await readFile(new URL('./public/index.html', import.meta.url), 'utf8');
   assert.match(html, /Audio is saved by default/);
   assert.ok(html.indexOf('id="recording-notice"') < html.indexOf('id="start"'));
+  assert.ok(html.indexOf('id="live-webrtc-notice"') < html.indexOf('id="start"'));
   assert.match(html, /id="agent-version"/);
   assert.match(html, /<option value="gpt-5.4">gpt-5.4<\/option>/);
   assert.doesNotMatch(html, /<option value="gpt-4.1">/);
   assert.match(html, /value="en-IN-Diya:DragonHDLatestNeural"/);
   assert.match(html, /value="zh-CN-Xiaoqi:DragonHDFlashLatestNeural"/);
   assert.match(html, /value="zh-CN-Xiaoke:DragonHDFlashLatestNeural"/);
+});
+
+test('Recording notice follows the saved model and selected transport', async () => {
+  for (const model of ['gpt-live-1', 'gpt-realtime-2.1']) {
+    const ui = await setup('webrtc', {fetch:async url=>({ok:true, json:async()=>url === '/api/config' ?
+      {configured:true, defaultTransport:'webrtc'} :
+      {exists:true, model, version:'1', transcriptionModel:'mai-transcribe-2-streaming'}})});
+    ui.stop();
+    const live = model === 'gpt-live-1';
+    assert.equal(ui.element('recording-notice').hidden, live);
+    assert.equal(ui.element('live-webrtc-notice').hidden, !live);
+    ui.element('agent-model-choice').value = live ? 'gpt-realtime-2.1' : 'gpt-live-1';
+    ui.element('agent-model-choice').onchange();
+    assert.equal(ui.element('live-webrtc-notice').hidden, !live);
+    ui.element('transport').value = 'websocket';
+    ui.element('transport').onchange();
+    assert.equal(ui.element('recording-notice').hidden, false);
+    assert.equal(ui.element('live-webrtc-notice').hidden, true);
+    ui.element('transport').value = 'webrtc';
+    ui.element('transport').onchange();
+    assert.equal(ui.element('recording-notice').hidden, live);
+    assert.equal(ui.element('live-webrtc-notice').hidden, !live);
+  }
 });
 
 test('Agent recreation requires the exact name and cancellation never calls the server', async () => {

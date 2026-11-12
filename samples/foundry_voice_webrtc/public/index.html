@@ -34,19 +34,24 @@
   </div>
   <header id="app-header"><a class="brand" href="/">◉ <span>Voice Agent In Foundry Agent Service</span></a><span class="tag">AZURE FOUNDRY <span> / </span> LIVE VOICE</span><a class="repository-link" href="https://github.com/microsoft/voice-agent" target="_blank" rel="noopener noreferrer">microsoft/voice-agent on GitHub</a></header>
   <main id="app-content">
-    <section class="intro"><p class="eyebrow">YOUR FIRST VOICE AGENT</p><h1>A little more human.</h1><p>Speak or type. Hear a reply. Interrupt naturally.</p><div class="weather-controls"><span id="weather-status" role="status">Loading Seattle weather...</span><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Weather: Open-Meteo</a></div></section>
-    <section class="scenario-picker" aria-labelledby="scenario-label">
-      <div><label id="scenario-label" for="scenario-choice">Choose a conversation</label><p>Six fictional demos. No real transactions, bookings, hiring decisions or device changes.</p></div>
-      <select id="scenario-choice" disabled>
-        <option value="">General assistant</option>
-        <option value="health">Health coverage</option>
-        <option value="banking">Everyday banking</option>
-        <option value="home">Connected home</option>
-        <option value="loan">Personal loans</option>
-        <option value="property">Home buying</option>
-        <option value="interview">Electrician interview</option>
-      </select>
-      <p id="scenario-switch-note" role="status">Choose a scenario before starting a call.</p>
+    <section class="intro">
+      <div class="intro-copy">
+        <p class="eyebrow">YOUR FIRST VOICE AGENT</p><h1>A little more human.</h1><p>Speak or type. Hear a reply. Interrupt naturally.</p><div class="weather-controls"><span id="weather-status" role="status">Loading Seattle weather...</span><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Weather: Open-Meteo</a></div>
+      </div>
+      <section class="scenario-picker" aria-labelledby="scenario-label">
+        <label id="scenario-label" for="scenario-choice">Choose a conversation</label>
+        <select id="scenario-choice" aria-describedby="scenario-description scenario-switch-note" disabled>
+          <option value="">General assistant</option>
+          <option value="health">Health coverage</option>
+          <option value="banking">Everyday banking</option>
+          <option value="home">Connected home</option>
+          <option value="loan">Personal loans</option>
+          <option value="property">Home buying</option>
+          <option value="interview">Electrician interview</option>
+        </select>
+        <p id="scenario-description">Six fictional demos. No real transactions, bookings, hiring decisions or device changes.</p>
+        <p id="scenario-switch-note" role="status">Choose a scenario before starting a call.</p>
+      </section>
     </section>
     <div class="workspace">
       <section class="call-panel" aria-labelledby="call-title">
@@ -57,6 +62,7 @@
         <div id="orb" class="orb" aria-hidden="true"><span>◉</span></div>
         <h3 id="status" role="status">Ready when you are</h3><p id="hint">Start a session to enable your microphone.</p>
         <p id="recording-notice" class="recording-notice"><strong>Audio is saved by default.</strong> Your microphone audio and messages are sent to Azure and stored there. After the call, download the log and audio. Clearing this page does not delete Azure recordings.</p>
+        <p id="live-webrtc-notice" class="recording-notice" hidden><strong>GPT Live WebRTC calls are not recorded.</strong> Audio and messages are sent to Azure; a conversation download is unavailable.</p>
         <div class="controls"><button id="start" class="primary" disabled>Start conversation <span>↗</span></button><button id="mute" disabled aria-pressed="false">Mute mic</button><button id="stop" class="end" disabled>End</button></div>
         <button id="play" class="play" hidden>Enable speaker audio</button>
         <p id="error" class="error" role="alert" hidden></p>
@@ -65,8 +71,8 @@
           <summary>Agent &amp; audio settings</summary>
         <div class="transport-control"><h2>Saved Agent</h2><p id="weather-tool-hint" hidden>General web search, including weather, is included through Foundry Toolbox.</p>
           <label for="agent-model-choice">Change model</label><select id="agent-model-choice" disabled><option value="gpt-realtime-2.1">gpt-realtime-2.1</option><option value="gpt-realtime-2.1-mini">gpt-realtime-2.1-mini</option><option value="azure-realtime">azure-realtime</option><option value="azure-realtime-flash-2026-10-14">azure-realtime-flash-2026-10-14</option><option value="gpt-5.4">gpt-5.4</option><option value="gpt-live-1">gpt-live-1</option></select>
-          <p id="live-model-hint" hidden>GPT Live requires a separate saved Agent because Azure does not allow changing an Agent's protocol across versions. Selecting it creates or reuses this demo's GPT Live companion; switching back selects the original realtime Agent. Neither Agent is deleted. GPT Live supports WebSocket audio or direct WebRTC audio with server-side signaling. WebRTC calls are not recorded and cannot be downloaded. Both transports use the saved Agent voice; per-call voice overrides are unavailable. GPT Live has built-in transcription and a Responses backend using web search. Independent transcription, text-only replies, and retained-after-interruption history do not apply.</p>
-          <label for="agent-transcription-choice">Transcription model</label>
+          <p id="live-model-hint" hidden>GPT Live uses a separate Agent, its saved voice, built-in transcription and web search. Switching back selects the original Agent. WebRTC calls aren't recorded or downloadable.</p>
+          <label for="agent-transcription-choice">Transcription</label>
           <select id="agent-transcription-choice" disabled>
             <option value="" disabled>Choose a transcription model</option>
             <option value="azure-speech">azure-speech</option>
@@ -84,9 +90,9 @@
             <option value="whisper-1">whisper-1</option>
           </select>
           <label class="checkbox" for="enhanced-turn-detection"><input id="enhanced-turn-detection" type="checkbox" checked disabled aria-describedby="turn-detection-help"> GPT Live 1-quality turn detection</label>
-          <p id="turn-detection-help">Improves turn-taking and interruptions using streaming transcription. On by default for new Agents using GPT Realtime 2.1 (including mini) or Azure Realtime. Turn off to restore previous settings.</p>
+          <p id="turn-detection-help">Better turn-taking with streaming transcription. On by default for supported new Agents; turn off to restore previous settings.</p>
           <p id="turn-detection-status" role="status"></p>
-          <p>Apply between calls. Changes create a shared Agent version; previous versions stay. GPT Live uses a separate Agent. New Agents use mai-transcribe-2-streaming. Azure Realtime uses Ava; switching back from a native voice uses Tyler HD. Available models vary by project.</p>
+          <p>Apply between calls. Changes create a shared version; older versions stay. New Agents use mai-transcribe-2-streaming. Switching models may change the voice.</p>
           <div class="agent-actions"><button id="save-model" disabled>Apply settings</button><button id="show-settings" disabled>Show Agent settings</button></div>
         </div>
         <div class="transport-control"><label for="transport">Connection</label><select id="transport"><option value="websocket">WebSocket — audio over HTTPS</option><option value="webrtc">WebRTC — direct audio</option></select><p>WebSocket avoids STUN/TURN. Both modes need server access to Azure.</p></div>

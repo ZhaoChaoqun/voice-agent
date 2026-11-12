@@ -24,6 +24,9 @@ function agentPath(path, agent = selectedAgent) {
 
 function updateAgentControls() {
   const busy = Boolean(call) || preparingAgent;
+  const liveWebRtc = savedModel === 'gpt-live-1' && $('transport').value === 'webrtc';
+  $('recording-notice').hidden = liveWebRtc;
+  $('live-webrtc-notice').hidden = !liveWebRtc;
   $('scenario-choice').disabled = busy || !config?.scenarios;
   $('scenario-switch-note').textContent = busy ?
     'End the call before changing scenarios. The current conversation keeps its context.' :
@@ -45,7 +48,7 @@ function updateAgentControls() {
   $('agent-transcription-choice').disabled = busy || agentAvailability !== 'ready' || live ||
     (savedEnhancedTurnDetection && !turnRepairNeeded) || turnChanged;
   $('turn-detection-status').textContent = !turnSupported ? (
-    live ? 'GPT Live uses built-in turn detection.' :
+    live ? 'GPT Live: built-in turn detection.' :
     !enhancedTurnModels.includes(selectedModel) ?
       'Not available for Azure Realtime Flash or GPT-5.4.' +
         (savedEnhancedTurnDetection ? (selectedModel === savedModel ?
@@ -779,6 +782,7 @@ $('clear').onclick = () => { call?.history.clear(); if (call) call.liveCaption =
 window.addEventListener('pagehide', () => stop());
 $('transport').onchange = () => {
   $('media').textContent = $('transport').value === 'websocket' ? 'WebSocket · PCM16 / 24 kHz' : 'WebRTC · Opus';
+  updateAgentControls();
 };
 try {
   const response = await fetch('/api/config'); if (!response.ok) throw new Error('Could not load server configuration.');

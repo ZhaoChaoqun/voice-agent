@@ -17,7 +17,8 @@
 #weather-scene{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
 body{isolation:isolate;background:transparent}
 header,footer{background:#f7f8f4e8;padding-left:18px;padding-right:18px}
-.intro{position:relative;padding-left:26px;padding-right:26px}
+.intro{position:relative;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);align-items:center;gap:24px;padding-left:26px;padding-right:26px}
+.intro-copy{min-width:0}
 .intro::before{content:"";position:absolute;inset:20px 0 8px;background:#f7f8f4df;border-radius:20px;z-index:-1}
 .weather-controls{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:12px;color:#344e40}
 .weather-controls button{padding:6px 10px;font-size:11px}
@@ -36,8 +37,9 @@ header{height:auto;min-height:100px;flex-wrap:wrap;gap:12px;padding-top:16px;pad
 @media(max-width:740px){header{min-height:76px}}
 .intro{padding-top:24px;padding-bottom:24px}
 .intro::before{inset:10px 0}
-.intro h1{font-size:clamp(28px,3.5vw,40px);margin:10px 0;letter-spacing:-1px}
-.intro>p{margin-top:8px;margin-bottom:12px}
+.intro h1{font-size:clamp(28px,3.5vw,40px);margin:6px 0;letter-spacing:-1px}
+.intro-copy>p{margin:0 0 8px}
+.intro-copy>p:not(.eyebrow){font-size:15px;line-height:1.5}
 header{min-height:76px}
 header .tag{display:none}
 .workspace{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
@@ -59,7 +61,7 @@ header .tag{display:none}
   .workspace{grid-template-columns:1fr;gap:16px}
   header{min-height:64px;gap:8px;padding-top:12px;padding-bottom:12px}
   .repository-link{font-size:12px}
-  .intro{padding:18px}
+  .intro{grid-template-columns:minmax(0,1fr);gap:12px;padding:18px}
   .intro h1{font-size:30px}
   .call-panel{padding:18px}
   .orb{width:76px;height:76px;margin:16px auto 12px}
@@ -74,7 +76,7 @@ header .tag{display:none}
 header,footer,#setup{background:rgba(247,248,244,.86);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .message{background:rgba(242,245,237,.76)}
 .message.user{background:rgba(250,250,247,.8)}
-.call-panel p,.intro>p,.history-help,.text-composer p{color:#263c30}
+.call-panel p,.intro-copy>p,.history-help,.text-composer p{color:#263c30}
 .recording-notice{background:rgba(238,241,223,.85)}
 .eyebrow,#empty h3,#empty p,.text-button,.transport-control label,.transcript-footer,.session-details span,.message label,.message p.transcribing{color:#33493b}
 #setup,#setup p,main>.privacy,footer{color:#263c30}
@@ -103,8 +105,8 @@ input::placeholder,textarea::placeholder{color:#526458;opacity:1}
 .scenery-only header,.scenery-only main,.scenery-only footer{display:none}
 .scenery-only .scenery-toolbar{top:16px;bottom:auto}
 footer{margin-bottom:96px}
-.scenario-picker{display:grid;grid-template-columns:1fr minmax(180px,280px);align-items:center;gap:8px 24px;padding:20px 24px;margin-bottom:20px;background:#fafcf7ed;border:1px solid #dce3d8;border-radius:16px}
-.scenario-picker label{font-size:15px;font-weight:650;color:#24362f}.scenario-picker p{font-size:12px;margin:5px 0;color:#42564a}.scenario-picker select{width:100%;min-height:48px;padding:10px 12px;font:inherit;font-size:14px;color:#24362f;border:1px solid #a9bcae;border-radius:10px;background:white}.scenario-picker select:focus-visible{outline:3px solid #658d4a;outline-offset:3px}
+.scenario-picker{display:grid;grid-template-columns:minmax(110px,1fr) minmax(160px,230px);align-items:center;gap:6px 12px;min-width:0;padding-left:24px;border-left:1px solid #dce3d8}
+.scenario-picker label{font-size:15px;font-weight:650;color:#24362f}.scenario-picker p{grid-column:1/-1;font-size:12px;line-height:1.45;margin:0;color:#42564a}.scenario-picker select{width:100%;min-width:0;min-height:48px;padding:10px 12px;font:inherit;font-size:14px;color:#24362f;border:1px solid #a9bcae;border-radius:10px;background:white}.scenario-picker select:focus-visible{outline:3px solid #658d4a;outline-offset:3px}
 #scenario-switch-note{grid-column:1/-1}
 .scenario-card{--scenario-ink:#186b83;--scenario-bg:#e9f5fa;margin:18px 20px 4px;padding:20px;border-radius:16px;border:1px solid #ffffff;background:var(--scenario-bg);color:var(--scenario-ink)}
 .scenario-banking{--scenario-ink:#725618;--scenario-bg:#fcf4de}.scenario-home{--scenario-ink:#3657a0;--scenario-bg:#edf1ff}.scenario-loan{--scenario-ink:#6d468d;--scenario-bg:#f5edfb}.scenario-property{--scenario-ink:#176658;--scenario-bg:#e9f6f1}.scenario-interview{--scenario-ink:#8b4e23;--scenario-bg:#fff2e4}
@@ -113,5 +115,7 @@ footer{margin-bottom:96px}
 .scenario-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:18px 0 10px}.scenario-facts>div{background:#ffffffb8;padding:12px 9px;border-radius:10px}.scenario-facts dt{font-size:10px;color:#4e5d60}.scenario-facts dd{margin:6px 0 0;font-size:12px;font-weight:650;color:#24362f;overflow-wrap:anywhere}
 .scenario-card .scenario-disclaimer{font-size:11px;line-height:1.5;color:#455653;margin:10px 0}.scenario-greeting{border-left:3px solid var(--scenario-ink);padding-left:12px;font-size:13px;line-height:1.6;color:#24362f}
 .scenario-prompts{display:flex;gap:7px;flex-wrap:wrap}.scenario-prompts button{min-height:44px;padding:10px 12px;text-align:left;font-size:12px;color:var(--scenario-ink);border-color:#ffffff;background:#ffffffc9}
-@media(max-width:740px){.scenario-picker{grid-template-columns:1fr;padding:16px;gap:10px}.scenario-card{margin:12px;padding:16px}.scenario-art{width:66px;height:66px}.scenario-card h3{font-size:20px}.scenario-facts{gap:6px}.scenario-facts>div{padding:10px 7px}}
+@media(min-width:741px) and (max-width:950px){.scenario-picker{grid-template-columns:1fr}}
+@media(max-width:740px){.scenario-picker{padding:12px 0 0;border-left:0;border-top:1px solid #dce3d8}.scenario-card{margin:12px;padding:16px}.scenario-art{width:66px;height:66px}.scenario-card h3{font-size:20px}.scenario-facts{gap:6px}.scenario-facts>div{padding:10px 7px}}
+@media(max-width:375px){.scenario-picker{grid-template-columns:1fr}}
 @media(max-width:740px){.scenery-toolbar{width:240px;right:12px;bottom:12px;max-width:calc(100vw - 24px)}.scenery-only .scenery-toolbar{top:12px}.scenery-toolbar button,.scene-picker select{height:40px;min-height:40px}.scenery-toolbar button{width:40px}}
