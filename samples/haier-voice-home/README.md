@@ -196,8 +196,8 @@ lab 直接连接 **Voice Live model mode**，浏览器音频走 WebRTC RTP，
 PORT=5188 npm run lab:webrtc
 ```
 
-lab 仅监听 `127.0.0.1:5188`，保留的是历史海外模型传输对比，**不属于海尔国内 Flash 部署步骤**；
-它不能证明客户 Flash 的 WebRTC 可用性，也不能直接切换为未列入 lab allowlist 的模型。
+lab 默认监听 `127.0.0.1:5188`，默认模型为 `microsoft-realtime-flash-1`（也可通过 `WEBRTC_MODEL` 选择对比模型）；
+它只测试无工具的直连 Voice Live model-mode 传输延迟，不加载家居 Agent，不能替代正式 Agent 的端到端验收。
 TTFA 从发送文本到每轮**第一个** `output_audio_buffer.started` 计算，
 不是物理扬声器出声时间，也不包含麦克风 VAD 的端到端测量。
 浏览器使用 STUN 进行 ICE 协商；防火墙、UDP、浏览器策略和区域能力会影响连接。

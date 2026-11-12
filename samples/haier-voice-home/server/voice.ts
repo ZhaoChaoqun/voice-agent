@@ -317,11 +317,13 @@ export class VoiceSession {
         isAssistantOutputEvent(event.type);
       if (event.type === "error") {
         if (
-          ["response_cancel_not_active", "response_cancel_not_found"].includes(
-            this.errorCode(event),
-          )
+          [
+            "response_cancel_not_active",
+            "response_cancel_not_found",
+            "item_already_truncated",
+          ].includes(this.errorCode(event))
         ) {
-          console.debug("Voice response was already stopped.");
+          console.debug("Voice response or playback item was already stopped.");
           return;
         }
         console.error("Managed Voice Agent returned an error", {

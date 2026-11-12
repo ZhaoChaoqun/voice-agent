@@ -8,6 +8,9 @@ import { describe, expect, it } from "vitest";
 const renderer = fileURLToPath(
   new URL("../deploy/render-container-app.mjs", import.meta.url),
 );
+const webrtcDeployer = fileURLToPath(
+  new URL("../deploy/deploy-webrtc.mjs", import.meta.url),
+);
 const env = {
   PATH: process.env.PATH,
   AZURE_SUBSCRIPTION_ID: "unit-subscription",
@@ -90,5 +93,69 @@ describe("offline ACA manifest renderer", () => {
       encoding: "utf8",
     });
     expect(result.status).not.toBe(0);
+  });
+});
+
+describe("parameterized WebRTC lab deployment helper", () => {
+  const webrtcEnv = {
+    PATH: process.env.PATH,
+    AZURE_SUBSCRIPTION_ID: "unit-subscription",
+    AZURE_TENANT_ID: "unit-tenant",
+    HAIER_WEBRTC_RESOURCE_GROUP: "unit-group",
+    HAIER_WEBRTC_ENVIRONMENT_NAME: "unit-env",
+    HAIER_WEBRTC_REGISTRY_NAME: "unitregistry",
+    HAIER_WEBRTC_IDENTITY_NAME: "unit-identity",
+    HAIER_WEBRTC_ENDPOINT: "https://example.services.ai.azure.com",
+    HAIER_WEBRTC_LOCATION: "unit-region",
+    AZURE_CLIENT_ID: "unit-client",
+  };
+
+  it("fails closed with no hardcoded Azure defaults", () => {
+    const result = spawnSync(process.execPath, [webrtcDeployer], {
+      env: {},
+      encoding: "utf8",
+    });
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("AZURE_SUBSCRIPTION_ID");
+  });
+
+  it("renders a Flash WebRTC lab manifest offline with minReplicas=0 by default", () => {
+    const directory = mkdtempSync(join(tmpdir(), "haier-webrtc-deploy-test-"));
+    try {
+      execFileSync(process.execPath, [webrtcDeployer], {
+        cwd: directory,
+        env: {
+          ...webrtcEnv,
+          HAIER_WEBRTC_DEPLOY_STATE: join(
+            directory,
+            ".local/webrtc-deployment.json",
+          ),
+        },
+        encoding: "utf8",
+      });
+      const manifests = JSON.parse(
+        readFileSync(join(directory, ".local/webrtc-manifests.json"), "utf8"),
+      );
+      expect(manifests).toHaveLength(1);
+      expect(manifests[0].name).toBe("voice-webrtc-flash");
+      expect(manifests[0].properties.template.scale.minReplicas).toBe(0);
+      expect(manifests[0].properties.template.containers[0].env).toContainEqual(
+        {
+          name: "WEBRTC_MODEL",
+          value: "microsoft-realtime-flash-1",
+        },
+      );
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses --apply without matching --confirm-endpoint", () => {
+    const result = spawnSync(process.execPath, [webrtcDeployer, "--apply"], {
+      env: webrtcEnv,
+      encoding: "utf8",
+    });
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("confirm-endpoint");
   });
 });

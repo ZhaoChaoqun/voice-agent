@@ -530,6 +530,10 @@ describe("managed Voice Agent relay", () => {
       type: "error",
       error: { code: "response_cancel_not_active" },
     });
+    upstream.receive({
+      type: "error",
+      error: { code: "item_already_truncated" },
+    });
     expect(browser.readyState).toBe(WebSocket.OPEN);
     expect(browser.events.some((event) => event.type === "demo.error")).toBe(
       false,

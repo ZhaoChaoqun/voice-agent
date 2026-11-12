@@ -154,7 +154,7 @@ cookie 使用 HMAC、12 小时到期、HttpOnly、Secure、SameSite=Lax 和 `__H
 ```mermaid
 flowchart LR
   B["Browser<br/>RTCPeerConnection"] -->|"SDP offer / text turn，loopback HTTP"| N["Lab Node<br/>服务端鉴权 control channel"]
-  N -->|"MediaGateway WebSocket<br/>/voice-live/realtime/calls"| L["Voice Live model mode<br/>历史海外比较模型，非国内客户路径"]
+  N -->|"MediaGateway WebSocket<br/>/voice-live/realtime/calls"| L["Voice Live model mode<br/>Microsoft Realtime Flash（无工具延迟实验）"]
   B <-->|"WebRTC RTP audio<br/>voice-live-events DataChannel"| L
 ```
 

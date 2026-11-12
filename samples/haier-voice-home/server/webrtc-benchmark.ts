@@ -17,7 +17,12 @@ const API_VERSION = "2026-07-15";
 const CONNECT_TIMEOUT_MS = 60_000; // Bound token acquisition, WebSocket upgrade and SDP negotiation.
 const MAX_SDP_LENGTH = 256 * 1024; // Match the MediaGateway control-message limit.
 const MAX_TEXT_LENGTH = 4_000; // Bound benchmark text turns.
-const ALLOWED_MODELS = new Set(["gpt-realtime-2.1", "gpt-realtime-2.1-mini"]);
+const ALLOWED_MODELS = new Set([
+  "microsoft-realtime-flash-1",
+  "microsoft-realtime-flash",
+  "gpt-realtime-2.1",
+  "gpt-realtime-2.1-mini",
+]);
 const sessionRequestSchema = z
   .object({ sdpOffer: z.string().min(1).max(MAX_SDP_LENGTH) })
   .strict();
@@ -28,6 +33,7 @@ const turnRequestSchema = z
 export interface WebRtcBenchmarkConfig {
   endpoint: string;
   model: string;
+  host: string;
   port: number;
   tenantId?: string;
   clientId?: string;
@@ -54,19 +60,23 @@ export function webRtcBenchmarkConfig(
   env: NodeJS.ProcessEnv = process.env,
 ): WebRtcBenchmarkConfig {
   const endpoint = env.VOICE_LIVE_ENDPOINT?.replace(/\/$/, "") ?? "";
-  const model = env.WEBRTC_MODEL ?? "gpt-realtime-2.1";
+  const model = env.WEBRTC_MODEL ?? "microsoft-realtime-flash-1";
   if (!/^https:\/\/[a-zA-Z0-9-]+\.services\.ai\.azure\.com$/.test(endpoint))
     throw new Error(
       "VOICE_LIVE_ENDPOINT must be an Azure AI Services HTTPS origin.",
     );
   if (!ALLOWED_MODELS.has(model))
     throw new Error("WEBRTC_MODEL is not an approved benchmark model.");
+  const host = env.HOST ?? "127.0.0.1";
+  if (!["127.0.0.1", "localhost", "::1", "0.0.0.0"].includes(host))
+    throw new Error("HOST must be loopback or 0.0.0.0.");
   const port = Number(env.PORT ?? 8080);
   if (!Number.isInteger(port) || port < 1 || port > 65_535)
     throw new Error("PORT must be a valid TCP port.");
   return {
     endpoint,
     model,
+    host,
     port,
     tenantId: env.AZURE_TENANT_ID,
     clientId: env.AZURE_CLIENT_ID,
@@ -135,7 +145,18 @@ function credential(config: WebRtcBenchmarkConfig): TokenCredential {
 }
 
 function sameOrigin(request: express.Request): boolean {
-  return isSameOrigin(request.headers.origin, request.headers.host);
+  const origin = request.headers.origin;
+  const host = request.headers.host;
+  if (!origin || !host) return false;
+  try {
+    const parsed = new URL(origin);
+    return (
+      (parsed.protocol === "https:" || isSameOrigin(origin, host)) &&
+      parsed.host === host
+    );
+  } catch {
+    return false;
+  }
 }
 
 async function openSocket(
@@ -248,14 +269,15 @@ function startServer(): void {
   app.disable("x-powered-by");
   app.use((request, response, next) => {
     const host = request.headers.host;
+    const loopbackOnly = config.host !== "0.0.0.0";
     if (
       !host ||
-      !isSameOrigin(`http://${host}`, host) ||
+      (loopbackOnly && !isSameOrigin(`http://${host}`, host)) ||
       (request.method !== "GET" && !sameOrigin(request))
     )
       return void response
         .status(403)
-        .json({ error: "Loopback same origin required." });
+        .json({ error: "Same-origin request required." });
     response.setHeader("Cache-Control", "no-store");
     response.setHeader("X-Content-Type-Options", "nosniff");
     next();
@@ -339,8 +361,9 @@ function startServer(): void {
       new URL("../webrtc-benchmark/index.html", import.meta.url).pathname,
     ),
   );
-  const server = app.listen(config.port, "127.0.0.1", () =>
+  const server = app.listen(config.port, config.host, () =>
     console.info("Haier WebRTC benchmark ready", {
+      host: config.host,
       port: config.port,
       model: config.model,
     }),

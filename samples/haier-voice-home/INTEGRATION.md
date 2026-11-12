@@ -435,12 +435,12 @@ async function negotiateAgentWebRtc({
 
 **仓库现状与可复用实现**：
 
-| 路径                                                                    | 已提供什么 / 没提供什么                                                             |
-| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| 本样例 `server/voice.ts`、三个 UI                                       | 已接通 Haier 的 WebSocket relay、家庭工具和 backchannel；没有接上 Agent-mode WebRTC |
-| `../foundry_voice_webrtc/server.py` 的 `Config.voice_url()` / `relay()` | 同一个保存的 Agent 的 WebSocket/WebRTC endpoint 与信令参考                          |
-| `../foundry_voice_webrtc/public/app.js` 的 `connectWebRtc()`            | SDP、ICE、麦克风、DataChannel 和远端音频参考                                        |
-| 本样例 `server/webrtc-benchmark.ts`                                     | **直接 Voice Live model-mode lab**；不是这里的 Agent-mode 接入实现                  |
+| 路径                                                                    | 已提供什么 / 没提供什么                                                                                         |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| 本样例 `server/voice.ts`、三个 UI                                       | 已接通 Haier 的 WebSocket relay、家庭工具和 backchannel；没有接上 Agent-mode WebRTC                             |
+| `../foundry_voice_webrtc/server.py` 的 `Config.voice_url()` / `relay()` | 同一个保存的 Agent 的 WebSocket/WebRTC endpoint 与信令参考                                                      |
+| `../foundry_voice_webrtc/public/app.js` 的 `connectWebRtc()`            | SDP、ICE、麦克风、DataChannel 和远端音频参考                                                                    |
+| 本样例 `server/webrtc-benchmark.ts`                                     | **直接 Voice Live model-mode lab**（支持 `microsoft-realtime-flash-1`，无工具）；不是这里的 Agent-mode 接入实现 |
 
 参考 sample 有自己的 Agent 创建/设置逻辑与业务场景，**不等于已装好 Haier 工具执行器**。
 不要直接启动其 create/reset/apply-settings 流程去覆盖已保存的 Haier Agent。

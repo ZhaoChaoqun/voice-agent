@@ -117,8 +117,8 @@ renderer 默认 access-code 保护，明确拒绝 `HAIER_PUBLIC_GUEST_ACCESS=1`�
 签名 cookie 只能提供会话完整性/隔离，不能代替身份鉴别、速率限制或计费保护。
 公共演示至少应加外部身份或反滥用入口、并发/请求限额、预算告警与数据治理。
 
-## WebRTC lab 不随正式应用公开
+## WebRTC 延迟实验独立部署与安全边界
 
-lab 的 `/api/sessions` 等接口面向 loopback 实验，禁用工具且不使用 Voice Agent。
-本目录不提供将其无鉴权暴露到 ACA 的脚本。若要另行部署，必须先补齐会话所有权、
-用户认证、滥用限制和有效的媒体网络配置；不能复用正式 demo 的部署结果来声称 lab 安全。
+`deploy/Dockerfile.webrtc` 与参数化脚本 `deploy/deploy-webrtc.mjs` 仅供需要单独对比 Voice Live model-mode WebRTC 首包延迟的测试环境使用：默认离线渲染 `.local/webrtc-manifests.json`（默认 `microsoft-realtime-flash-1`、`HAIER_WEBRTC_MIN_REPLICAS=0`），不含任何预置订阅或资源名，且必须显式传入 `--apply --confirm-endpoint <url>` 才会调用 Azure CLI。
+
+注意：lab 的 `/api/sessions` 接口禁用工具且不连接 Foundry Voice Agent，也不内置访问码或用户登录保护。切勿将其作为正式客户应用长期暴露在无保护公网；正式应用请使用上方的 `deploy/Dockerfile` 与 `deploy/render-container-app.mjs`。
