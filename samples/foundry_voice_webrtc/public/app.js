@@ -45,7 +45,7 @@ function updateAgentControls() {
   $('agent-transcription-choice').disabled = busy || agentAvailability !== 'ready' || live ||
     (savedEnhancedTurnDetection && !turnRepairNeeded) || turnChanged;
   $('turn-detection-status').textContent = !turnSupported ? (
-    live ? 'GPT Live uses built-in turn detection.' :
+    live ? 'GPT Live: built-in turn detection.' :
     !enhancedTurnModels.includes(selectedModel) ?
       'Not available for Azure Realtime Flash or GPT-5.4.' +
         (savedEnhancedTurnDetection ? (selectedModel === savedModel ?

@@ -70,6 +70,10 @@ test('every configured scenario has a picker option and illustration', () => {
   }
 });
 
+test('the scenario picker is part of the introduction panel', () => {
+  assert.match(page, /<section class="intro">(?:(?!<\/section>)[\s\S])*<section class="scenario-picker"/);
+});
+
 test('scenario switching refreshes visuals and greeting, clears old context and never sends an idea', async () => {
   const ui = await setup('websocket', {
     fetch:async url => ({ok:true, json:async()=>url === '/api/config' ?
@@ -864,11 +868,14 @@ test('New Agents preview the enabled streaming default and only supported models
       ['gpt-live-1', 'gpt-5.4', 'azure-realtime-flash-2026-10-14'].includes(model));
     assert.equal(ui.element('enhanced-turn-detection').checked,
       !['gpt-live-1', 'gpt-5.4', 'azure-realtime-flash-2026-10-14'].includes(model));
+    if (model === 'gpt-live-1') {
+      assert.equal(ui.element('turn-detection-status').textContent, 'GPT Live: built-in turn detection.');
+    }
     if (['gpt-5.4', 'azure-realtime-flash-2026-10-14'].includes(model)) {
       assert.match(ui.element('turn-detection-status').textContent, /Not available/);
       assert.match(ui.element('turn-detection-status').textContent, /Apply settings or start a call to remove the preset/);
       assert.equal(ui.element('save-model').disabled, false);
-      assert.doesNotMatch(ui.element('turn-detection-status').textContent, /GPT Live uses built-in/);
+      assert.doesNotMatch(ui.element('turn-detection-status').textContent, /GPT Live: built-in/);
     }
   }
   const ui = await setup('websocket', {fetch:async url=>({ok:true, json:async()=>url === '/api/config' ?
