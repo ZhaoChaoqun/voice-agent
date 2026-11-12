@@ -137,6 +137,15 @@ describe("Portal-preserving Agent authoring", () => {
       "REQUIRED for every appliance change",
     );
     expect(control?.description).toContain("打开电视");
+    expect(control?.description).toContain(
+      "Emit no text or audio before this function call; the application relay owns the spoken backchannel.",
+    );
+    expect(control?.description).toContain(
+      "Never claim success or narrate the procedure before this function returns.",
+    );
+    expect(control?.description).not.toContain(
+      "A very short acknowledgement may precede the call",
+    );
   });
   it("preserves complete dynamic fields and bilingual transcription in the authoring API payload", () => {
     const definition = voiceAgentDefinition(remoteVoiceDefinition(), {
