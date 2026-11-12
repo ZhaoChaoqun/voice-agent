@@ -841,15 +841,20 @@ test('A failed turn-detection save remains pending and does not change the saved
   assert.equal(ui.element('save-model').disabled, false);
 });
 
-test('New Agents preview the enabled streaming default and all non-Live models expose the toggle', async () => {
+test('New Agents preview the enabled streaming default and only supported models expose the toggle', async () => {
   for (const model of ['gpt-realtime-2.1', 'gpt-realtime-2.1-mini', 'gpt-5.4',
     'azure-realtime', 'azure-realtime-flash-2026-10-14', 'gpt-live-1']) {
     const ui = await setup('webrtc', {fetch:async url=>({ok:true, json:async()=>url === '/api/config' ?
       {configured:true} : {exists:true, model, version:'1', enhancedTurnDetection:model !== 'gpt-live-1',
         transcriptionModel:model === 'gpt-live-1' ? null : 'mai-transcribe-2-streaming'}})});
     ui.stop();
-    assert.equal(ui.element('enhanced-turn-detection').disabled, model === 'gpt-live-1');
+    assert.equal(ui.element('enhanced-turn-detection').disabled,
+      ['gpt-live-1', 'gpt-5.4', 'azure-realtime-flash-2026-10-14'].includes(model));
     assert.equal(ui.element('enhanced-turn-detection').checked, model !== 'gpt-live-1');
+    if (['gpt-5.4', 'azure-realtime-flash-2026-10-14'].includes(model)) {
+      assert.match(ui.element('turn-detection-status').textContent, /not yet available/);
+      assert.doesNotMatch(ui.element('turn-detection-status').textContent, /GPT Live uses built-in/);
+    }
   }
   const ui = await setup('websocket', {fetch:async url=>({ok:true, json:async()=>url === '/api/config' ?
     {configured:true} : {exists:false, model:'gpt-realtime-2.1', enhancedTurnDetection:true,
@@ -858,6 +863,46 @@ test('New Agents preview the enabled streaming default and all non-Live models e
   assert.equal(ui.element('agent-transcription-choice').value, 'mai-transcribe-2-streaming');
   assert.match(ui.element('turn-detection-status').textContent, /Default: on/);
 });
+
+for (const unsupportedModel of ['azure-realtime-flash-2026-10-14', 'gpt-5.4']) {
+  test(`${unsupportedModel}: model switching suppresses pending turn-detection changes`, async () => {
+    let model = 'gpt-realtime-2.1', version = 1;
+    const writes = [];
+    const ui = await setup('websocket', {fetch:async (url, options)=>{
+      if (url === '/api/agent/model') {
+        const body = JSON.parse(options.body);
+        writes.push(body);
+        model = body.model;
+        version++;
+      }
+      return {ok:true, json:async()=>url === '/api/config' ? {configured:true} :
+        {exists:true, model, version:String(version), enhancedTurnDetection:false,
+          transcriptionModel:'mai-transcribe-2-streaming'}};
+    }});
+    ui.stop();
+    ui.element('enhanced-turn-detection').checked = true;
+    ui.element('enhanced-turn-detection').onchange();
+    assert.match(ui.element('turn-detection-status').textContent, /Not saved/);
+    ui.element('agent-model-choice').value = unsupportedModel;
+    ui.element('agent-model-choice').onchange();
+    assert.equal(ui.element('enhanced-turn-detection').disabled, true);
+    assert.match(ui.element('turn-detection-status').textContent, /not yet available/);
+    assert.equal(ui.element('save-model').disabled, false);
+    await ui.element('save-model').onclick();
+    assert.equal(ui.element('enhanced-turn-detection').disabled, true);
+    assert.equal(ui.element('enhanced-turn-detection').checked, false);
+    ui.element('agent-model-choice').value = 'gpt-realtime-2.1';
+    ui.element('agent-model-choice').onchange();
+    assert.equal(ui.element('enhanced-turn-detection').disabled, true);
+    assert.match(ui.element('turn-detection-status').textContent, /Apply the selected supported model/);
+    await ui.element('save-model').onclick();
+    assert.equal(ui.element('enhanced-turn-detection').disabled, false);
+    assert.deepEqual(writes, [
+      {model:unsupportedModel, version:'1', transcriptionModel:'mai-transcribe-2-streaming'},
+      {model:'gpt-realtime-2.1', version:'2', transcriptionModel:'mai-transcribe-2-streaming'},
+    ]);
+  });
+}
 
 test('Conversation download waits for End and posts only its session capability', async () => {
   const writes = [], blobs = [];

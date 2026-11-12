@@ -15,7 +15,7 @@ let liveGreetingMissing = false;
 let savedEnhancedTurnDetection = false;
 let selectedScenario = '';
 let savedWeatherEnabled = false;
-const enhancedTurnModels = modelChoices.filter(model => model !== 'gpt-live-1');
+const enhancedTurnModels = ['gpt-realtime-2.1', 'gpt-realtime-2.1-mini', 'azure-realtime'];
 
 function agentPath(path, agent = selectedAgent) {
   return agent && agent !== config?.agent ?
@@ -34,14 +34,19 @@ function updateAgentControls() {
     agentAvailability === 'error' ? 'Retry setup & start' : 'Start conversation';
   $('recreate-agent').disabled = busy || !config?.configured || !config?.agentRecreateAllowed || agentAvailability !== 'ready' || savedModel === 'gpt-live-1';
   $('agent-model-choice').disabled = busy || agentAvailability !== 'ready';
-  const live = $('agent-model-choice').value === 'gpt-live-1';
-  const turnSupported = enhancedTurnModels.includes($('agent-model-choice').value) &&
+  const selectedModel = $('agent-model-choice').value;
+  const live = selectedModel === 'gpt-live-1';
+  const turnSupported = enhancedTurnModels.includes(selectedModel) &&
     enhancedTurnModels.includes(savedModel);
   const turnChanged = turnSupported && $('enhanced-turn-detection').checked !== savedEnhancedTurnDetection;
   $('enhanced-turn-detection').disabled = busy || agentAvailability !== 'ready' || !turnSupported;
   $('agent-transcription-choice').disabled = busy || agentAvailability !== 'ready' || live ||
     savedEnhancedTurnDetection || turnChanged;
-  $('turn-detection-status').textContent = !turnSupported ? 'GPT Live uses built-in turn detection. Apply a non-GPT Live model to use this setting.' :
+  $('turn-detection-status').textContent = !turnSupported ? (
+    live ? 'GPT Live uses built-in turn detection.' :
+    !enhancedTurnModels.includes(selectedModel) ?
+      'GPT Live 1-quality turn detection is not yet available for Azure Realtime Flash or GPT-5.4.' :
+      'Apply the selected supported model before changing turn detection.') :
     agentAvailability === 'missing' ? 'Default: on, using mai-transcribe-2-streaming (after setup).' :
     turnChanged ? ($('enhanced-turn-detection').checked ?
       'Not saved: after mode will use mai-transcribe-2-streaming.' :
