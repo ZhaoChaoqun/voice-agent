@@ -228,6 +228,22 @@ export class VoiceClient {
       ];
       this.patch({ activities: activities.slice(-ACTIVITY_LIMIT) });
     }
+    if (
+      event.type === "demo.discard-assistant-output" &&
+      Array.isArray(event.itemIds)
+    ) {
+      const itemIds = new Set(
+        event.itemIds.filter(
+          (itemId): itemId is string => typeof itemId === "string",
+        ),
+      );
+      this.audio?.interrupt();
+      this.patch({
+        messages: this.snapshot.messages.filter(
+          (message) => !itemIds.has(message.id),
+        ),
+      });
+    }
   }
 
   private receiveAudio(event: Record<string, unknown>): void {

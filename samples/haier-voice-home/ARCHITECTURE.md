@@ -108,6 +108,12 @@ backchannel 的音频正常转发，但 `audio_transcript/output_audio_transcrip
 取消/失败会丢弃 pending calls，不执行被取消的动作。单元测试覆盖 fallback、音频转发和全部 transcript 变体隐藏、
 后续回答恢复、重复 call、取消、首轮 greeting 和 continuation 顺序。
 对旧模型已主动说出的 acknowledgement 保留兼容调度；新的 instructions 不再请求这一行为。
+协议层还跟踪 `response.output_item.added`：同一 response 已出现 message，随后又出现
+function_call 时，relay 发出 `demo.discard-assistant-output` 并携带待移除的 item IDs。
+三个 UI 共用的 VoiceClient 立即停止排队音频、移除对应 transcript；relay 抑制这些 item
+后续的音频和文本 delta/done，当前 response 结束后清理跟踪状态。
+工具完成后的新消息不受影响，已有其他回合的消息也不会被删除。
+已经通过扬声器播放的前缀无法撤回，不能把此机制描述为绝对没有听到过过程话语。
 
 这是确定的调度策略，不是硬编码的用户意图解析器；输出仍由真正的 Voice Agent 生成。
 成功语句必须基于实际工具结果，失败不能被模型描述成成功；源代码不能保证每个声学环境下的主观体验。

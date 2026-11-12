@@ -44,8 +44,13 @@ for (const model of ["gpt-realtime-2.1", SECONDARY_MODEL]) {
     });
     await page.locator("#atelier-model").selectOption(model);
     await page.locator("#atelier-message").fill("请帮我打开电视。");
+    const send = page.getByRole("button", {
+      name: "发送消息",
+      exact: true,
+    });
+    await expect(send).toBeEnabled({ timeout: TURN_TIMEOUT_MS });
     const start = events.length;
-    await page.getByRole("button", { name: "发送消息", exact: true }).click();
+    await send.click();
     await expect
       .poll(
         () =>
@@ -123,6 +128,9 @@ for (const model of ["gpt-realtime-2.1", SECONDARY_MODEL]) {
             "response.audio_transcript.done",
             "response.output_audio_transcript.done",
           ].includes(String(event.type)),
+        )
+        .filter(
+          (event) => String(event.transcript ?? "") !== homeGreeting("zh").text,
         ),
     ).toHaveLength(0);
     expect(completions).toHaveLength(1);

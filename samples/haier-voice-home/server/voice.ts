@@ -170,6 +170,8 @@ export class VoiceSession {
   private pendingContinuation = false;
   private continuationInstructions: string[] = [];
   private pendingToolCalls: PendingToolCall[] = [];
+  private responseMessageItems = new Map<string, string[]>();
+  private discardedAssistantItemIds = new Set<string>();
   private sentCalls = new Set<string>();
   private runner: ToolRunner;
   private readyTimeout: ReturnType<typeof setTimeout>;
@@ -304,9 +306,14 @@ export class VoiceSession {
     try {
       const event = JSON.parse(data.toString()) as BackendEvent;
       if (typeof event.type !== "string") return;
+      this.trackResponseOutput(event);
       const suppressTranscript =
         this.toolAcknowledgementInProgress &&
         isAssistantTranscriptEvent(event.type);
+      const suppressDiscardedOutput =
+        typeof event.item_id === "string" &&
+        this.discardedAssistantItemIds.has(event.item_id) &&
+        isAssistantOutputEvent(event.type);
       if (event.type === "error") {
         if (
           ["response_cancel_not_active", "response_cancel_not_found"].includes(
@@ -340,11 +347,40 @@ export class VoiceSession {
         this.functionCall(event);
       if (event.type === "response.done") this.responseDone(event);
       // Session metadata contains server-controlled instructions and tool schemas; keep it private.
-      if (!event.type.startsWith("session.") && !suppressTranscript)
+      if (
+        !event.type.startsWith("session.") &&
+        !suppressTranscript &&
+        !suppressDiscardedOutput
+      )
         sendEvent(this.browser, event);
+      if (event.type === "response.done") {
+        this.responseMessageItems.clear();
+        this.discardedAssistantItemIds.clear();
+      }
     } catch {
       this.fail("The managed voice service returned an invalid event.");
     }
+  }
+
+  private trackResponseOutput(event: BackendEvent): void {
+    if (event.type !== "response.output_item.added") return;
+    const responseId = event.response_id;
+    const item = event.item as { id?: unknown; type?: unknown } | undefined;
+    if (typeof responseId !== "string" || !item) return;
+    if (item.type === "message" && typeof item.id === "string") {
+      const itemIds = this.responseMessageItems.get(responseId) ?? [];
+      itemIds.push(item.id);
+      this.responseMessageItems.set(responseId, itemIds);
+      return;
+    }
+    if (item.type !== "function_call") return;
+    const itemIds = this.responseMessageItems.get(responseId) ?? [];
+    if (itemIds.length === 0) return;
+    for (const itemId of itemIds) this.discardedAssistantItemIds.add(itemId);
+    sendEvent(this.browser, {
+      type: "demo.discard-assistant-output",
+      itemIds,
+    });
   }
 
   private functionCall(event: Record<string, unknown>): void {
@@ -570,6 +606,12 @@ function responseHasSpokenOutput(
 
 function isAssistantTranscriptEvent(type: string): boolean {
   return /^(response\.(audio_transcript|output_audio_transcript|text|output_text)\.(delta|done))$/.test(
+    type,
+  );
+}
+
+function isAssistantOutputEvent(type: string): boolean {
+  return /^(response\.(audio|output_audio|audio_transcript|output_audio_transcript|text|output_text)\.(delta|done))$/.test(
     type,
   );
 }

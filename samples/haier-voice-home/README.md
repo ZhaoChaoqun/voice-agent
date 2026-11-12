@@ -167,6 +167,10 @@ relay 在执行前提供简短 spoken backchannel，中文只使用“好 / 收�
 relay 等 backchannel response 完成后再执行工具，随后请求只描述真实结果的 continuation。
 设备实际成功后才报告完成结果；失败不能说成已完成。fallback 的选择、音频转发、
 transcript 隐藏和执行顺序均有源码及单元测试覆盖。
+如果 Mini 等模型仍在同一个 response 中先产生 message、再产生 function call，
+relay 会发送应用事件 `demo.discard-assistant-output`，让共享浏览器客户端停止排队音频、
+移除对应 message，并阻止该 item 的后续音频/文本继续到达页面。
+已经实际播放的声音不能撤回；这个防线用于尽早截断过程输出，不能替代模型指令和实机听测。
 它约束协议顺序，不代表模型的实际语音质量无需人工确认。
 
 六类设备包括电视、冰箱、空调、加湿器、灯和窗帘。温度/湿度等设置受 schema 和服务端规则限制；

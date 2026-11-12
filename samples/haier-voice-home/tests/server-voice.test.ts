@@ -359,8 +359,8 @@ describe("managed Voice Agent relay", () => {
     ]);
   });
 
-  it("uses an acknowledgement already spoken by Realtime before applying the tool", async () => {
-    const { upstream, home } = await connected();
+  it("discards a model-authored pre-tool message before applying the tool", async () => {
+    const { browser, upstream, home } = await connected();
     acknowledge(upstream);
     const call = {
       type: "function_call",
@@ -368,6 +368,49 @@ describe("managed Voice Agent relay", () => {
       name: "control_device",
       arguments: '{"deviceId":"tv","power":true}',
     };
+    upstream.receive({
+      type: "response.output_item.added",
+      response_id: "tool-response",
+      item: { id: "pre-tool-message", type: "message" },
+    });
+    upstream.receive({
+      type: "response.output_audio_transcript.delta",
+      response_id: "tool-response",
+      item_id: "pre-tool-message",
+      delta: "好的，我来打开电视。",
+    });
+    upstream.receive({
+      type: "response.output_item.added",
+      response_id: "tool-response",
+      item: { id: "tool-item", type: "function_call" },
+    });
+    for (const type of [
+      "response.audio.delta",
+      "response.output_audio.delta",
+      "response.audio_transcript.done",
+      "response.output_audio_transcript.done",
+      "response.text.done",
+      "response.output_text.done",
+    ])
+      upstream.receive({
+        type,
+        response_id: "tool-response",
+        item_id: "pre-tool-message",
+        transcript: "好的，我来打开电视。",
+        text: "好的，我来打开电视。",
+        delta: "AAAA",
+      });
+    expect(browser.events).toContainEqual({
+      type: "demo.discard-assistant-output",
+      itemIds: ["pre-tool-message"],
+    });
+    expect(
+      browser.events.some(
+        (event) =>
+          event.item_id === "pre-tool-message" &&
+          event.type !== "response.output_audio_transcript.delta",
+      ),
+    ).toBe(false);
     upstream.receive({
       type: "response.done",
       response: {
@@ -389,6 +432,16 @@ describe("managed Voice Agent relay", () => {
       response: {
         instructions: expect.stringContaining("电视打开啦"),
       },
+    });
+    upstream.receive({
+      type: "response.output_audio_transcript.done",
+      item_id: "post-tool-message",
+      transcript: "电视打开啦。",
+    });
+    expect(browser.events).toContainEqual({
+      type: "response.output_audio_transcript.done",
+      item_id: "post-tool-message",
+      transcript: "电视打开啦。",
     });
   });
 

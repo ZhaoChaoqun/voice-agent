@@ -159,6 +159,26 @@ test("streams a mocked assistant turn, tool state, and an auditable action", asy
       socket.send(JSON.stringify({ type: "response.created" }));
       socket.send(
         JSON.stringify({
+          type: "response.output_audio_transcript.delta",
+          item_id: "pre-tool-message",
+          delta: "我先帮你调整空调。",
+        }),
+      );
+      socket.send(
+        JSON.stringify({
+          type: "response.output_audio.delta",
+          item_id: "pre-tool-message",
+          delta: "AAAAAA==",
+        }),
+      );
+      socket.send(
+        JSON.stringify({
+          type: "demo.discard-assistant-output",
+          itemIds: ["pre-tool-message"],
+        }),
+      );
+      socket.send(
+        JSON.stringify({
           type: "response.audio.delta",
           item_id: "backchannel",
           delta: "AAAAAA==",

@@ -321,6 +321,11 @@ sequenceDiagram
 随后由编排器发起需要的 `response.create`，避免与已有 response 重叠。
 `ok: true` 必须来自真实执行结果，不能照抄示例伪造成功。
 本样例还会在工具前生成短 backchannel、隐藏其 transcript，并在工具后只显示一条完成回答。
+若模型在同一 response 先生成 message 再调用函数，relay 会发送
+`demo.discard-assistant-output`（携带 `itemIds`），要求浏览器停止排队音频并删除对应消息，
+同时丢弃这些 item 的后续输出。它是**应用自己的事件，不是 Azure 原生协议事件**，
+自定义客户端需要实现相同处理；不能只处理原生 `response.*` 而忽略它。
+已经播放的声音无法撤回，此机制用于截断余下的错误过程输出。
 具体调度、取消、去重与错误处理见 `server/voice.ts` 和 `tests/server-voice.test.ts`。
 
 **可直接运行的完整应用路径**：

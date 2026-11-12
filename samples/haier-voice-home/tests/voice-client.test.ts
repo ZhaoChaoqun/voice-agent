@@ -144,6 +144,42 @@ describe("browser voice lifecycle", () => {
     expect(audio.play).toHaveBeenCalledWith("AAAA", "a1");
   });
 
+  it("discards only the pre-tool message, stops buffered audio and retains the completed reply", async () => {
+    const socket = await connected(client);
+    socket.emit({
+      type: "response.output_audio_transcript.done",
+      item_id: "earlier-message",
+      transcript: "你好。",
+    });
+    socket.emit({
+      type: "response.output_audio_transcript.delta",
+      item_id: "pre-tool-message",
+      delta: "我先帮你打开电视",
+    });
+    socket.emit({
+      type: "response.output_audio.delta",
+      item_id: "pre-tool-message",
+      delta: "AAAA",
+    });
+    expect(client.getSnapshot().messages).toHaveLength(2);
+    socket.emit({
+      type: "demo.discard-assistant-output",
+      itemIds: ["pre-tool-message"],
+    });
+    expect(client.getSnapshot().messages.map((message) => message.id)).toEqual([
+      "earlier-message",
+    ]);
+    expect(audio.interrupt).toHaveBeenCalledOnce();
+    socket.emit({
+      type: "response.output_audio_transcript.done",
+      item_id: "post-tool-message",
+      transcript: "电视打开啦。",
+    });
+    expect(
+      client.getSnapshot().messages.map((message) => message.text),
+    ).toEqual(["你好。", "电视打开啦。"]);
+  });
+
   it("surfaces failed responses and unexpected socket closure", async () => {
     const socket = await connected(client);
     socket.emit({
