@@ -159,10 +159,13 @@ HAIER_VERIFIED_MODELS=gpt-realtime-2.1,gpt-realtime-2.1-mini
 
 ## 交互约束与数据边界
 
-所有 function call 之前先说一句简短、自然变化的 acknowledgement，不长篇解释过程。
-设备实际成功后才报告完成结果；失败不能说成已完成。若模型直接返回静默 function call，
-relay 会先请求一次禁用工具的简短 acknowledgement，等这一 response 完成后再执行工具，
-随后请求只描述真实结果的 continuation。fallback 的选择和执行顺序在源码与单元测试中保留。
+模型在工具执行前只输出 function call，不输出中间文本、音频或过程说明。
+relay 在执行前提供简短 spoken backchannel，中文只使用“好 / 收到 / 嗯，好 / 可以”，
+英语使用 “Sure.”。backchannel 的音频正常播放，但对应 transcript/text delta 和 done
+不会转发到聊天记录；聊天只显示一条工具后的完成回答。
+relay 等 backchannel response 完成后再执行工具，随后请求只描述真实结果的 continuation。
+设备实际成功后才报告完成结果；失败不能说成已完成。fallback 的选择、音频转发、
+transcript 隐藏和执行顺序均有源码及单元测试覆盖。
 它约束协议顺序，不代表模型的实际语音质量无需人工确认。
 
 六类设备包括电视、冰箱、空调、加湿器、灯和窗帘。温度/湿度等设置受 schema 和服务端规则限制；
@@ -227,7 +230,7 @@ HAIER_LIVE_BROWSER=1 npm run test:browser -- tests/browser/live-ui.spec.ts --wor
 | `401` / `403`                | 开发身份登录状态、正确 tenant、项目消费或开发角色；不要换成浏览器 token                  |
 | `realtime_requires_language` | 检查已发布定义包含 `azure-speech-streaming` 的 `zh-CN,en-US` candidate languages         |
 | 连接后一直等待               | greeting 是否完成、structured input 模板是否发布、输出 voice 是否匹配、服务端错误 code   |
-| pre-tool 没有声音            | 检查原始 response transcript / audio 事件和 fallback 测试；不要用假回复替代              |
+| pre-tool 没有声音            | 检查 response audio 事件和 fallback 测试；backchannel transcript 按设计不显示在聊天中    |
 | 麦克风被拒绝                 | localhost 或 HTTPS secure context、用户手势、浏览器系统权限                              |
 | `EADDRINUSE`                 | 选择自己空闲的端口，不停止其他会话的服务；edition proxy 的 backend 端口须一致            |
 | 无 WebGL                     | 使用可用 GPU/浏览器；UI 应显示错误，设备/文本控件仍可使用                                |

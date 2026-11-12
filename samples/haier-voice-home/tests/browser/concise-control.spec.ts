@@ -75,7 +75,7 @@ for (const model of ["gpt-realtime-2.1", SECONDARY_MODEL]) {
             ).length,
         { timeout: TURN_TIMEOUT_MS },
       )
-      .toBeGreaterThanOrEqual(2);
+      .toBeGreaterThanOrEqual(1);
     const turn = events.slice(start);
     const successIndex = turn.findIndex(
       (event) =>
@@ -105,11 +105,26 @@ for (const model of ["gpt-realtime-2.1", SECONDARY_MODEL]) {
     const completions = transcripts.filter(
       (transcript) => transcript.index > successIndex,
     );
-    expect(acknowledgements).toHaveLength(1);
-    expect(acknowledgements[0].text.length).toBeLessThanOrEqual(16);
-    expect(acknowledgements[0].text).not.toMatch(
-      /电视|打开|稍等|我先|然后|结果|状态|设置/,
-    );
+    expect(acknowledgements).toHaveLength(0);
+    expect(
+      turn
+        .slice(0, successIndex)
+        .some((event) =>
+          ["response.audio.delta", "response.output_audio.delta"].includes(
+            String(event.type),
+          ),
+        ),
+    ).toBe(true);
+    expect(
+      turn
+        .slice(0, successIndex)
+        .filter((event) =>
+          [
+            "response.audio_transcript.done",
+            "response.output_audio_transcript.done",
+          ].includes(String(event.type)),
+        ),
+    ).toHaveLength(0);
     expect(completions).toHaveLength(1);
     expect(completions[0].text).toMatch(/^电视(打开啦|已打开)/);
     expect(completions[0].text).toMatch(/小城良方|折月亮|尚公主|良陈美锦/);

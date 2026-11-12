@@ -8,15 +8,15 @@
 `npm run agents:render` 合并以下源码，生成忽略目录中的完整
 `.local/agent-definitions.json`：
 
-| 来源                                                 | 维护内容                                                 |
-| ---------------------------------------------------- | -------------------------------------------------------- |
-| `agents/*.json`                                      | 模型、PCM 格式、speech profile、voice 和 `store: false`  |
-| `server/voice-profile.ts`                            | 两只 Agent 共享的动态 VAD、AEC、降噪和双语转录常量       |
-| `server/instructions.txt` / `server/instructions.ts` | 简短 acknowledgement、结果确认、语言和 grounding 规则    |
-| `server/tools.ts` / `shared/controls.ts`             | 全部 function schema 与服务端输入范围                    |
-| `server/greeting.ts`                                 | 中英文 welcome_text 和 structured input greeting 默认值  |
-| `server/agent-config.ts`                             | wire definition 合并，以及保留未知 Portal 字段的转换逻辑 |
-| `server/sync-agent-config.ts`                        | 离线展开、显式发布、并发检查和 readback                  |
+| 来源                                                 | 维护内容                                                               |
+| ---------------------------------------------------- | ---------------------------------------------------------------------- |
+| `agents/*.json`                                      | 模型、PCM 格式、speech profile、voice 和 `store: false`                |
+| `server/voice-profile.ts`                            | 两只 Agent 共享的动态 VAD、AEC、降噪和双语转录常量                     |
+| `server/instructions.txt` / `server/instructions.ts` | 工具前模型静默、relay backchannel、单条结果回答、语言和 grounding 规则 |
+| `server/tools.ts` / `shared/controls.ts`             | 全部 function schema 与服务端输入范围                                  |
+| `server/greeting.ts`                                 | 中英文 welcome_text 和 structured input greeting 默认值                |
+| `server/agent-config.ts`                             | wire definition 合并，以及保留未知 Portal 字段的转换逻辑               |
+| `server/sync-agent-config.ts`                        | 离线展开、显式发布、并发检查和 readback                                |
 
 `welcome_text` 是字符串 structured input，greeting 为
 `{"type":"template","text":"{{{welcome_text}}}"}`。浏览器初始语言在建立 Voice

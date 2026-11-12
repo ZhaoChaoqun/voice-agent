@@ -157,6 +157,19 @@ test("streams a mocked assistant turn, tool state, and an auditable action", asy
       const event = JSON.parse(String(raw));
       if (event.type !== "response.create") return;
       socket.send(JSON.stringify({ type: "response.created" }));
+      socket.send(
+        JSON.stringify({
+          type: "response.audio.delta",
+          item_id: "backchannel",
+          delta: "AAAAAA==",
+        }),
+      );
+      socket.send(
+        JSON.stringify({
+          type: "response.done",
+          response: { status: "completed" },
+        }),
+      );
       socket.send(JSON.stringify({ type: "demo.state", home: updated }));
       socket.send(
         JSON.stringify({
@@ -198,6 +211,7 @@ test("streams a mocked assistant turn, tool state, and an auditable action", asy
   await expect(page.locator(".message-assistant")).toHaveText(
     "好呀，空调已经调到 25 度。",
   );
+  await expect(page.locator(".message-assistant")).toHaveCount(1);
   await expect(
     page.locator(".device-card-main").filter({ hasText: "空调" }),
   ).toContainText("25°C");

@@ -66,9 +66,10 @@ sequenceDiagram
   N-->>B: demo.ready
   B->>N: PCM append 或 input_text
   N->>A: 校验后转发
-  A-->>N: 简短 acknowledgement + function call
-  Note over N,A: 若 function response 无语音，先请求 tool_choice:none acknowledgement
-  A-->>N: acknowledgement response.done
+  A-->>N: 静默 function call，不输出中间文本或音频
+  N->>A: tool_choice:none 短 backchannel
+  A-->>N: backchannel audio + response.done
+  N-->>B: 仅转发 backchannel 音频，隐藏 transcript
   N->>T: 校验 / 去重 / 执行
   T-->>N: 成功或失败结果、状态、证据
   N-->>B: demo.tool / demo.state / demo.sources
@@ -98,12 +99,15 @@ UI 语言只决定欢迎语和界面；转录候选语言固定为 `zh-CN,en-US`
 或 endpointing model 来改变这份配置。relay 不在每次 `session.update` 重写 VAD/降噪/转录；
 因此必须先正确发布 Agent，不能只靠连接时覆盖来补齐缺失配置。
 
-instructions 要求每次 function call 前先简短 acknowledgement，禁止长过程说明。
+instructions 要求工具前模型只输出 function call，不说中间文本或音频，禁止长过程说明。
 `VoiceSession` 在 `response.done` 收集并去重 call；若 response 没有 spoken output，
-用 call ID 稳定选择一个简短中文变体，英语 fallback 为 “Sure.”，请求一次禁用工具的 response。
+用 call ID 稳定选择“好 / 收到 / 嗯，好 / 可以”，英语为 “Sure.”，请求一次禁用工具的 backchannel response。
+backchannel 的音频正常转发，但 `audio_transcript/output_audio_transcript/text/output_text`
+的 delta/done 事件被隐藏，不在聊天中生成额外消息；后续完成回答恢复正常 transcript 转发。
 收到完成后才执行 pending calls，再通过只允许讲话的 continuation 汇报工具结果。
-取消/失败会丢弃 pending calls，不执行被取消的动作。单元测试覆盖 fallback、原生 acknowledgement、
-重复 call、取消、首轮 greeting 和 continuation 顺序。
+取消/失败会丢弃 pending calls，不执行被取消的动作。单元测试覆盖 fallback、音频转发和全部 transcript 变体隐藏、
+后续回答恢复、重复 call、取消、首轮 greeting 和 continuation 顺序。
+对旧模型已主动说出的 acknowledgement 保留兼容调度；新的 instructions 不再请求这一行为。
 
 这是确定的调度策略，不是硬编码的用户意图解析器；输出仍由真正的 Voice Agent 生成。
 成功语句必须基于实际工具结果，失败不能被模型描述成成功；源代码不能保证每个声学环境下的主观体验。

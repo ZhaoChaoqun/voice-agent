@@ -115,16 +115,20 @@ describe("Portal-preserving Agent authoring", () => {
     );
     expect(prompt).toContain("not a prerequisite");
   });
-  it("requires a simple varied acknowledgement and a useful post-action TV reply", () => {
+  it("keeps pre-tool model output silent and one useful post-action TV reply", () => {
     const prompt = homeInstructions();
-    expect(prompt).toContain("speak one simple, concise acknowledgement");
-    expect(prompt).toContain("vary it naturally even for the same intent");
-    expect(prompt).toContain('Answer: "电视打开啦。想轻松一点');
     expect(prompt).toContain(
-      'a short varied acknowledgement such as "好。" or "这就来。"',
+      "the function call must be the only model output before its result arrives",
     );
     expect(prompt).toContain(
-      "The completed device result and useful viewing suggestion belong in the post-tool answer",
+      "The application relay supplies its own brief spoken backchannel",
+    );
+    expect(prompt).toContain('Answer: "电视打开啦。想轻松一点');
+    expect(prompt).toContain(
+      'a short backchannel such as "好。" without adding it to the conversation transcript',
+    );
+    expect(prompt).toContain(
+      "The completed device result and useful viewing suggestion belong in the single post-tool answer",
     );
   });
   it("marks appliance control as required before claiming a visible change", () => {

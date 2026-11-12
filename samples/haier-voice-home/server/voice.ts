@@ -91,12 +91,7 @@ interface PendingToolCall {
 
 // These short confirmations are spoken before a local function is executed.
 // The call ID selects a stable variant so repeated intents do not always sound identical.
-const TOOL_ACKNOWLEDGEMENTS = [
-  "好的。",
-  "没问题。",
-  "可以，这就来。",
-  "收到。",
-];
+const TOOL_ACKNOWLEDGEMENTS = ["好。", "收到。", "嗯，好。", "可以。"];
 
 export interface VoiceDependencies {
   getToken: () => Promise<string>;
@@ -309,6 +304,9 @@ export class VoiceSession {
     try {
       const event = JSON.parse(data.toString()) as BackendEvent;
       if (typeof event.type !== "string") return;
+      const suppressTranscript =
+        this.toolAcknowledgementInProgress &&
+        isAssistantTranscriptEvent(event.type);
       if (event.type === "error") {
         if (
           ["response_cancel_not_active", "response_cancel_not_found"].includes(
@@ -342,7 +340,8 @@ export class VoiceSession {
         this.functionCall(event);
       if (event.type === "response.done") this.responseDone(event);
       // Session metadata contains server-controlled instructions and tool schemas; keep it private.
-      if (!event.type.startsWith("session.")) sendEvent(this.browser, event);
+      if (!event.type.startsWith("session.") && !suppressTranscript)
+        sendEvent(this.browser, event);
     } catch {
       this.fail("The managed voice service returned an invalid event.");
     }
@@ -567,6 +566,12 @@ function responseHasSpokenOutput(
       );
     });
   });
+}
+
+function isAssistantTranscriptEvent(type: string): boolean {
+  return /^(response\.(audio_transcript|output_audio_transcript|text|output_text)\.(delta|done))$/.test(
+    type,
+  );
 }
 
 function toolAcknowledgement(callId: string): string {

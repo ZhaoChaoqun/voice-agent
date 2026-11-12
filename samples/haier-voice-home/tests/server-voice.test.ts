@@ -262,11 +262,50 @@ describe("managed Voice Agent relay", () => {
       response: {
         tool_choice: "none",
         instructions: expect.stringMatching(
-          /repeat verbatim, character for character: "(好的。|没问题。|可以，这就来。|收到。)"/,
+          /repeat verbatim, character for character: "(好。|收到。|嗯，好。|可以。)"/,
         ),
       },
     });
     expect(home.snapshot().revision).toBe(0);
+    for (const kind of [
+      "audio_transcript",
+      "output_audio_transcript",
+      "text",
+      "output_text",
+    ]) {
+      for (const suffix of ["delta", "done"])
+        upstream.receive({
+          type: `response.${kind}.${suffix}`,
+          item_id: "ack-item",
+          transcript: "好。",
+          text: "好。",
+          delta: "好。",
+        });
+    }
+    upstream.receive({
+      type: "response.audio.delta",
+      item_id: "ack-item",
+      delta: "AAAA",
+    });
+    upstream.receive({
+      type: "response.output_audio.delta",
+      item_id: "ack-item",
+      delta: "AAAA",
+    });
+    expect(
+      browser.events.some((event) =>
+        /^response\.(audio_transcript|output_audio_transcript|text|output_text)\./.test(
+          String(event.type),
+        ),
+      ),
+    ).toBe(false);
+    expect(
+      browser.events.filter((event) =>
+        ["response.audio.delta", "response.output_audio.delta"].includes(
+          String(event.type),
+        ),
+      ),
+    ).toHaveLength(2);
     upstream.receive({
       type: "response.done",
       response: {
@@ -274,7 +313,7 @@ describe("managed Voice Agent relay", () => {
         output: [
           {
             type: "message",
-            content: [{ type: "output_audio", transcript: "好的。" }],
+            content: [{ type: "output_audio", transcript: "好。" }],
           },
         ],
       },
@@ -302,6 +341,22 @@ describe("managed Voice Agent relay", () => {
     expect(browser.events.some((event) => event.type === "demo.state")).toBe(
       true,
     );
+    upstream.receive({
+      type: "response.audio_transcript.done",
+      item_id: "completion-item",
+      transcript: "电视打开啦。",
+    });
+    expect(
+      browser.events.filter(
+        (event) => event.type === "response.audio_transcript.done",
+      ),
+    ).toEqual([
+      {
+        type: "response.audio_transcript.done",
+        item_id: "completion-item",
+        transcript: "电视打开啦。",
+      },
+    ]);
   });
 
   it("uses an acknowledgement already spoken by Realtime before applying the tool", async () => {

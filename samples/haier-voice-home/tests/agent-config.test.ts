@@ -53,7 +53,7 @@ describe("portable Voice Agent configuration", () => {
         },
       });
       expect(definition.instructions).toContain(
-        "speak one simple, concise acknowledgement",
+        "The application relay supplies its own brief spoken backchannel",
       );
       expect(JSON.stringify(definition)).not.toMatch(
         /\/subscriptions\/|services\.ai\.azure\.com/,
