@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Haier Voice · WebRTC Latency Lab</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #f5f8fb;
+        color: #17314b;
+        font: 16px system-ui;
+      }
+      main {
+        width: min(720px, calc(100vw - 32px));
+        padding: 32px;
+        border-radius: 22px;
+        background: #fff;
+        box-shadow: 0 18px 60px #1233;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-weight: 500;
+      }
+      p {
+        line-height: 1.6;
+        color: #5a7087;
+      }
+      button,
+      input {
+        box-sizing: border-box;
+        padding: 12px 14px;
+        border-radius: 9px;
+        font: inherit;
+      }
+      button {
+        border: 0;
+        background: #005aaa;
+        color: #fff;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      input {
+        flex: 1;
+        min-width: 0;
+        border: 1px solid #cdd9e5;
+      }
+      form {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 8px 18px;
+        padding: 18px;
+        background: #f5f8fb;
+        border-radius: 12px;
+      }
+      dt {
+        color: #71859a;
+      }
+      dd {
+        margin: 0;
+        font-variant-numeric: tabular-nums;
+      }
+      #events {
+        min-height: 90px;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <small>MODEL MODE · WEBRTC A/B</small>
+      <h1>Haier Voice Latency Lab</h1>
+      <p>
+        音频使用 WebRTC RTP，事件使用
+        <code>voice-live-events</code> DataChannel；服务端只持有 MediaGateway
+        控制通道。
+      </p>
+      <dl>
+        <dt>Model</dt>
+        <dd id="model">加载中…</dd>
+        <dt>Status</dt>
+        <dd id="status">未连接</dd>
+        <dt>Setup</dt>
+        <dd id="setup">—</dd>
+        <dt>TTFA</dt>
+        <dd id="ttfa">—</dd>
+        <dt>Transcript</dt>
+        <dd id="transcript">—</dd>
+      </dl>
+      <button id="connect">开始 WebRTC 会话</button>
+      <form id="turn">
+        <input id="text" value="你好，请简单回复你好。" maxlength="4000" />
+        <button id="send" disabled>发送并测量</button>
+      </form>
+      <p id="events"></p>
+    </main>
+    <script>
+      let peer;
+      let channel;
+      let stream;
+      let sessionId = "";
+      let turnStarted = 0;
+      const status = document.querySelector("#status");
+      const events = document.querySelector("#events");
+      const send = document.querySelector("#send");
+      fetch("/api/config")
+        .then((response) => response.json())
+        .then((config) => {
+          document.querySelector("#model").textContent = config.model;
+        });
+      function log(message) {
+        events.textContent =
+          `${new Date().toLocaleTimeString()} ${message}\n${events.textContent}`.slice(
+            0,
+            3000,
+          );
+      }
+      document.querySelector("#connect").onclick = async () => {
+        const started = performance.now();
+        status.textContent = "连接中…";
+        peer = new RTCPeerConnection({
+          iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+        });
+        const audio = document.createElement("audio");
+        audio.autoplay = true;
+        peer.ontrack = (event) => {
+          audio.srcObject = event.streams[0];
+        };
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((track) => peer.addTrack(track, stream));
+        channel = peer.createDataChannel("voice-live-events");
+        channel.onmessage = (event) => {
+          const message = JSON.parse(event.data);
+          if (message.type === "output_audio_buffer.started" && turnStarted) {
+            document.querySelector("#ttfa").textContent =
+              `${Math.round(performance.now() - turnStarted)} ms`;
+            turnStarted = 0;
+          }
+          if (message.type === "response.audio_transcript.done") {
+            document.querySelector("#transcript").textContent =
+              message.transcript;
+          }
+          if (
+            [
+              "response.created",
+              "response.done",
+              "input_audio_buffer.speech_started",
+              "input_audio_buffer.speech_stopped",
+            ].includes(message.type)
+          )
+            log(message.type);
+        };
+        const offer = await peer.createOffer();
+        await peer.setLocalDescription(offer);
+        await new Promise((resolve) => {
+          if (peer.iceGatheringState === "complete") return resolve();
+          peer.onicegatheringstatechange = () =>
+            peer.iceGatheringState === "complete" && resolve();
+          setTimeout(resolve, 3000);
+        });
+        const response = await fetch("/api/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sdpOffer: peer.localDescription.sdp }),
+        });
+        if (!response.ok) throw new Error((await response.json()).error);
+        const created = await response.json();
+        sessionId = created.sessionId;
+        await peer.setRemoteDescription({
+          type: "answer",
+          sdp: created.sdpAnswer,
+        });
+        await new Promise((resolve) => {
+          if (channel.readyState === "open") return resolve();
+          channel.onopen = resolve;
+        });
+        document.querySelector("#setup").textContent =
+          `${Math.round(performance.now() - started)} ms`;
+        status.textContent = "已连接";
+        send.disabled = false;
+      };
+      document.querySelector("#turn").onsubmit = async (event) => {
+        event.preventDefault();
+        turnStarted = performance.now();
+        document.querySelector("#ttfa").textContent = "等待首音频…";
+        const response = await fetch(`/api/sessions/${sessionId}/turns`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: document.querySelector("#text").value }),
+        });
+        if (!response.ok) throw new Error((await response.json()).error);
+      };
+      window.addEventListener("beforeunload", () => {
+        if (sessionId) navigator.sendBeacon(`/api/sessions/${sessionId}`, "");
+        stream?.getTracks().forEach((track) => track.stop());
+        peer?.close();
+      });
+    </script>
+  </body>
+</html>

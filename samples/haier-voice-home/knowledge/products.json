@@ -1,0 +1,34 @@
+[
+  {
+    "id": "haier-seeker-75v80d",
+    "title": "Haier Seeker 75V80D — official China product facts / 官方产品信息",
+    "model": "75V80D",
+    "kind": "manufacturer",
+    "url": "https://www.haier.com/televisions/20260423_289662.shtml",
+    "content": "Verified from Haier China on 2026-11-12, paraphrased facts rather than a complete manual. Seeker 75V80D is a 75-inch 3840×2160 television in Ice River Silver. Its RGB 16-bit ambient-light sensor automatically adjusts screen brightness and color temperature; it offers a close-viewing distance reminder. The official page describes its own home-control ecosystem and Xiaoyou assistant; this is not evidence that our custom Voice Agent is a manufacturer integration. Wall-mountable, bare-panel width 1669 mm, height 963 mm, depth 31 mm. 海尔Seeker 75英寸智慧屏，冰河银，4K；环境光传感器随光线调整亮度和色温；近距离观看提醒；可壁挂。顾问角度：从白天的阳光到晚上的柔光，少一点手动调节，让观看更从容。The official Haier AWE2026 release dated 2026-03-17 introduces the Seeker series: https://www.haier.com/global/press-events/news/20260402_288853.shtml . This links the 2026 showcased series to the official product listing; it does not prove this SKU first launched in summer 2026 or was the exact exhibition unit."
+  },
+  {
+    "id": "haier-xiaohonghua-480",
+    "title": "Haier Xiaohonghua BCD-480WGHTDEDXMU1 — official China product facts / 官方产品信息",
+    "model": "BCD-480WGHTDEDXMU1",
+    "kind": "manufacturer",
+    "url": "https://www.haier.com/cooling/20260914_294934.shtml",
+    "content": "Verified from Haier China on 2026-11-12, paraphrased product facts, not a complete manual. Haier Xiaohonghua BCD-480WGHTDEDXMU1 is a 480 L cross-door four-door refrigerator in Ice River Silver with PCM sheet-metal panels. The variable-temperature zone has three modes: maternal/infant, eggs and fresh foods. Official exterior width 830 mm, height 1850 mm, depth 594 mm. 海尔小红花480升十字四门冰箱，冰河银；三档变温区可按母婴、蛋类、生鲜选择；594毫米薄机身，兼顾储物与餐厨走动空间。顾问角度：一家人的食材各有各的保存需求，分区安排比只追求低温更贴近日常。The official catalog currently lists this real model, but its original launch year and a summer-2026 release are not established. Do not attribute AI food cameras, automatic inventory recognition, exact storage-life extensions, Humidity Zone or a European energy label to this model. The household food list is entered scenario context, not a manufacturer camera feed."
+  },
+  {
+    "id": "haier-comfortwind-z6a",
+    "title": "Haier Comfort Wind KFR-35GW/Z6A — official China product facts / 官方产品信息",
+    "model": "KFR-35GW/Z6A",
+    "kind": "manufacturer",
+    "url": "https://www.haier.com/air_conditioners/20260915_294973.shtml",
+    "content": "Verified from Haier China on 2026-11-12, paraphrased product facts, not a complete manual. Haier Comfort Wind KFR-35GW/Z6A is a 1.5-horsepower wall-mounted air conditioner in Jasmine White. The official page describes coordinated dual-wing airflow control over 300 degrees, human sensing that avoids direct cold airflow when someone comes within 2 metres, and indoor/outdoor-unit self-cleaning. Indoor unit width 910 mm, height 315 mm, depth 215 mm. 海尔舒适风1.5匹壁挂空调，茉莉白；双翼控风、人感防直吹、内外机自清洁。顾问角度：看电视、聊天时，不只是把温度调低，更在意冷风别一直追着人吹。A 2026-03-14 AWE report discusses the Comfort Wind series, not the exact SKU launch: https://topics.gmw.cn/2026-03/14/content_38647482.htm . Do not infer this SKU was an AWE debut or promise suitability for any arbitrary living-room area. Our on-screen setpoints are scenario controls, not proof of actual manufacturer connectivity."
+  },
+  {
+    "id": "home-controls",
+    "title": "Home controls and comfort scenes / 家居控制与舒适场景",
+    "model": "HOME",
+    "kind": "demo",
+    "url": "https://www.haier.com/cn/",
+    "content": "Independent concept-home operating guide, not a Haier manufacturer manual or IoT integration. The TV, refrigerator and AC use verified model identities in their manufacturer references; humidifier, ambient lights and motorized curtains are generic scenario devices with no verified Haier SKU. TV volume 0–100; channel home/movie/music; a selected media title represents preparation, not licensed streaming. AC temperature 16–30 Celsius; mode cool/heat/auto/fan; fanSpeed low/medium/high/auto. Humidifier targetHumidity 30–70 percent; mistLevel low/medium/high/auto. Lights brightness 0–100 and warmth 2700–6500 Kelvin. Curtains fully open or closed. Fridge targets 2–8 Celsius and -24 to -16 Celsius; these are scenario control limits, not manufacturer instructions. Refrigerator power-off is blocked. Environmental temperature 26.4 Celsius, humidity 42 percent and air-quality index 18 are illustrative, uncalibrated readings and do not instantly change with setpoints. Movie scene prepares TV, softer lights and closed curtains; comfort prepares AC 24 Celsius, humidity target 50 percent and warm light; away turns off TV, AC, humidifier and lights and closes curtains, keeping the refrigerator on. Food records are entered household context, not camera observations or proof of expiry/safety. Replenishment only edits a private list, with no merchant checkout, payment or delivery. Ordinary conversation can use natural device names; explain the scenario boundary when asked about physical connectivity or an actual order."
+  }
+]

@@ -1,0 +1,50 @@
+{
+  "asOf": "2026-11-12T03:05:00Z",
+  "items": [
+    {
+      "id": "small-town-remedy",
+      "title": "小城良方",
+      "kind": "series",
+      "platform": "爱奇艺",
+      "sourceUrl": "https://m.iqiyi.com/ranklist.html?cid=2&tagId=0&tagName=%E7%83%AD%E6%92%AD%E6%A6%9C",
+      "sourceDate": "2026-11-12",
+      "description": "都市题材；适合想看日常生活与人物故事的晚上。Source: official platform popularity-page search snapshot; do not quote an unverified plot or ranking."
+    },
+    {
+      "id": "fold-the-moon",
+      "title": "折月亮",
+      "kind": "series",
+      "platform": "爱奇艺",
+      "sourceUrl": "https://m.iqiyi.com/ranklist.html?cid=2&tagId=0&tagName=%E7%83%AD%E6%92%AD%E6%A6%9C",
+      "sourceDate": "2026-11-12",
+      "description": "都市爱情题材；可作为轻松追剧的选择。Source: official platform popularity-page search snapshot."
+    },
+    {
+      "id": "shang-gong-zhu",
+      "title": "尚公主",
+      "kind": "series",
+      "platform": "腾讯视频",
+      "sourceUrl": "https://v.qq.com/x/cover/mzc002001w361jz/m33420pcanw.html",
+      "sourceDate": "2026-10-23",
+      "description": "古装爱情题材。Source is an official series information/clip page, not proof of today's ranking or a right to stream episodes."
+    },
+    {
+      "id": "liang-chen-mei-jin",
+      "title": "良陈美锦",
+      "kind": "series",
+      "platform": "芒果TV",
+      "sourceUrl": "https://www.mgtv.com/lib/2?year=all&feature=all",
+      "sourceDate": "2026-11-04",
+      "description": "出现在平台最热电视剧片库的检索快照；可作古装剧片单选择。不声称当前排名、最近上映或独家播放。"
+    },
+    {
+      "id": "interstellar",
+      "title": "星际穿越 / Interstellar",
+      "kind": "movie",
+      "platform": "经典电影片单",
+      "sourceUrl": "https://www.interstellarmovie.net/",
+      "sourceDate": null,
+      "description": "经典科幻电影，可为用户准备沉浸观影环境；不是近期上映推荐，也不表示已经接入影片播放或会员。"
+    }
+  ]
+}
