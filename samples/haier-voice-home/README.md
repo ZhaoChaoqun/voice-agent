@@ -21,7 +21,8 @@
 资源配置、环境文件、访问码、会话签名密钥或部署状态。三个保留的 UI 均从源码构建；
 现代版不是对历史 minified bundle 的重新包装。
 
-详细说明：[架构](ARCHITECTURE.md) · [Agent 配置](agents/README.md) ·
+详细说明：[客户接入指南：部署 / WebSocket / WebRTC / 真实设备与 MCP](INTEGRATION.md) ·
+[架构](ARCHITECTURE.md) · [Agent 配置](agents/README.md) ·
 [ACA 部署](deploy/README.md) · [Modern](editions/modern/README.md) ·
 [Habitat](editions/habitat/README.md)。
 
