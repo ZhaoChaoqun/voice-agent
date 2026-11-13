@@ -11,18 +11,14 @@ import {
 import express from "express";
 import { WebSocket, type RawData } from "ws";
 import { z } from "zod";
+import { VOICE_MODEL_IDS } from "@shared/protocol";
 import { isSameOrigin } from "#server/app";
 
 const API_VERSION = "2026-07-15";
 const CONNECT_TIMEOUT_MS = 60_000; // Bound token acquisition, WebSocket upgrade and SDP negotiation.
 const MAX_SDP_LENGTH = 256 * 1024; // Match the MediaGateway control-message limit.
 const MAX_TEXT_LENGTH = 4_000; // Bound benchmark text turns.
-const ALLOWED_MODELS = new Set([
-  "microsoft-realtime-flash-1",
-  "microsoft-realtime-flash",
-  "gpt-realtime-2.1",
-  "gpt-realtime-2.1-mini",
-]);
+const ALLOWED_MODELS = new Set<string>(VOICE_MODEL_IDS);
 const sessionRequestSchema = z
   .object({ sdpOffer: z.string().min(1).max(MAX_SDP_LENGTH) })
   .strict();

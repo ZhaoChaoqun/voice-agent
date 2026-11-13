@@ -91,26 +91,11 @@ describe("Portal-preserving Agent authoring", () => {
       FOUNDRY_PROJECT_ENDPOINT:
         "https://example.services.ai.azure.com/api/projects/example",
       SMART_HOME_FLASH_AGENT: "unit-flash",
-      SMART_HOME_MINI_AGENT: "unused-comparison-mini",
       SMART_HOME_VERIFIED_MODELS: "microsoft-realtime-flash-1",
     });
     expect(config.models.filter((model) => model.available)).toEqual([
       expect.objectContaining({
         id: "microsoft-realtime-flash-1",
-        agentName: "unit-flash",
-        label: "Microsoft Realtime Flash",
-      }),
-    ]);
-    const unversioned = runtimeConfig({
-      FOUNDRY_PROJECT_ENDPOINT:
-        "https://example.services.ai.azure.com/api/projects/example",
-      SMART_HOME_FLASH_AGENT: "unit-flash",
-      SMART_HOME_SECONDARY_MODEL_ID: "microsoft-realtime-flash",
-      SMART_HOME_VERIFIED_MODELS: "microsoft-realtime-flash",
-    });
-    expect(unversioned.models.filter((model) => model.available)).toEqual([
-      expect.objectContaining({
-        id: "microsoft-realtime-flash",
         agentName: "unit-flash",
         label: "Microsoft Realtime Flash",
       }),
@@ -138,24 +123,36 @@ describe("Portal-preserving Agent authoring", () => {
     });
   });
 
-  it("uses the Mini selector without presenting it as Flash", () => {
+  it("enables the Realtime comparison without changing the Flash identity", () => {
     const config = runtimeConfig({
       FOUNDRY_PROJECT_ENDPOINT:
         "https://example.services.ai.azure.com/api/projects/example",
-      SMART_HOME_SECONDARY_MODEL_ID: "gpt-realtime-2.1-mini",
-      SMART_HOME_VERIFIED_MODELS: "gpt-realtime-2.1,gpt-realtime-2.1-mini",
+      SMART_HOME_VERIFIED_MODELS: "gpt-realtime-2.1,microsoft-realtime-flash-1",
     });
     expect(config.models).toContainEqual(
       expect.objectContaining({
-        id: "gpt-realtime-2.1-mini",
-        label: "GPT Realtime 2.1 Mini",
+        id: "gpt-realtime-2.1",
+        label: "GPT Realtime 2.1",
         available: true,
-        agentName: "home-mini",
+        agentName: "home-realtime",
       }),
     );
-    expect(config.models.some((model) => model.id.includes("flash"))).toBe(
-      false,
-    );
+    expect(config.models.map((model) => model.id)).toEqual([
+      "gpt-realtime-2.1",
+      "microsoft-realtime-flash-1",
+    ]);
+  });
+
+  it("rejects unsupported verified models instead of silently selecting a different model", () => {
+    expect(() =>
+      runtimeConfig({ SMART_HOME_VERIFIED_MODELS: "unsupported-model" }),
+    ).toThrow("SMART_HOME_VERIFIED_MODELS");
+    expect(() =>
+      voiceAgentDefinition(remoteVoiceDefinition("unsupported-model"), {
+        instructions: "Concierge",
+        tools: [],
+      }),
+    ).toThrow();
   });
 
   it("embeds source-dated titles so a recommendation does not wait for an unavailable Playground tool", () => {
@@ -246,13 +243,13 @@ describe("Portal-preserving Agent authoring", () => {
     });
   });
 
-  it("applies the complete speech profile to Mini", () => {
-    const definition = voiceAgentDefinition(
-      remoteVoiceDefinition("gpt-realtime-2.1-mini"),
-      { instructions: "Concierge", tools: [] },
-    );
+  it("applies the complete speech profile to GPT Realtime", () => {
+    const definition = voiceAgentDefinition(remoteVoiceDefinition(), {
+      instructions: "Concierge",
+      tools: [],
+    });
     expect(definition).toMatchObject({
-      store: false,
+      store: true,
       audio: {
         input: {
           turn_detection: {
@@ -315,17 +312,17 @@ describe("Portal-preserving Agent authoring", () => {
     });
   });
 
-  it("uses the same dynamic VAD for Mini", () => {
+  it("keeps the Realtime service overlay free of unsupported VAD fields", () => {
     const service = voiceAgentService(
-      "home-mini",
-      remoteVoiceDefinition("gpt-realtime-2.1-mini"),
+      "home-realtime",
+      remoteVoiceDefinition(),
       {
         instructions: "New concierge instructions",
         tools: [],
       },
     );
     expect(service).toMatchObject({
-      store: false,
+      store: true,
       audio: {
         input: {
           turnDetection: {
@@ -759,10 +756,10 @@ describe("local HTTP API", () => {
     const base = await listen();
     const config = await (await fetch(`${base}/api/config`)).json();
     expect(config.backend.configured).toBe(false);
+    expect(config.models).toHaveLength(2);
     expect(
-      config.models.find((entry: { id: string }) => entry.id === "gpt-live")
-        .available,
-    ).toBe(false);
+      config.models.every((entry: { available: boolean }) => !entry.available),
+    ).toBe(true);
     expect(JSON.stringify(config)).not.toMatch(
       /accessToken|Bearer |FOUNDRY_PROJECT_ENDPOINT/,
     );

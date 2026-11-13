@@ -18,17 +18,16 @@ describe("WebRTC benchmark", () => {
     );
   });
 
-  it.each([
-    "microsoft-realtime-flash",
-    "gpt-realtime-2.1",
-    "gpt-realtime-2.1-mini",
-  ])("accepts approved benchmark model %s", (model) => {
-    const config = webRtcBenchmarkConfig({
-      VOICE_LIVE_ENDPOINT: "https://example.services.ai.azure.com",
-      WEBRTC_MODEL: model,
-    });
-    expect(mediaGatewayUrl(config)).toContain(`model=${model}`);
-  });
+  it.each(["microsoft-realtime-flash-1", "gpt-realtime-2.1"])(
+    "accepts approved benchmark model %s",
+    (model) => {
+      const config = webRtcBenchmarkConfig({
+        VOICE_LIVE_ENDPOINT: "https://example.services.ai.azure.com",
+        WEBRTC_MODEL: model,
+      });
+      expect(mediaGatewayUrl(config)).toContain(`model=${model}`);
+    },
+  );
 
   it("rejects unapproved models instead of silently changing the benchmark", () => {
     expect(() =>

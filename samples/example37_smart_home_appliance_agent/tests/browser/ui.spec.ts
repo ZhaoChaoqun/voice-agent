@@ -14,8 +14,8 @@ function fixture(): DemoConfig {
         available: true,
       },
       {
-        id: "gpt-live",
-        label: "GPT Live",
+        id: "unsupported-model",
+        label: "Unsupported model",
         available: false,
         reason: "Model not advertised by this endpoint.",
       },
@@ -295,7 +295,7 @@ test("knowledge shows sample provenance and imports an allowed plain-text guide"
 test("requested unavailable models cannot masquerade as another model", async ({
   page,
 }) => {
-  const option = page.locator("#voice-model option[value='gpt-live']");
+  const option = page.locator("#voice-model option[value='unsupported-model']");
   await expect(option).toBeDisabled();
   await page.locator("#voice-model").selectOption("microsoft-realtime-flash-1");
   await expect(page.locator("#voice-model")).toHaveValue(

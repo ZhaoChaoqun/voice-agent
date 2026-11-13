@@ -242,10 +242,10 @@ test("bilingual UI keeps offline models clearly unavailable", async ({
 }) => {
   await expect(page.locator("#atelier-model")).toHaveValue("");
   await expect(
-    page.locator("#atelier-model option[value='gpt-live']"),
+    page.locator("#atelier-model option[value='gpt-realtime-2.1']"),
   ).toBeDisabled();
   await expect(
-    page.locator("#atelier-model option[value='gpt-live']"),
+    page.locator("#atelier-model option[value='gpt-realtime-2.1']"),
   ).toContainText("暂不可用");
   await expect(
     page.locator("#atelier-model option[value='microsoft-realtime-flash-1']"),

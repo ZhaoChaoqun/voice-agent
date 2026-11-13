@@ -21,17 +21,21 @@ const origin = required("SMART_HOME_PUBLIC_ORIGIN");
 const projectEndpoint = required("FOUNDRY_PROJECT_ENDPOINT");
 const accessCode = required("SMART_HOME_ACCESS_CODE");
 const sessionSecret = required("SMART_HOME_SESSION_SECRET");
-const minimum = process.env.SMART_HOME_MIN_REPLICAS ?? "1";
-const secondaryModelId =
-  process.env.SMART_HOME_SECONDARY_MODEL_ID ?? "microsoft-realtime-flash-1";
+const verifiedModels = required("SMART_HOME_VERIFIED_MODELS");
 if (
-  !["microsoft-realtime-flash-1", "microsoft-realtime-flash"].includes(
-    secondaryModelId,
-  )
+  verifiedModels
+    .split(",")
+    .some(
+      (model) =>
+        !["microsoft-realtime-flash-1", "gpt-realtime-2.1"].includes(
+          model.trim(),
+        ),
+    )
 )
   throw new Error(
-    "SMART_HOME_SECONDARY_MODEL_ID must be microsoft-realtime-flash-1 or microsoft-realtime-flash.",
+    "SMART_HOME_VERIFIED_MODELS must contain only microsoft-realtime-flash-1, gpt-realtime-2.1.",
   );
+const minimum = process.env.SMART_HOME_MIN_REPLICAS ?? "1";
 const webRoot = process.env.SMART_HOME_WEB_ROOT ?? "editions/habitat/dist";
 if (!["0", "1"].includes(minimum))
   throw new Error("SMART_HOME_MIN_REPLICAS must be 0 or 1.");
@@ -100,10 +104,13 @@ const env = {
   SMART_HOME_WEB_ROOT: webRoot,
   FOUNDRY_PROJECT_ENDPOINT: projectEndpoint,
   SMART_HOME_FLASH_AGENT: required("SMART_HOME_FLASH_AGENT"),
-  SMART_HOME_SECONDARY_MODEL_ID: secondaryModelId,
-  SMART_HOME_VERIFIED_MODELS: required("SMART_HOME_VERIFIED_MODELS"),
+  SMART_HOME_VERIFIED_MODELS: verifiedModels,
   AZURE_CLIENT_ID: required("AZURE_CLIENT_ID"),
 };
+if (
+  verifiedModels.split(",").some((model) => model.trim() === "gpt-realtime-2.1")
+)
+  env.SMART_HOME_REALTIME_AGENT = required("SMART_HOME_REALTIME_AGENT");
 const manifest = {
   name: appName,
   type: "Microsoft.App/containerApps",

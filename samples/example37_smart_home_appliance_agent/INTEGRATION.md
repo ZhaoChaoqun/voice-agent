@@ -25,10 +25,10 @@ deliberately execute them and require authorization in your target environment.
 
 Use Node.js **24.5+**, npm, Azure CLI, and your own Foundry resource/project.
 The default is **Microsoft Realtime Flash**, `microsoft-realtime-flash-1`.
-The runtime also accepts `microsoft-realtime-flash` if that is the exact
-catalog ID in your project; keep `agents/flash.json`,
-`SMART_HOME_SECONDARY_MODEL_ID`, and `SMART_HOME_VERIFIED_MODELS` aligned.
-Do not assume catalog aliases, model access, regions, or quota are interchangeable.
+The only supported API model IDs are `microsoft-realtime-flash-1` and
+`gpt-realtime-2.1`; keep the selected template and
+`SMART_HOME_VERIFIED_MODELS` aligned. Product names and unversioned IDs are not
+aliases. Do not assume model access, regions, or quota are interchangeable.
 
 `model_type: managed` selects a service-managed model, not a deployment name.
 It needs no separately created Azure OpenAI deployment with the same name.
@@ -170,7 +170,7 @@ back all submitted fields. The concurrency check is not atomic: coordinate an
 exclusive editing window. No resources, model deployments, or RBAC are created.
 
 See [Agent definitions](agents/README.md) for explicit `--comparison` publishing,
-which selects comparison Agents instead of Flash and is not a prerequisite.
+which selects only the GPT Realtime Agent instead of Flash and is not a prerequisite.
 
 ### Optional raw REST alternative
 
@@ -213,7 +213,6 @@ Configure the root server's `.env`, after inspecting the saved Agent/model:
 ```dotenv
 FOUNDRY_PROJECT_ENDPOINT=https://<resource>.services.ai.azure.com/api/projects/<project>
 SMART_HOME_FLASH_AGENT=<your-flash-agent-name>
-SMART_HOME_SECONDARY_MODEL_ID=microsoft-realtime-flash-1
 SMART_HOME_VERIFIED_MODELS=microsoft-realtime-flash-1
 ```
 

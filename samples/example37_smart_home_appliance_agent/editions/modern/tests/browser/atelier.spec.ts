@@ -180,7 +180,7 @@ test("knowledge and offline model availability remain honest", async ({
 }) => {
   await expect(page.locator("#atelier-model")).toHaveValue("");
   await expect(
-    page.locator("#atelier-model option[value='gpt-live']"),
+    page.locator("#atelier-model option[value='gpt-realtime-2.1']"),
   ).toBeDisabled();
   await expect(
     page.locator("#atelier-model option[value='microsoft-realtime-flash-1']"),

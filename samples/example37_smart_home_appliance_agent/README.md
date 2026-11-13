@@ -193,7 +193,6 @@ Put your own values in the server-only `.env`:
 ```dotenv
 FOUNDRY_PROJECT_ENDPOINT=https://<resource>.services.ai.azure.com/api/projects/<project>
 SMART_HOME_FLASH_AGENT=<your-flash-agent-name>
-SMART_HOME_SECONDARY_MODEL_ID=microsoft-realtime-flash-1
 ```
 
 An authorized operator may sign in with `az login` and explicitly publish:
@@ -221,30 +220,31 @@ SMART_HOME_VERIFIED_MODELS=microsoft-realtime-flash-1
 ```
 
 This is an operator declaration, not automated acceptance evidence. Validate
-live connectivity before using it in a demonstration. `gpt-live` is not integrated
-and is marked unavailable rather than aliased to another model.
+live connectivity before using it in a demonstration. The only supported API
+model IDs are `microsoft-realtime-flash-1` and `gpt-realtime-2.1`; unsupported
+verified-model declarations are rejected rather than aliased to another model.
 See [Agent definitions](agents/README.md) and the [integration guide](INTEGRATION.md)
-for the full speech profile, publishing checks, and optional comparison models.
+for the full speech profile, publishing checks, and optional GPT Realtime comparison.
 
 ### Environment variables
 
-| Variable                                               | Purpose / default                                                          |
-| ------------------------------------------------------ | -------------------------------------------------------------------------- |
-| `FOUNDRY_PROJECT_ENDPOINT`                             | The only allowed project HTTPS endpoint; no default resource.              |
-| `SMART_HOME_FLASH_AGENT`                               | Your Flash Agent name; required explicitly for publishing.                 |
-| `SMART_HOME_SECONDARY_MODEL_ID`                        | Defaults to `microsoft-realtime-flash-1`; does not require a second Agent. |
-| `SMART_HOME_VERIFIED_MODELS`                           | Comma-separated exact model IDs; no voice model enabled by default.        |
-| `AZURE_TENANT_ID`                                      | Optional local Azure CLI tenant.                                           |
-| `AZURE_CLIENT_ID`                                      | Cloud user-assigned managed identity client ID.                            |
-| `HOST` / `PORT`                                        | Defaults: `127.0.0.1` / `5178`.                                            |
-| `SMART_HOME_LOCAL_BACKEND`                             | Optional validated loopback backend for edition development proxies.       |
-| `SMART_HOME_LOCAL_STATE_PATH`                          | Local household JSON; defaults to `.azure/home.json`.                      |
-| `SMART_HOME_PUBLIC_ORIGIN`                             | Exact HTTPS origin for protected cloud mode.                               |
-| `SMART_HOME_ACCESS_CODE` / `SMART_HOME_SESSION_SECRET` | Independent cloud secrets, at least 24 / 32 characters.                    |
-| `SMART_HOME_PUBLIC_GUEST_ACCESS`                       | Defaults to `0`; `1` allows any visitor to incur service charges.          |
-| `SMART_HOME_DATA_PATH`                                 | Writable cloud household storage directory.                                |
-| `SMART_HOME_WEB_ROOT`                                  | `dist`, `editions/modern/dist`, or `editions/habitat/dist`.                |
-| `VOICE_LIVE_ENDPOINT` / `WEBRTC_MODEL`                 | Model-mode WebRTC lab only; no default resource endpoint.                  |
+| Variable                                               | Purpose / default                                                      |
+| ------------------------------------------------------ | ---------------------------------------------------------------------- |
+| `FOUNDRY_PROJECT_ENDPOINT`                             | The only allowed project HTTPS endpoint; no default resource.          |
+| `SMART_HOME_FLASH_AGENT`                               | Your Flash Agent name; required explicitly for publishing.             |
+| `SMART_HOME_REALTIME_AGENT`                            | Explicit GPT Realtime comparison Agent name; not a Flash prerequisite. |
+| `SMART_HOME_VERIFIED_MODELS`                           | Comma-separated exact model IDs; no voice model enabled by default.    |
+| `AZURE_TENANT_ID`                                      | Optional local Azure CLI tenant.                                       |
+| `AZURE_CLIENT_ID`                                      | Cloud user-assigned managed identity client ID.                        |
+| `HOST` / `PORT`                                        | Defaults: `127.0.0.1` / `5178`.                                        |
+| `SMART_HOME_LOCAL_BACKEND`                             | Optional validated loopback backend for edition development proxies.   |
+| `SMART_HOME_LOCAL_STATE_PATH`                          | Local household JSON; defaults to `.azure/home.json`.                  |
+| `SMART_HOME_PUBLIC_ORIGIN`                             | Exact HTTPS origin for protected cloud mode.                           |
+| `SMART_HOME_ACCESS_CODE` / `SMART_HOME_SESSION_SECRET` | Independent cloud secrets, at least 24 / 32 characters.                |
+| `SMART_HOME_PUBLIC_GUEST_ACCESS`                       | Defaults to `0`; `1` allows any visitor to incur service charges.      |
+| `SMART_HOME_DATA_PATH`                                 | Writable cloud household storage directory.                            |
+| `SMART_HOME_WEB_ROOT`                                  | `dist`, `editions/modern/dist`, or `editions/habitat/dist`.            |
+| `VOICE_LIVE_ENDPOINT` / `WEBRTC_MODEL`                 | Model-mode WebRTC lab only; no default resource endpoint.              |
 
 Keep credentials on the server. Local runtime uses `AzureCliCredential`; cloud
 runtime uses managed identity, not API keys. Use project-scoped development and

@@ -69,7 +69,6 @@ SMART_HOME_IMAGE=<your-registry>.azurecr.io/voice-home:<your-tag>
 SMART_HOME_PUBLIC_ORIGIN=https://<your-app-fqdn>
 FOUNDRY_PROJECT_ENDPOINT=https://<resource>.services.ai.azure.com/api/projects/<project>
 SMART_HOME_FLASH_AGENT=<your-flash-agent>
-SMART_HOME_SECONDARY_MODEL_ID=microsoft-realtime-flash-1
 SMART_HOME_VERIFIED_MODELS=microsoft-realtime-flash-1
 SMART_HOME_ENVIRONMENT_STORAGE=<your-environment-storage-binding-name>
 SMART_HOME_ACCESS_CODE=<new-random-value-at-least-24-characters>
@@ -78,6 +77,11 @@ SMART_HOME_PUBLIC_GUEST_ACCESS=0
 SMART_HOME_WEB_ROOT=editions/habitat/dist
 SMART_HOME_MIN_REPLICAS=1
 ```
+
+To enable the optional GPT Realtime comparison in the deployed UI, also set
+`SMART_HOME_REALTIME_AGENT` and include `gpt-realtime-2.1` in
+`SMART_HOME_VERIFIED_MODELS`. The renderer requires that explicit Agent name
+when the comparison model is enabled.
 
 Generate independent high-entropy access/signing values; do not use placeholders,
 shared passwords, defaults, or test fixtures. `SMART_HOME_PUBLIC_ORIGIN` must be
@@ -163,7 +167,9 @@ SMART_HOME_WEBRTC_SECONDARY_APP=<your-lab-app-name>
 SMART_HOME_WEBRTC_MIN_REPLICAS=0
 ```
 
-The lab defaults to Flash and `SMART_HOME_WEBRTC_MIN_REPLICAS=0` (unlike the
+Only `microsoft-realtime-flash-1` and `gpt-realtime-2.1` are accepted by the lab
+and its deployment helper. The lab defaults to Flash and
+`SMART_HOME_WEBRTC_MIN_REPLICAS=0` (unlike the
 full application's default `1`); maximum replicas remain one. Optional
 `SMART_HOME_WEBRTC_PRIMARY_APP` and `SMART_HOME_WEBRTC_PRIMARY_MODEL_ID` add
 a distinct comparison app/model. Model support must be checked in the target

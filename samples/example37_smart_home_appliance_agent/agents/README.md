@@ -5,9 +5,9 @@
 `flash.json` is the default base template: `kind: voice`,
 `model_type: managed`, and model `microsoft-realtime-flash-1`. It contains no
 endpoint, subscription, tenant, project, or saved Agent version.
-The runtime also accepts `microsoft-realtime-flash` where that is the exact
-catalog ID, but template, runtime model ID, and verified-model declaration must
-match. Do not assume an alias is available in your project.
+The only supported API model IDs are `microsoft-realtime-flash-1` and
+`gpt-realtime-2.1`. Template and verified-model declaration must match the
+exact ID; product names and unversioned IDs are not aliases.
 
 These are **base templates, not upload-ready payloads**.
 From `samples/example37_smart_home_appliance_agent`, run:
@@ -89,19 +89,20 @@ This is optimistic concurrency checking, **not** server-side compare-and-swap.
 Avoid simultaneous Portal edits. Rendering or unit tests do not prove the saved
 Agent is usable; live acceptance remains optional and must be run deliberately.
 
-## Optional comparison templates
+## Optional GPT Realtime comparison
 
-`realtime.json` (`gpt-realtime-2.1`) and `mini.json`
-(`gpt-realtime-2.1-mini`) are explicit comparison options, not prerequisites
-for the Flash sample. Offline rendering includes them. Publishing them requires:
+`realtime.json` (`gpt-realtime-2.1`) is an explicit comparison option, not a
+prerequisite for the Flash sample. Offline rendering includes both supported
+templates. Publishing Realtime requires:
 
 ```bash
-# Only in a project that supports the selected comparison models.
+# Only in a project that supports GPT Realtime 2.1.
 npm run agents:publish -- --comparison --confirm-project "$FOUNDRY_PROJECT_ENDPOINT"
 ```
 
-`--comparison` selects the two comparison Agents **instead of Flash**.
-Set distinct `SMART_HOME_REALTIME_AGENT` and `SMART_HOME_MINI_AGENT` names.
-These writes are not one atomic transaction. Runtime selection also needs the
-matching model configuration and verified models. A successful comparison does
+`--comparison` selects only Realtime **instead of Flash**.
+Set `SMART_HOME_REALTIME_AGENT` to an explicit Agent name distinct from the Flash
+Agent name; the publisher refuses to change an existing Agent's model.
+After checking the saved definition, include `gpt-realtime-2.1` in
+`SMART_HOME_VERIFIED_MODELS` to enable it in the UI. A successful comparison does
 not establish Flash access, regional support, or equivalent behaviour.

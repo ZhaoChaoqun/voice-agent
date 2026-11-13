@@ -59,8 +59,7 @@ async function connected({
   modelId = "gpt-realtime-2.1",
 }: {
   language?: "zh" | "en";
-  modelId?:
-    "gpt-realtime-2.1" | "microsoft-realtime-flash-1" | "gpt-realtime-2.1-mini";
+  modelId?: "gpt-realtime-2.1" | "microsoft-realtime-flash-1";
 } = {}): Promise<{
   browser: MockSocket;
   upstream: MockSocket;
@@ -79,11 +78,7 @@ async function connected({
       connect: (url, token) => {
         expect(url).toContain(
           `/agents/${
-            modelId === "gpt-realtime-2.1"
-              ? "home-realtime"
-              : modelId === "microsoft-realtime-flash-1"
-                ? "home-flash"
-                : "home-mini"
+            modelId === "gpt-realtime-2.1" ? "home-realtime" : "home-flash"
           }/endpoint/protocols/voice?api-version=v1`,
         );
         expect(token).toBe("mock-secret-token");
@@ -99,8 +94,6 @@ async function connected({
     FOUNDRY_PROJECT_ENDPOINT:
       "https://example.services.ai.azure.com/api/projects/test",
     SMART_HOME_VERIFIED_MODELS: modelId,
-    SMART_HOME_SECONDARY_MODEL_ID:
-      modelId === "gpt-realtime-2.1" ? undefined : modelId,
   });
   await session.start(config, modelId, { language });
   upstream.emit("open");
@@ -123,16 +116,11 @@ describe("managed Voice Agent relay", () => {
   it("leaves tool choice automatic so instructions can emit one brief filler before tools", async () => {
     const realtime = await connected();
     const flash = await connected({ modelId: "microsoft-realtime-flash-1" });
-    const mini = await connected({ modelId: "gpt-realtime-2.1-mini" });
     expect(realtime.upstream.events[0].session).toHaveProperty(
       "tool_choice",
       "auto",
     );
     expect(flash.upstream.events[0].session).toHaveProperty(
-      "tool_choice",
-      "auto",
-    );
-    expect(mini.upstream.events[0].session).toHaveProperty(
       "tool_choice",
       "auto",
     );
