@@ -1087,6 +1087,8 @@ test('Session controls and saved summary precede collapsed Agent and audio setti
   for (const id of ['agent-model-choice', 'agent-transcription-choice', 'transport', 'voice', 'personalization', 'advanced-agent']) {
     assert.ok(html.indexOf(`id="${id}"`) > settings, `${id} is below the primary controls`);
   }
+  assert.ok(html.indexOf('id="voice-label"') > html.indexOf('id="agent-transcription-choice"'));
+  assert.ok(html.indexOf('id="voice-label"') < html.indexOf('id="transport"'));
   assert.match(html, /<h2>Audio processing<\/h2>/);
   assert.match(html, /existing Agent may differ/);
 });

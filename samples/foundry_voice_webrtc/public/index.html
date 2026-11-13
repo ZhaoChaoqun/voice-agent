@@ -90,14 +90,6 @@
             <option value="whisper-1">whisper-1</option>
           </select>
           <p id="transcription-language-help">Auto-detect except azure-speech and azure-speech-streaming (saved language; English by default).</p>
-          <label class="checkbox" for="enhanced-turn-detection"><input id="enhanced-turn-detection" type="checkbox" checked disabled aria-describedby="turn-detection-help"> GPT Live 1-quality turn detection</label>
-          <p id="turn-detection-help">Better turn-taking with streaming transcription. On by default for supported new Agents; turn off to restore previous settings.</p>
-          <p id="turn-detection-status" role="status"></p>
-          <p>Apply between calls. Changes create a shared version; older versions stay. New Agents use mai-transcribe-2-streaming. Switching models may change the voice.</p>
-          <div class="agent-actions"><button id="save-model" disabled>Apply settings</button><button id="show-settings" disabled>Show Agent settings</button></div>
-        </div>
-        <div class="transport-control"><label for="transport">Connection</label><select id="transport"><option value="websocket">WebSocket — audio over HTTPS</option><option value="webrtc">WebRTC — direct audio</option></select><p>WebSocket avoids STUN/TURN. Both modes need server access to Azure.</p></div>
-        <div class="transport-control">
           <label id="voice-label" for="voice">Output voice</label>
           <select id="voice">
             <option value="">Saved Agent voice</option>
@@ -130,7 +122,13 @@
             <option value="" selected>Saved Agent voice (configured in Foundry)</option>
           </select>
           <p>Availability depends on the project and voice catalog. Unsupported selections fail without substituting a voice. GPT Live uses the voice stored in its saved Agent; edit that voice in Foundry. A voice preview for a different model applies after you save that model.</p>
+          <p>Apply between calls. Changes create a shared version; older versions stay. New Agents use mai-transcribe-2-streaming. Switching models may change the voice.</p>
+          <label class="checkbox" for="enhanced-turn-detection"><input id="enhanced-turn-detection" type="checkbox" checked disabled aria-describedby="turn-detection-help"> GPT Live 1-quality turn detection</label>
+          <p id="turn-detection-help">Better turn-taking with streaming transcription. On by default for supported new Agents; turn off to restore previous settings.</p>
+          <p id="turn-detection-status" role="status"></p>
+          <div class="agent-actions"><button id="save-model" disabled>Apply settings</button><button id="show-settings" disabled>Show Agent settings</button></div>
         </div>
+        <div class="transport-control"><label for="transport">Connection</label><select id="transport"><option value="websocket">WebSocket — audio over HTTPS</option><option value="webrtc">WebRTC — direct audio</option></select><p>WebSocket avoids STUN/TURN. Both modes need server access to Azure.</p></div>
         <div class="transport-control audio-processing"><h2>Audio processing</h2><p>The browser requests microphone noise suppression and echo cancellation with mono input. Support depends on your browser and device.</p><p>Azure denoising is configured separately in the saved Agent. Use <strong>Show Agent settings</strong> above to inspect <code>audio.input.noise_reduction</code>. The bundled example uses headset noise suppression; an existing Agent may differ.</p></div>
         <details class="transport-control">
           <summary>Session personalization</summary>
