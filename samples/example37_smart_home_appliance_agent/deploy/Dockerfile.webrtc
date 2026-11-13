@@ -1,0 +1,17 @@
+FROM node:24-bookworm-slim AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --no-audit --no-fund
+
+FROM node:24-bookworm-slim AS runtime
+ENV NODE_ENV=production HOST=0.0.0.0 PORT=8080
+WORKDIR /app
+COPY --from=build --chown=node:node /app/package*.json ./
+COPY --from=build --chown=node:node /app/node_modules ./node_modules
+COPY --chown=node:node tsconfig.json ./
+COPY --chown=node:node server ./server
+COPY --chown=node:node shared ./shared
+COPY --chown=node:node webrtc-benchmark ./webrtc-benchmark
+USER node
+EXPOSE 8080
+CMD ["node_modules/.bin/tsx", "server/webrtc-benchmark.ts"]

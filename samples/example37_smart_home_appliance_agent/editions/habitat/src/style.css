@@ -1,0 +1,695 @@
+/** Habitat-only layout; the earlier edition's CSS remains untouched. */
+.habitat {
+  --line: #e4e6df;
+  --muted: #64736a;
+  min-height: 100svh;
+  padding: 0 34px;
+  background: #f6f5f0;
+  color: #23332d;
+}
+.habitat button,
+.habitat select,
+.habitat input {
+  font-size: 14px;
+}
+.habitat button:focus-visible,
+.habitat a:focus-visible,
+.habitat input:focus-visible,
+.habitat select:focus-visible {
+  outline: 2px solid #005aaa;
+  outline-offset: 3px;
+}
+.habitat-header {
+  height: 94px;
+  border-bottom: 1px solid #dedfd7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.habitat-brand {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.habitat-brand > strong {
+  font-size: 39px;
+  letter-spacing: -2px;
+  color: #005aaa;
+}
+.habitat-brand > i {
+  height: 28px;
+  width: 1px;
+  background: #c9d0ca;
+}
+.habitat-brand > span {
+  font-size: 20px;
+  letter-spacing: 0.15em;
+  font-weight: 500;
+}
+.habitat-brand small {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #6a796f;
+}
+.habitat-looks {
+  display: flex;
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid #dddfd7;
+  border-radius: 30px;
+}
+.habitat-looks button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 19px;
+  color: #66776c;
+  border-radius: 25px;
+}
+.habitat-looks button[aria-pressed="true"] {
+  background: #2f5145;
+  color: #fff;
+}
+.habitat-language {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #718175;
+}
+.habitat-language button {
+  min-height: 42px;
+  padding: 0;
+}
+.habitat-language button[aria-pressed="true"] {
+  color: #153e30;
+  font-weight: 600;
+}
+.habitat-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  min-height: 135px;
+  padding: 24px 0;
+}
+.habitat-kicker {
+  font-size: 12px;
+  letter-spacing: 0.17em;
+  color: #6c7d71;
+}
+.habitat-title h1 {
+  font-size: clamp(26px, 2.4vw, 38px);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  margin-top: 9px;
+}
+.habitat-title > p {
+  font-size: 14px;
+  line-height: 1.9;
+  color: #66746b;
+  white-space: pre-line;
+}
+.habitat-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  grid-template-rows: clamp(460px, calc(100svh - 410px), 680px) auto;
+  gap: 20px 24px;
+  align-items: start;
+}
+.habitat-room {
+  position: relative;
+  height: clamp(460px, calc(100svh - 410px), 680px);
+  background: #e4e2d9;
+  border-radius: 16px;
+  border: 1px solid #d5d9cd;
+  overflow: hidden;
+}
+.habitat-stage {
+  position: absolute;
+  inset: 0;
+}
+.habitat-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: pan-y;
+}
+.habitat-room-caption,
+.habitat-room-tools {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: #334e43;
+}
+.habitat-room-caption {
+  top: 20px;
+  left: 22px;
+  right: 22px;
+  pointer-events: none;
+}
+.habitat-room-caption > span {
+  background: #fffffff0;
+  border: 1px solid #e8e9df;
+  border-radius: 20px;
+  padding: 9px 13px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.habitat-room-caption i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #3a7457;
+}
+.habitat-room-tools {
+  left: 20px;
+  bottom: 76px;
+  border-radius: 20px;
+  background: #fffffff0;
+  padding: 3px 4px 3px 13px;
+}
+.habitat-room-tools button {
+  display: grid;
+  place-items: center;
+  height: 36px;
+  width: 36px;
+  border: 1px solid #e8e9df;
+  border-radius: 50%;
+}
+.habitat-scenes {
+  position: absolute;
+  z-index: 2;
+  left: 20px;
+  right: 20px;
+  bottom: 18px;
+  display: flex;
+  gap: 8px;
+}
+.habitat-scenes button {
+  background: #fffffff5;
+  padding: 12px 20px;
+  border: 1px solid #e0e5da;
+  border-radius: 9px;
+  color: #385446;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.habitat-scenes button[aria-pressed="true"] {
+  color: white;
+  border-color: #2f5145;
+  background: #2f5145;
+}
+.habitat-stage .hotspot[hidden] {
+  display: none;
+}
+.habitat-stage .hotspot > i {
+  height: 29px;
+  width: 29px;
+  color: #2f5145;
+  border-color: #94ad9b;
+  box-shadow: 0 0 0 4px #ffffff42;
+}
+.habitat-stage .hotspot > span {
+  border-color: #d7dfd2;
+  border-radius: 0 15px 15px 0;
+  color: #2d4d40;
+}
+.habitat-stage .hotspot.selected > i {
+  background: #2f5145;
+  color: white;
+}
+.habitat-controls {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-width: 0;
+}
+.habitat-balance {
+  margin-bottom: 16px;
+  padding: 17px 18px;
+  background: #eceee6;
+  border-radius: 13px;
+}
+.habitat-balance > span {
+  color: #526b5b;
+  font-size: 13px;
+}
+.habitat-balance > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.habitat-balance strong {
+  font-size: 27px;
+  font-weight: 400;
+  margin-top: 13px;
+  color: #284736;
+}
+.habitat-balance small {
+  font-size: 12px;
+  padding-left: 3px;
+}
+.habitat-metric-labels {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #637368;
+}
+.habitat .device-panel {
+  box-shadow: none;
+  border-color: #e0e4d9;
+  background: #fffefa;
+  padding: 20px 17px 14px;
+}
+.habitat .device-list {
+  grid-template-columns: 1fr;
+}
+.habitat .device-select {
+  padding: 13px 0;
+  min-height: 58px;
+}
+.habitat .device-select strong {
+  font-size: 14px;
+  font-weight: 500;
+  color: #31483b;
+}
+.habitat .device-select small,
+.habitat .panel-caption,
+.habitat .panel-caption > span:first-child,
+.habitat .panel-footnote,
+.habitat .detail-note,
+.habitat .model-id {
+  font-size: 12px;
+  color: #637368;
+}
+.habitat .device-row {
+  border-bottom-color: #e9e9df;
+}
+.habitat .switch {
+  position: relative;
+  box-sizing: border-box;
+  border: 0;
+  width: 44px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+}
+.habitat .switch::before {
+  content: "";
+  position: absolute;
+  inset: 10px 5px;
+  border-radius: 20px;
+  background: #dfe7df;
+}
+.habitat .switch[aria-checked="true"] {
+  background: transparent;
+}
+.habitat .switch[aria-checked="true"]::before {
+  background: #005aaa;
+}
+.habitat .switch > i {
+  position: absolute;
+  top: 13px;
+  left: 8px;
+  width: 14px;
+  height: 14px;
+}
+.habitat .switch[aria-checked="true"] > i {
+  transform: translateX(13px);
+}
+.habitat .panel-title h2 {
+  font-size: 19px;
+  color: #284736;
+}
+.habitat .device-detail {
+  min-height: 320px;
+}
+.habitat .numeric-control button,
+.habitat .power-icon {
+  min-width: 36px;
+  min-height: 36px;
+}
+.habitat-engine {
+  padding: 18px 4px 0;
+}
+.habitat-engine label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 9px;
+  color: #586e60;
+}
+.habitat-engine select {
+  height: 44px;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #d6ddcf;
+  background: #fffefa;
+  border-radius: 7px;
+  padding: 0 9px;
+  color: #334e3f;
+}
+.habitat-engine > small {
+  display: block;
+  color: #67776c;
+  font-size: 12px;
+  margin: 8px 0;
+}
+.habitat-engine > button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 0;
+  color: #005aaa;
+}
+.habitat-engine > button svg:last-child {
+  margin-left: auto;
+}
+.habitat .voice-dock {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  margin: 0;
+  width: 100%;
+  grid-column: 1;
+  grid-row: 2;
+  padding: 0 20px;
+  order: initial;
+  background: #fffefa;
+  border-color: #e1e4d9;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.habitat .dock-content input,
+.habitat .dock-content input::placeholder {
+  font-size: 16px;
+}
+.habitat .dock-content form > button,
+.habitat .dock-small-button {
+  min-width: 36px;
+  min-height: 36px;
+}
+.habitat .microphone {
+  color: white;
+  background: #2f5145;
+  box-shadow: 0 0 0 5px #edf0e7;
+}
+.habitat .microphone.live {
+  background: #005aaa;
+  color: white;
+}
+.habitat .conversation-sheet {
+  z-index: 8;
+  background: #fffefa;
+}
+.habitat .chat-message p,
+.habitat .empty-sheet > p,
+.habitat .empty-sheet > button,
+.habitat .tool-entry strong,
+.habitat .tool-entry p {
+  font-size: 14px;
+}
+.habitat .dock-error {
+  color: #9c3328;
+}
+.habitat .dock-meta,
+.habitat .dock-status,
+.habitat .companion-label,
+.habitat .companion-label small {
+  font-size: 12px;
+  color: #586b60;
+}
+.habitat .knowledge-modal {
+  color: #263d30;
+}
+.habitat .knowledge-modal p,
+.habitat .knowledge-modal label,
+.habitat .source-card strong,
+.habitat .knowledge-notice {
+  font-size: 14px;
+}
+.habitat-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  font-size: 12px;
+  color: #69776c;
+  padding: 22px 0 25px;
+  line-height: 1.8;
+}
+.habitat-footer > span {
+  letter-spacing: 0.06em;
+}
+.habitat-footer a {
+  white-space: nowrap;
+  color: #005aaa;
+}
+.habitat-notice {
+  padding: 15px;
+  border: 1px solid #e1cda8;
+  border-radius: 8px;
+  color: #755426;
+  background: #fff7e6;
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.habitat-loading,
+.habitat-webgl-error {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 25px;
+  position: absolute;
+  inset: 0;
+  font-size: 16px;
+  line-height: 1.8;
+  background: #e9ebe3;
+  z-index: 3;
+}
+.habitat-stage.failed canvas {
+  visibility: hidden;
+}
+@media (max-width: 1050px) {
+  .habitat {
+    padding: 0 22px;
+  }
+  .habitat-grid {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 18px;
+  }
+  .habitat-brand > span {
+    font-size: 17px;
+  }
+  .habitat-brand {
+    gap: 13px;
+  }
+  .habitat-looks button {
+    padding: 0 12px;
+  }
+  .habitat-title > p {
+    max-width: 250px;
+    font-size: 13px;
+  }
+  .habitat-room-tools > span {
+    max-width: 145px;
+  }
+}
+@media (max-width: 760px) {
+  .habitat {
+    padding: 0 16px;
+  }
+  .habitat-header {
+    height: auto;
+    min-height: 135px;
+    flex-wrap: wrap;
+    gap: 0;
+    padding: 17px 0 12px;
+  }
+  .habitat-brand > strong {
+    font-size: 33px;
+  }
+  .habitat-brand > span {
+    font-size: 17px;
+  }
+  .habitat-brand small {
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+  .habitat-brand > i {
+    height: 26px;
+  }
+  .habitat-language {
+    gap: 5px;
+    margin-left: auto;
+  }
+  .habitat-language > svg {
+    display: none;
+  }
+  .habitat-looks {
+    order: 3;
+    margin: 15px auto 0;
+    padding: 3px;
+    width: 100%;
+    justify-content: center;
+  }
+  .habitat-looks button {
+    flex: 1;
+    justify-content: center;
+    padding: 0 8px;
+    min-height: 38px;
+    font-size: 12px;
+    gap: 5px;
+  }
+  .habitat-title {
+    min-height: 133px;
+    padding: 22px 2px;
+  }
+  .habitat-title h1 {
+    font-size: 25px;
+    letter-spacing: 0;
+  }
+  .habitat-title > p {
+    display: none;
+  }
+  .habitat-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+  }
+  .habitat-room {
+    width: 100%;
+    height: 330px;
+    border-radius: 12px;
+  }
+  .habitat-stage .hotspot > span {
+    display: none;
+  }
+  .habitat-stage .hotspot > i {
+    width: 30px;
+    height: 30px;
+  }
+  .habitat-room-caption {
+    left: 12px;
+    right: 12px;
+    top: 12px;
+  }
+  .habitat-room-caption > span {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+  .habitat-room-tools {
+    left: 12px;
+    bottom: 70px;
+    gap: 6px;
+  }
+  .habitat-room-tools > span {
+    max-width: none;
+    font-size: 12px;
+  }
+  .habitat-scenes {
+    left: 12px;
+    right: 12px;
+    bottom: 13px;
+    gap: 6px;
+  }
+  .habitat-scenes button {
+    flex: 1;
+    justify-content: center;
+    padding: 9px 5px;
+    font-size: 13px;
+  }
+  .habitat-controls {
+    width: 100%;
+    order: 2;
+  }
+  .habitat .voice-dock {
+    order: 1;
+    padding: 0 14px;
+  }
+  .habitat .device-list {
+    grid-template-columns: 1fr 1fr;
+    gap: 0 17px;
+  }
+  .habitat .device-select {
+    gap: 8px;
+    min-height: 75px;
+  }
+  .habitat .device-select > svg:last-child,
+  .habitat .waveform {
+    display: none;
+  }
+  .habitat .device-select > svg:first-child {
+    width: 18px;
+  }
+  .habitat .device-row {
+    gap: 2px;
+  }
+  .habitat .switch {
+    width: 40px;
+    flex-shrink: 0;
+  }
+  .habitat .switch[aria-checked="true"] > i {
+    transform: translateX(9px);
+  }
+  .habitat .device-panel {
+    padding: 18px 14px 14px;
+  }
+  .habitat .dock-body {
+    flex-wrap: wrap;
+    gap: 11px;
+  }
+  .habitat .dock-small-button {
+    width: 38px;
+  }
+  .habitat .microphone {
+    width: 43px;
+    height: 43px;
+  }
+  .habitat .conversation-sheet {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    margin: 12px -4px 0;
+    padding: 13px;
+  }
+  .habitat .transcript {
+    max-height: 250px;
+  }
+  .habitat-footer {
+    flex-wrap: wrap;
+    padding: 24px 2px;
+    gap: 10px;
+  }
+  .habitat-footer p {
+    flex-basis: 100%;
+    order: 2;
+  }
+  .habitat-footer > span {
+    max-width: 195px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .habitat *,
+  .habitat *::before,
+  .habitat *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

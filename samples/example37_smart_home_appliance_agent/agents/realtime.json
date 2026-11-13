@@ -1,0 +1,41 @@
+{
+  "kind": "voice",
+  "model": "gpt-realtime-2.1",
+  "model_type": "managed",
+  "sub_protocol": "realtime",
+  "instructions": "",
+  "tools": [],
+  "store": false,
+  "output_modalities": ["audio", "text"],
+  "audio": {
+    "input": {
+      "format": { "type": "audio/pcm", "rate": 24000 },
+      "echo_cancellation": {
+        "type": "server_echo_cancellation",
+        "reference_source": "server",
+        "channels": 1
+      },
+      "noise_reduction": {
+        "type": "azure_personal_noise_suppression",
+        "detection_input": "mas_dns"
+      },
+      "transcription": {
+        "model": "azure-speech-streaming",
+        "language": "zh-CN,en-US"
+      },
+      "turn_detection": {
+        "type": "azure_semantic_vad",
+        "profile": "normal",
+        "auto_truncate": true,
+        "create_response": true,
+        "interrupt_response": true,
+        "remove_filler_words": false
+      }
+    },
+    "output": {
+      "format": { "type": "audio/pcm", "rate": 24000 },
+      "voice": "zh-CN-Xiaoxiao:DragonHDFlashLatestNeural",
+      "voice_type": "azure-standard"
+    }
+  }
+}
