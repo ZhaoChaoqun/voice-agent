@@ -18,7 +18,6 @@ const env = {
   FOUNDRY_PROJECT_ENDPOINT: endpoint,
   SMART_HOME_FLASH_AGENT: "unit-flash",
   SMART_HOME_REALTIME_AGENT: "unit-realtime",
-  SMART_HOME_MINI_AGENT: "unit-mini",
 };
 const version = (definition: object, revision = "1") => ({
   versions: { latest: { version: revision, status: "active", definition } },
@@ -28,8 +27,7 @@ describe("portable Voice Agent configuration", () => {
   it.each([
     ["flash", "microsoft-realtime-flash-1"],
     ["realtime", "gpt-realtime-2.1"],
-    ["mini", "gpt-realtime-2.1-mini"],
-  ])(
+  ] as const)(
     "materializes complete %s settings, tools and greeting without resource IDs",
     (edition, model) => {
       const definition = agentDefinitions()[edition]!;
@@ -92,29 +90,34 @@ describe("portable Voice Agent configuration", () => {
     ).toHaveLength(1);
   });
 
-  it("publishes the overseas comparison pair only with explicit opt-in", () => {
+  it("publishes only Realtime with explicit comparison opt-in", () => {
     expect(publishSettings(env, endpoint, true).agents).toEqual([
       { edition: "realtime", name: "unit-realtime" },
-      { edition: "mini", name: "unit-mini" },
     ]);
     expect(() =>
       publishSettings(
-        { ...env, SMART_HOME_MINI_AGENT: env.SMART_HOME_REALTIME_AGENT },
+        { ...env, SMART_HOME_REALTIME_AGENT: undefined },
         endpoint,
         true,
       ),
-    ).toThrow("different");
+    ).toThrow();
+    expect(() =>
+      publishSettings(
+        { ...env, SMART_HOME_VERIFIED_MODELS: "unsupported-model" },
+        endpoint,
+      ),
+    ).toThrow("SMART_HOME_VERIFIED_MODELS");
   });
 
   it("creates an absent Agent and reads back the complete configuration", async () => {
-    const definition = agentDefinitions().mini!;
+    const definition = agentDefinitions().flash;
     const request = vi
       .fn<AuthoringRequest>()
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(version(definition).versions.latest)
       .mockResolvedValueOnce(version(definition));
-    await publishAgent(request, "unit-mini", definition);
-    expect(request).toHaveBeenNthCalledWith(2, "/agents/unit-mini/versions", {
+    await publishAgent(request, "unit-flash", definition);
+    expect(request).toHaveBeenNthCalledWith(2, "/agents/unit-flash/versions", {
       definition,
     });
   });
@@ -154,13 +157,13 @@ describe("portable Voice Agent configuration", () => {
       .fn<AuthoringRequest>()
       .mockResolvedValue(version(agentDefinitions().realtime!));
     await expect(
-      publishAgent(request, "unit-mini", agentDefinitions().mini!),
+      publishAgent(request, "unit-flash", agentDefinitions().flash),
     ).rejects.toThrow("kind or model");
     expect(request).toHaveBeenCalledTimes(1);
   });
 
   it("detects lost advanced fields during readback instead of claiming success", async () => {
-    const definition = agentDefinitions().mini!;
+    const definition = agentDefinitions().flash;
     const lost = structuredClone(definition);
     delete lost.audio;
     const request = vi
@@ -169,19 +172,19 @@ describe("portable Voice Agent configuration", () => {
       .mockResolvedValueOnce(version(lost).versions.latest)
       .mockResolvedValueOnce(version(lost));
     await expect(
-      publishAgent(request, "unit-mini", definition),
+      publishAgent(request, "unit-flash", definition),
     ).rejects.toThrow("definition.audio");
   });
 
   it("detects a concurrent publish that replaced the just-created version", async () => {
-    const definition = agentDefinitions().mini!;
+    const definition = agentDefinitions().flash;
     const request = vi
       .fn<AuthoringRequest>()
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(version(definition).versions.latest)
       .mockResolvedValueOnce(version(definition, "2"));
     await expect(
-      publishAgent(request, "unit-mini", definition),
+      publishAgent(request, "unit-flash", definition),
     ).rejects.toThrow("did not become active");
   });
 });

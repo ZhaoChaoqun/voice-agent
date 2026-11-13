@@ -5,6 +5,12 @@ export type DeviceId =
   "tv" | "fridge" | "ac" | "humidifier" | "lights" | "curtains";
 export type SceneId = "movie" | "comfort" | "away";
 
+/** Exact supported API model IDs; product display names are not aliases. */
+export const VOICE_MODEL_IDS = [
+  "microsoft-realtime-flash-1",
+  "gpt-realtime-2.1",
+] as const;
+
 export interface Device {
   id: DeviceId;
   name: LocalizedText;

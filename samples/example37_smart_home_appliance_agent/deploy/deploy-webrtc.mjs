@@ -8,9 +8,7 @@ import { setTimeout as delay } from "node:timers/promises";
 
 const ALLOWED_MODELS = new Set([
   "microsoft-realtime-flash-1",
-  "microsoft-realtime-flash",
   "gpt-realtime-2.1",
-  "gpt-realtime-2.1-mini",
 ]);
 const appNamePattern = /^[a-z][a-z0-9-]{0,30}[a-z0-9]$/;
 

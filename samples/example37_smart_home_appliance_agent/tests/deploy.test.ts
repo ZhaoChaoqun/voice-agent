@@ -69,10 +69,6 @@ describe("offline ACA manifest renderer", () => {
           name: "SMART_HOME_FLASH_AGENT",
           value: "unit-flash",
         });
-        expect(manifest.properties.template.containers[0].env).toContainEqual({
-          name: "SMART_HOME_SECONDARY_MODEL_ID",
-          value: "microsoft-realtime-flash-1",
-        });
         expect(manifest.properties.template.volumes[0].storageType).toBe(
           "AzureFile",
         );
@@ -87,12 +83,38 @@ describe("offline ACA manifest renderer", () => {
     { SMART_HOME_PUBLIC_GUEST_ACCESS: "1" },
     { SMART_HOME_IMAGE: "untrusted.invalid/home:unit" },
     { SMART_HOME_SESSION_SECRET: "short" },
+    { SMART_HOME_VERIFIED_MODELS: "unsupported-model" },
   ])("rejects unsafe/invalid deployment input %j", (override) => {
     const result = spawnSync(process.execPath, [renderer], {
       env: { ...env, ...override },
       encoding: "utf8",
     });
     expect(result.status).not.toBe(0);
+  });
+
+  it("includes the explicit Realtime Agent when enabling the comparison model", () => {
+    const directory = mkdtempSync(join(tmpdir(), "smart-home-deploy-test-"));
+    try {
+      execFileSync(process.execPath, [renderer], {
+        cwd: directory,
+        env: {
+          ...env,
+          SMART_HOME_VERIFIED_MODELS:
+            "microsoft-realtime-flash-1,gpt-realtime-2.1",
+          SMART_HOME_REALTIME_AGENT: "unit-realtime",
+        },
+        encoding: "utf8",
+      });
+      const manifest = JSON.parse(
+        readFileSync(join(directory, ".local/container-app.json"), "utf8"),
+      );
+      expect(manifest.properties.template.containers[0].env).toContainEqual({
+        name: "SMART_HOME_REALTIME_AGENT",
+        value: "unit-realtime",
+      });
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });
 
@@ -160,4 +182,22 @@ describe("parameterized WebRTC lab deployment helper", () => {
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain("confirm-endpoint");
   });
+
+  it.each([
+    { SMART_HOME_WEBRTC_SECONDARY_MODEL_ID: "unsupported-model" },
+    {
+      SMART_HOME_WEBRTC_PRIMARY_APP: "unit-realtime",
+      SMART_HOME_WEBRTC_PRIMARY_MODEL_ID: "unsupported-model",
+    },
+  ])(
+    "rejects an unsupported lab model before rendering or applying %j",
+    (override) => {
+      const result = spawnSync(process.execPath, [webrtcDeployer], {
+        env: { ...webrtcEnv, ...override },
+        encoding: "utf8",
+      });
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain("not an approved model");
+    },
+  );
 });

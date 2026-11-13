@@ -1,5 +1,6 @@
 /** Preserve Portal-owned settings while authoring the shared concierge behavior. */
 import { z } from "zod";
+import { VOICE_MODEL_IDS } from "@shared/protocol";
 import { homeGreeting } from "#server/greeting";
 import {
   FLASH_TURN_DETECTION,
@@ -11,7 +12,7 @@ const objectSchema = z.record(z.string(), z.unknown()); // Preserve opaque servi
 const definitionSchema = z
   .object({
     kind: z.literal("voice"),
-    model: z.string().min(1),
+    model: z.enum(VOICE_MODEL_IDS),
     model_type: z.enum(["managed", "self_deployed"]),
     instructions: z.string(),
     tools: z.array(objectSchema),
@@ -83,7 +84,7 @@ function wireInputAudio(current: VoiceDefinition): Record<string, unknown> {
   const input = structuredClone(current.audio.input);
   input.format = { type: "audio/pcm", rate: 24000 };
   input.echo_cancellation = structuredClone(HOME_ECHO_CANCELLATION);
-  const isFlash = current.model.startsWith("microsoft-realtime-flash");
+  const isFlash = current.model === "microsoft-realtime-flash-1";
   if (!isFlash || input.noise_reduction === undefined) {
     input.noise_reduction = structuredClone(HOME_INPUT_AUDIO.noise_reduction);
   }
@@ -204,7 +205,7 @@ function conciergeSettings(
 }
 
 function turnDetectionProfile(model: string): Record<string, unknown> {
-  if (model.startsWith("microsoft-realtime-flash")) return FLASH_TURN_DETECTION;
+  if (model === "microsoft-realtime-flash-1") return FLASH_TURN_DETECTION;
   return HOME_INPUT_AUDIO.turn_detection;
 }
 

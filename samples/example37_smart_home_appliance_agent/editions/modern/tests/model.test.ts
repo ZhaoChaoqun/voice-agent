@@ -12,22 +12,19 @@ describe("default model selection", () => {
     ).toBe("microsoft-realtime-flash-1");
   });
 
-  it("supports unversioned microsoft-realtime-flash model IDs", () => {
+  it("ignores an unsupported model even if the backend advertises it as available", () => {
     expect(
       defaultModel([
         { id: "gpt-realtime-2.1", available: true },
-        { id: "microsoft-realtime-flash", available: true },
+        { id: "unsupported-model", available: true },
       ]),
-    ).toBe("microsoft-realtime-flash");
+    ).toBe("gpt-realtime-2.1");
   });
 
-  it("supports overseas comparison Mini when Flash is absent", () => {
-    expect(
-      defaultModel([
-        { id: "gpt-realtime-2.1", available: true },
-        { id: "gpt-realtime-2.1-mini", available: true },
-      ]),
-    ).toBe("gpt-realtime-2.1-mini");
+  it("does not select an unsupported model when no supported model is available", () => {
+    expect(defaultModel([{ id: "unsupported-model", available: true }])).toBe(
+      "",
+    );
   });
 
   it("falls back to the available Realtime model", () => {

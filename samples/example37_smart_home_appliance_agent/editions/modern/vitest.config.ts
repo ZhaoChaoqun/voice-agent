@@ -1,4 +1,9 @@
 /** Pure scene math tests never call Azure. */
-import { defineConfig } from "vitest/config";
+import { defineConfig, mergeConfig } from "vitest/config";
 
-export default defineConfig({ test: { include: ["tests/*.test.ts"] } });
+import viteConfig from "./vite.config";
+
+export default mergeConfig(
+  viteConfig,
+  defineConfig({ test: { include: ["tests/*.test.ts"] } }),
+);

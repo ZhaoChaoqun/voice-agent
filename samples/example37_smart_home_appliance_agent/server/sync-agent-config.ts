@@ -18,50 +18,46 @@ const versionSchema = z.object({
   definition: z.record(z.string(), z.unknown()),
 });
 type Version = z.infer<typeof versionSchema>;
+type Edition = "flash" | "realtime";
 export type AuthoringRequest = (
   path: string,
   body?: object,
 ) => Promise<unknown>;
 
-export function agentDefinitions(): Record<string, Record<string, unknown>> {
-  return Object.fromEntries(
-    ["flash", "realtime", "mini"].map((edition) => [
-      edition,
-      voiceAgentDefinition(
-        JSON.parse(
-          readFileSync(
-            new URL(`../agents/${edition}.json`, import.meta.url),
-            "utf8",
-          ),
+/** Expand the two supported templates without contacting the service. */
+export function agentDefinitions(): Record<Edition, Record<string, unknown>> {
+  const render = (edition: Edition): Record<string, unknown> =>
+    voiceAgentDefinition(
+      JSON.parse(
+        readFileSync(
+          new URL(`../agents/${edition}.json`, import.meta.url),
+          "utf8",
         ),
-        { instructions: homeInstructions(), tools },
       ),
-    ]),
-  );
+      { instructions: homeInstructions(), tools },
+    );
+  return { flash: render("flash"), realtime: render("realtime") };
 }
 
+/** Select Flash by default or the explicitly requested Realtime comparison. */
 export function publishSettings(
   env: NodeJS.ProcessEnv,
   confirmation: string | undefined,
   comparison = false,
 ): {
   endpoint: string;
-  agents: { edition: "flash" | "realtime" | "mini"; name: string }[];
+  agents: { edition: Edition; name: string }[];
 } {
   const endpoint = runtimeConfig(env).projectEndpoint;
   if (!endpoint || endpoint !== confirmation)
     throw new Error(
       "Publishing requires FOUNDRY_PROJECT_ENDPOINT and --confirm-project with the same exact HTTPS project URL.",
     );
-  const editions: ("flash" | "realtime" | "mini")[] = comparison
-    ? ["realtime", "mini"]
-    : ["flash"];
+  const editions: Edition[] = comparison ? ["realtime"] : ["flash"];
   const agents = editions.map((edition) => ({
     edition,
     name: names.parse(env[`SMART_HOME_${edition.toUpperCase()}_AGENT`]),
   }));
-  if (new Set(agents.map((agent) => agent.name)).size !== agents.length)
-    throw new Error("Selected Agents must have different names.");
   if (
     /placeholder|replace|example/i.test(
       `${endpoint} ${agents.map((agent) => agent.name).join(" ")}`,
