@@ -1,0 +1,30 @@
+[
+  {
+    "id": "sample-tv",
+    "title": "Sample living-room TV / 示例客厅电视",
+    "model": "SAMPLE-TV-01",
+    "kind": "demo",
+    "content": "Fictional sample guide, not a manufacturer's specification. The living-room television has simulated power, volume from 0 to 100, and home/movie/music channels. Selecting a title prepares a viewing environment but never streams video or music. Approximate procedural-room dimensions: width 1600 mm, height 900 mm, depth 40 mm. 示例客厅电视支持模拟电源、音量与频道控制；选择节目只准备观影环境，不播放真实内容。尺寸为程序化场景的示例比例，没有真实产品型号、上市日期、认证或厂商连接。"
+  },
+  {
+    "id": "sample-fridge",
+    "title": "Sample four-door refrigerator / 示例四门冰箱",
+    "model": "SAMPLE-FRIDGE-01",
+    "kind": "demo",
+    "content": "Fictional sample guide, not a manufacturer's specification. This four-door refrigerator uses separate simulated fridge and freezer targets: 2 to 8 Celsius and -24 to -16 Celsius. Power-off is blocked. Approximate procedural-room dimensions: width 800 mm, height 1800 mm, depth 600 mm. The household food list is entered scenario context, not camera recognition, expiry detection or a food-safety assessment. 示例四门冰箱分别设置冷藏与冷冻目标，方便演示分区管理；宽800毫米、高1800毫米、深600毫米。食材记录是模拟输入，不是摄像头识别，也不能证明食物是否安全。"
+  },
+  {
+    "id": "sample-ac",
+    "title": "Sample wall-mounted air conditioner / 示例壁挂空调",
+    "model": "SAMPLE-AC-01",
+    "kind": "demo",
+    "content": "Fictional sample guide, not a manufacturer's specification. The wall-mounted air conditioner has simulated power, a 16 to 30 Celsius target, cool/heat/auto/fan modes and low/medium/high/auto fan speeds. Approximate procedural-room dimensions: width 900 mm, height 300 mm, depth 200 mm. Changing a target does not change the illustrative environmental reading or prove energy savings. 示例壁挂空调可演示温度与风速调节，帮助安排舒适场景；宽900毫米、高300毫米、深200毫米。不具备真实传感器、人体感应或自清洁集成。"
+  },
+  {
+    "id": "home-controls",
+    "title": "Home controls and comfort scenes / 家居控制与舒适场景",
+    "model": "HOME",
+    "kind": "demo",
+    "content": "All six appliances are fictional scenario devices. TV volume 0–100; channel home/movie/music. AC temperature 16–30 Celsius; mode cool/heat/auto/fan; fanSpeed low/medium/high/auto. Humidifier targetHumidity 30–70 percent; mistLevel low/medium/high/auto. Lights brightness 0–100 and warmth 2700–6500 Kelvin. Curtains fully open or closed. Fridge targets 2–8 Celsius and -24 to -16 Celsius. These are sample control limits, not manufacturer instructions. Refrigerator power-off is blocked. Environmental temperature 26.4 Celsius, humidity 42 percent and air-quality index 18 are illustrative, uncalibrated readings and do not change with setpoints. Movie scene prepares TV, softer lights and closed curtains; comfort prepares AC 24 Celsius, humidity target 50 percent and warm light; away turns off TV, AC, humidifier and lights and closes curtains, keeping the refrigerator on. Food records are entered household context, not camera observations or proof of expiry/safety. Replenishment only edits a list, with no checkout, payment or delivery. Explain the scenario boundary when asked about physical connectivity or an actual order. 电影夜、舒适、外出场景只改变模拟家庭；补货清单不是购物订单。"
+  }
+]

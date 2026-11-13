@@ -1,0 +1,50 @@
+{
+  "asOf": "2026-11-12T03:05:00Z",
+  "items": [
+    {
+      "id": "small-town-journal",
+      "title": "小镇日记 / Small Town Journal",
+      "kind": "series",
+      "platform": "Fictional sample catalog",
+      "sourceUrl": "https://github.com/microsoft/voice-agent/blob/main/samples/example37_smart_home_appliance_agent/knowledge/entertainment.json",
+      "sourceDate": "2026-11-12",
+      "description": "Fictional everyday-life series for a relaxed evening. 日常生活题材的虚构示例。No real release, popularity ranking, entitlement or streaming service."
+    },
+    {
+      "id": "moonlit-walk",
+      "title": "月下漫步 / Moonlit Walk",
+      "kind": "series",
+      "platform": "Fictional sample catalog",
+      "sourceUrl": "https://github.com/microsoft/voice-agent/blob/main/samples/example37_smart_home_appliance_agent/knowledge/entertainment.json",
+      "sourceDate": "2026-11-12",
+      "description": "Fictional gentle romance selection. 轻松爱情题材的虚构示例。This saved selection is not a live chart."
+    },
+    {
+      "id": "garden-stories",
+      "title": "花园故事 / Garden Stories",
+      "kind": "series",
+      "platform": "Fictional sample catalog",
+      "sourceUrl": "https://github.com/microsoft/voice-agent/blob/main/samples/example37_smart_home_appliance_agent/knowledge/entertainment.json",
+      "sourceDate": "2026-11-12",
+      "description": "Fictional historical-adventure selection. 古装冒险题材的虚构示例。No actual episodes are available in this application."
+    },
+    {
+      "id": "journey-through-seasons",
+      "title": "四季之旅 / A Journey Through Seasons",
+      "kind": "series",
+      "platform": "Fictional sample catalog",
+      "sourceUrl": "https://github.com/microsoft/voice-agent/blob/main/samples/example37_smart_home_appliance_agent/knowledge/entertainment.json",
+      "sourceDate": "2026-11-12",
+      "description": "Fictional travel-themed selection. 旅行题材的虚构示例。Do not infer a release date or platform ranking."
+    },
+    {
+      "id": "across-the-stars",
+      "title": "星际漫游 / Across the Stars",
+      "kind": "movie",
+      "platform": "Fictional sample catalog",
+      "sourceUrl": "https://github.com/microsoft/voice-agent/blob/main/samples/example37_smart_home_appliance_agent/knowledge/entertainment.json",
+      "sourceDate": "2026-11-12",
+      "description": "Fictional science-fiction movie selection for preparing an immersive room. 科幻题材的虚构示例。The sample prepares TV, lights and curtains; it does not play a real film."
+    }
+  ]
+}
