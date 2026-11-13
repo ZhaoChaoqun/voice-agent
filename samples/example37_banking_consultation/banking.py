@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
+import uuid
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -31,6 +33,9 @@ MODELS = {
         ],
     },
 }
+PAIRS = tuple((model, voice["id"]) for model, data in MODELS.items() for voice in data["voices"])
+BINDINGS_SCHEMA_VERSION = 1
+AGENT_PREFIX = re.compile(r"northstar-demo-[a-f0-9]{12}")
 LANGUAGES = {
     "de": {
         "name": "German",
@@ -172,8 +177,9 @@ def definition(model: str, voice: str) -> dict[str, Any]:
                     "type": "server_echo_cancellation", "reference_source": "server", "channels": 1,
                 },
                 "turn_detection": {
-                    "type": "azure_semantic_vad", "profile": "normal",
-                    "remove_filler_words": False, "create_response": True,
+                    # The caller can start in, or switch between, English,
+                    # German and Chinese, so use the multilingual detector.
+                    "type": "azure_semantic_vad_multilingual", "create_response": True,
                     "interrupt_response": True, "auto_truncate": True,
                 },
             },
@@ -253,9 +259,21 @@ def check_definition(actual: Any, model: str, voice: str) -> None:
         raise ValueError("The saved Agent is not this sample's fictional definition. Run setup with a new bindings file.")
 
 
-def load_bindings(path: Path, endpoint: str) -> dict[tuple[str, str], dict[str, str]]:
-    if not path.is_file():
-        raise ValueError("Agent bindings are missing. Run setup_agents.py --create first, or use --demo.")
+def agent_name(prefix: str, model: str, voice: str) -> str:
+    """Return the stable Agent name for one model/voice pair in one bindings file."""
+    pair = hashlib.sha256(f"{model}\n{voice}".encode()).hexdigest()[:8]
+    return f"{prefix}-{pair}"
+
+
+def new_bindings(endpoint: str) -> dict[str, Any]:
+    return {
+        "schema_version": BINDINGS_SCHEMA_VERSION, "project_endpoint": endpoint,
+        "agent_prefix": f"northstar-demo-{uuid.uuid4().hex[:12]}", "agents": [],
+    }
+
+
+def read_bindings(path: Path, endpoint: str) -> tuple[dict[str, Any], dict[tuple[str, str], dict[str, str]]]:
+    """Read a possibly incomplete or outdated bindings file written by setup."""
     if path.stat().st_size > 64 * 1024:
         raise ValueError("Agent bindings exceed this sample's size limit.")
     try:
@@ -263,30 +281,56 @@ def load_bindings(path: Path, endpoint: str) -> dict[tuple[str, str], dict[str, 
     except (ValueError, UnicodeError) as error:
         raise ValueError("Agent bindings must contain valid JSON.") from error
     if (
-        not isinstance(data, dict) or set(data) != {"schema_version", "project_endpoint", "agents"}
-        or type(data["schema_version"]) is not int or data["schema_version"] != 1
+        not isinstance(data, dict)
+        or set(data) != {"schema_version", "project_endpoint", "agent_prefix", "agents"}
+        or type(data["schema_version"]) is not int or data["schema_version"] != BINDINGS_SCHEMA_VERSION
         or data["project_endpoint"] != endpoint or not isinstance(data["agents"], list)
+        or not isinstance(data["agent_prefix"], str) or not AGENT_PREFIX.fullmatch(data["agent_prefix"])
     ):
         raise ValueError("Agent bindings must belong to the configured project and sample schema.")
     result = {}
-    names = set()
     for row in data["agents"]:
         if (
             not isinstance(row, dict)
             or set(row) != {"model", "voice", "agent_name", "agent_version", "definition_sha256"}
             or not all(isinstance(value, str) for value in row.values())
-            or not re.fullmatch(r"northstar-demo-[a-f0-9]{16}", row["agent_name"])
             or not re.fullmatch(r"[1-9][0-9]*", row["agent_version"])
+            or not re.fullmatch(r"[a-f0-9]{64}", row["definition_sha256"])
         ):
             raise ValueError("Invalid local Agent binding. Use this sample's setup output.")
         model, voice = row["model"], row["voice"]
         voice_option(model, voice)
-        if row["definition_sha256"] != fingerprint(model, voice):
-            raise ValueError("Agent bindings predate the current fictional definition. Use a new bindings file.")
-        if (model, voice) in result or row["agent_name"] in names:
-            raise ValueError("Each model/voice must have its own unique saved Agent binding.")
+        if row["agent_name"] != agent_name(data["agent_prefix"], model, voice):
+            raise ValueError("Invalid local Agent binding. Use this sample's setup output.")
+        if (model, voice) in result:
+            raise ValueError("Each model/voice must have one saved Agent binding.")
         result[(model, voice)] = row
-        names.add(row["agent_name"])
-    if set(result) != {(model, row["id"]) for model, data in MODELS.items() for row in data["voices"]}:
-        raise ValueError("Setup must complete all four model/voice bindings before cloud mode can start.")
+    return data, result
+
+
+def pending_pairs(rows: dict[tuple[str, str], dict[str, str]]) -> list[tuple[str, str]]:
+    """Pairs that have no saved version or whose saved version predates this definition."""
+    return [
+        pair for pair in PAIRS
+        if pair not in rows or rows[pair]["definition_sha256"] != fingerprint(*pair)
+    ]
+
+
+def write_bindings(path: Path, data: dict[str, Any], rows: dict[tuple[str, str], dict[str, str]]) -> None:
+    """Atomically replace setup output so an interrupted write never corrupts it."""
+    content = {**data, "agents": [rows[pair] for pair in PAIRS if pair in rows]}
+    temporary = path.with_name(path.name.removesuffix(".local.json") + ".tmp.local.json")
+    temporary.write_text(json.dumps(content, indent=2) + "\n", encoding="utf-8")
+    os.replace(temporary, path)
+
+
+def load_bindings(path: Path, endpoint: str) -> dict[tuple[str, str], dict[str, str]]:
+    if not path.is_file():
+        raise ValueError("Agent bindings are missing. Run setup_agents.py --create first, or use --demo.")
+    _data, result = read_bindings(path, endpoint)
+    if pending_pairs(result):
+        raise ValueError(
+            "Agent bindings are incomplete or predate the current definition. "
+            "Run setup_agents.py --create again to resume or publish new versions."
+        )
     return result

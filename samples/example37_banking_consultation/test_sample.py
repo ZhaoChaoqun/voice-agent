@@ -12,30 +12,58 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from urllib.parse import parse_qs, urlsplit
 
 from aiohttp import WSServerHandshakeError, WSMsgType
+from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from azure.ai.projects.models import VoiceAgentDefinition
+from azure.core.exceptions import HttpResponseError
 
 from banking import (
-    DEFAULT_MODEL, DEFAULT_VOICE, MODELS, check_definition, definition,
-    fingerprint, inputs, load_bindings, project_endpoint, voice_option,
+    DEFAULT_MODEL, DEFAULT_VOICE, MODELS, PAIRS, agent_name, check_definition, definition,
+    fingerprint, inputs, load_bindings, project_endpoint, read_bindings, voice_option,
 )
 from server import Settings, browser_event, cloud_call, create_app, verify_session, voice_url
 from setup_agents import create_agents, main as setup_main
 
 ENDPOINT = "https://example.services.ai.azure.com/api/projects/synthetic"
+PREFIX = "northstar-demo-" + "0" * 12
 
 
 def rows():
     return [
         {
-            "model": model, "voice": voice["id"],
-            "agent_name": f"northstar-demo-{index:016x}", "agent_version": "1",
-            "definition_sha256": fingerprint(model, voice["id"]),
+            "model": model, "voice": voice,
+            "agent_name": agent_name(PREFIX, model, voice), "agent_version": "1",
+            "definition_sha256": fingerprint(model, voice),
         }
-        for index, (model, voice) in enumerate(
-            (model, voice) for model, data in MODELS.items() for voice in data["voices"]
-        )
+        for model, voice in PAIRS
     ]
+
+
+def bindings(agents):
+    return {"schema_version": 1, "project_endpoint": ENDPOINT, "agent_prefix": PREFIX, "agents": agents}
+
+
+def fake_project(fail_on=None):
+    """A mock project client that keeps versions per Agent name."""
+    definitions, calls = {}, []
+
+    async def create_version(*, agent_name, definition, **_kwargs):
+        calls.append(agent_name)
+        if fail_on is not None and len(calls) == fail_on:
+            raise HttpResponseError(message="synthetic failure")
+        versions = definitions.setdefault(agent_name, [])
+        versions.append(definition)
+        return SimpleNamespace(version=str(len(versions)))
+
+    async def get_version(*, agent_name, agent_version):
+        return SimpleNamespace(definition=definitions[agent_name][int(agent_version) - 1])
+
+    client = MagicMock()
+    client.__aenter__.return_value = client
+    client.agents.create_version = AsyncMock(side_effect=create_version)
+    client.agents.get_version = AsyncMock(side_effect=get_version)
+    client.agents.enable = AsyncMock()
+    return client, calls
 
 
 def session(model=DEFAULT_MODEL, voice=DEFAULT_VOICE):
@@ -64,6 +92,11 @@ class DefinitionTests(unittest.TestCase):
         actual["audio"]["input"]["turn_detection"]["auto_truncate"] = False
         with self.assertRaises(ValueError):
             verify_session(actual, DEFAULT_MODEL, DEFAULT_VOICE)
+
+    def test_multilingual_turn_detection(self):
+        for model, voice in PAIRS:
+            turn_detection = definition(model, voice)["audio"]["input"]["turn_detection"]
+            self.assertEqual(turn_detection["type"], "azure_semantic_vad_multilingual")
 
     def test_unrelated_agent_and_execution_capabilities_are_rejected(self):
         actual = definition(DEFAULT_MODEL, DEFAULT_VOICE)
@@ -108,12 +141,18 @@ class DefinitionTests(unittest.TestCase):
     def test_binding_file_requires_complete_unique_reader_owned_context(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "bindings.local.json"
-            data = {"schema_version": 1, "project_endpoint": ENDPOINT, "agents": rows()}
+            data = bindings(rows())
             path.write_text(json.dumps(data))
             self.assertEqual(len(load_bindings(path, ENDPOINT)), 4)
             with self.assertRaises(ValueError):
                 load_bindings(path, ENDPOINT + "-other")
             data["agents"].pop()
+            path.write_text(json.dumps(data))
+            with self.assertRaises(ValueError):
+                load_bindings(path, ENDPOINT)
+            self.assertEqual(len(read_bindings(path, ENDPOINT)[1]), 3)
+            data["agents"] = rows()
+            data["agents"][1] = dict(data["agents"][0])
             path.write_text(json.dumps(data))
             with self.assertRaises(ValueError):
                 load_bindings(path, ENDPOINT)
@@ -123,7 +162,7 @@ class DefinitionTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 load_bindings(path, ENDPOINT)
             data["agents"] = rows()
-            data["agents"][0]["definition_sha256"] = "outdated"
+            data["agents"][0]["definition_sha256"] = "0" * 64
             path.write_text(json.dumps(data))
             with self.assertRaises(ValueError):
                 load_bindings(path, ENDPOINT)
@@ -146,11 +185,25 @@ class DefinitionTests(unittest.TestCase):
         self.assertEqual(projected, {"type": "status", "status": "listening"})
         for event in (
             {"type": "error", "error": {"message": "untrusted service detail"}},
-            {"type": "response.done", "response": {"status": "failed"}},
+            {"type": "response.done", "response": {"status": "unknown"}},
             {"type": "response.output_audio.delta", "delta": "not-base64"},
         ):
             with self.assertRaises(ValueError):
                 browser_event(event)
+
+    def test_single_turn_failures_keep_the_call_open(self):
+        self.assertEqual(
+            browser_event({"type": "conversation.item.input_audio_transcription.failed", "item_id": "item-1"}),
+            {"type": "turn_failed", "role": "user", "id": "item-1"},
+        )
+        for status in ("failed", "incomplete"):
+            self.assertEqual(
+                browser_event({"type": "response.done", "response": {"id": "response-1", "status": status, "output": []}}),
+                {"type": "turn_failed", "role": "assistant", "id": "response-1"},
+            )
+        self.assertIsNone(browser_event({"type": "error", "error": {"code": "response_cancel_not_active"}}))
+        with self.assertRaises(ValueError):
+            browser_event({"type": "error", "error": {"code": "session_expired", "message": "detail"}})
 
 
 class FakeUpstream:
@@ -198,21 +251,7 @@ class FakeHTTP:
 
 class CloudContractTests(unittest.IsolatedAsyncioTestCase):
     async def test_explicit_setup_writes_only_new_agents_and_reuses_complete_local_output(self):
-        definitions = {}
-
-        async def create_version(*, agent_name, definition, **_kwargs):
-            definitions[agent_name] = definition
-            return SimpleNamespace(version="7")
-
-        async def get_version(*, agent_name, agent_version):
-            self.assertEqual(agent_version, "7")
-            return SimpleNamespace(definition=definitions[agent_name])
-
-        client = MagicMock()
-        client.__aenter__.return_value = client
-        client.agents.create_version = AsyncMock(side_effect=create_version)
-        client.agents.get_version = AsyncMock(side_effect=get_version)
-        client.agents.enable = AsyncMock()
+        client, _calls = fake_project()
         credential = MagicMock()
         credential.__aenter__.return_value = credential
         with tempfile.TemporaryDirectory() as folder:
@@ -223,17 +262,56 @@ class CloudContractTests(unittest.IsolatedAsyncioTestCase):
                 await create_agents(ENDPOINT, path, "cli")
             bindings = load_bindings(path, ENDPOINT)
             self.assertEqual(len(bindings), 4)
-            self.assertTrue(all(row["agent_version"] == "7" for row in bindings.values()))
+            self.assertTrue(all(row["agent_version"] == "1" for row in bindings.values()))
             self.assertEqual(client.agents.create_version.await_count, 4)
             self.assertEqual(client.agents.enable.await_count, 4)
             client.agents.create_version.reset_mock()
             client.agents.enable.reset_mock()
             with patch("sys.argv", ["setup_agents.py", "--create", "--output", str(path)]), patch.dict(
                 "os.environ", {"AZURE_AI_PROJECT_ENDPOINT": ENDPOINT},
-            ), redirect_stdout(io.StringIO()):
+            ), patch("azure.ai.projects.aio.AIProjectClient", return_value=client), redirect_stdout(io.StringIO()):
                 setup_main()
             client.agents.create_version.assert_not_called()
             client.agents.enable.assert_not_called()
+
+    async def test_failed_setup_resumes_with_same_names_and_updates_by_new_version(self):
+        credential = MagicMock()
+        credential.__aenter__.return_value = credential
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "bindings.local.json"
+            failing, failed_calls = fake_project(fail_on=3)
+            with patch("azure.ai.projects.aio.AIProjectClient", return_value=failing), patch(
+                "azure.identity.aio.AzureCliCredential", return_value=credential,
+            ), redirect_stdout(io.StringIO()), self.assertRaises(RuntimeError):
+                await create_agents(ENDPOINT, path, "cli")
+            data, saved = read_bindings(path, ENDPOINT)
+            self.assertEqual(len(saved), 2)
+            planned = [agent_name(data["agent_prefix"], *pair) for pair in PAIRS]
+            self.assertEqual(failed_calls, planned[:3])
+
+            client, calls = fake_project()
+            with patch("azure.ai.projects.aio.AIProjectClient", return_value=client), patch(
+                "azure.identity.aio.AzureCliCredential", return_value=credential,
+            ), redirect_stdout(io.StringIO()):
+                await create_agents(ENDPOINT, path, "cli")
+            self.assertEqual(calls, planned[2:])
+            self.assertEqual(len(load_bindings(path, ENDPOINT)), 4)
+
+            content = json.loads(path.read_text())
+            content["agents"][0]["definition_sha256"] = "0" * 64
+            path.write_text(json.dumps(content))
+            client.agents.get_version.side_effect = None
+            client.agents.get_version.return_value = SimpleNamespace(definition=definition(*PAIRS[0]))
+            client.agents.create_version.side_effect = None
+            client.agents.create_version.return_value = SimpleNamespace(version="2")
+            with patch("azure.ai.projects.aio.AIProjectClient", return_value=client), patch(
+                "azure.identity.aio.AzureCliCredential", return_value=credential,
+            ), redirect_stdout(io.StringIO()):
+                await create_agents(ENDPOINT, path, "cli")
+            self.assertEqual(client.agents.create_version.await_args.kwargs["agent_name"], planned[0])
+            updated = load_bindings(path, ENDPOINT)[PAIRS[0]]
+            self.assertEqual((updated["agent_name"], updated["agent_version"]), (planned[0], "2"))
+            self.assertEqual(sorted(p.name for p in Path(folder).iterdir()), ["bindings.local.json"])
 
     async def test_each_pair_pins_its_version_preserves_greeting_and_never_updates_agent(self):
         for row in rows():
@@ -293,7 +371,7 @@ class CloudContractTests(unittest.IsolatedAsyncioTestCase):
             await cloud_call(settings, browser, (row["model"], row["voice"], "overdraft", "en"), asyncio.Queue())
         browser.send_json.assert_not_called()
 
-    async def test_setup_requires_explicit_flag_and_never_overwrites_bindings(self):
+    async def test_setup_requires_explicit_flag_and_never_overwrites_unrelated_files(self):
         with patch("sys.argv", ["setup_agents.py"]), patch(
             "azure.ai.projects.aio.AIProjectClient",
         ) as client, redirect_stdout(io.StringIO()) as output:
@@ -303,7 +381,7 @@ class CloudContractTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "existing.local.json"
             path.write_text("reader data")
-            with self.assertRaises(FileExistsError):
+            with self.assertRaises(ValueError):
                 await create_agents(ENDPOINT, path, "cli")
             self.assertEqual(path.read_text(), "reader data")
 
@@ -355,6 +433,25 @@ class WebTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(WSServerHandshakeError) as error:
             await self.client.ws_connect("/api/voice", params=query, headers={"Origin": self.origin})
         self.assertEqual(error.exception.status, 400)
+
+    async def test_concurrent_calls_cannot_both_take_the_single_slot(self):
+        query = {"model": DEFAULT_MODEL, "voice": DEFAULT_VOICE, "scenario": "overdraft", "language": "en"}
+        prepare = web.WebSocketResponse.prepare
+
+        async def slow_prepare(socket, request):
+            # Widen the handshake window so both requests overlap.
+            await asyncio.sleep(0.05)
+            return await prepare(socket, request)
+
+        with patch.object(web.WebSocketResponse, "prepare", slow_prepare):
+            results = await asyncio.gather(*(
+                self.client.ws_connect("/api/voice", params=query, headers={"Origin": self.origin})
+                for _ in range(2)
+            ), return_exceptions=True)
+        sockets = [result for result in results if not isinstance(result, BaseException)]
+        errors = [result for result in results if isinstance(result, WSServerHandshakeError)]
+        self.assertEqual((len(sockets), [error.status for error in errors]), (1, [503]))
+        await sockets[0].close()
 
 
 if __name__ == "__main__":

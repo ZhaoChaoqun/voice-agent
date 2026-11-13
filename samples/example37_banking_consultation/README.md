@@ -1,4 +1,4 @@
-# Fictional banking Voice Agent
+# Banking consultation Voice Agent
 
 A phone-shaped browser sample for a **Foundry Voice Agent** using Voice Live
 for speech input and output. Nora helps explore overdrafts and beginner
@@ -60,7 +60,9 @@ sequenceDiagram
 `setup_agents.py` explicitly creates **four separate Agents, one per legal
 model/voice pair**, in your existing project. The resulting version mapping
 belongs to your resource and is stored only in an ignored `*.local.json` file.
-No pre-existing Agent name, version or project is included.
+No pre-existing Agent name, version or project is included. Each bindings file
+has its own random Agent-name prefix, and each pair always uses the same Agent
+name under that prefix.
 
 A saved voice is selected **before opening the connection**. The server never
 uses `session.update` to change the voice: native realtime voice updates are
@@ -89,7 +91,7 @@ loopback-only, not a hosted or multi-user gateway.
 From the repository root, in PowerShell:
 
 ```powershell
-Set-Location samples\fictional_banking
+Set-Location samples\example37_banking_consultation
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
@@ -97,7 +99,7 @@ python -m venv .venv
 On Linux/macOS:
 
 ```bash
-cd samples/fictional_banking
+cd samples/example37_banking_consultation
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 ```
@@ -146,7 +148,9 @@ BANKING_AGENT_BINDINGS=bindings.local.json
 Sign in with `az login`. `cli` uses Azure CLI credentials; `default` uses
 `DefaultAzureCredential` for an environment configured by you.
 
-First inspect the plan, which makes **no Azure requests**:
+First inspect the plan, which makes **no Azure requests**. It reads any existing
+local bindings and shows, for each pair, whether setup would create an Agent,
+publish a new version or leave it unchanged:
 
 ```powershell
 .\.venv\Scripts\python.exe setup_agents.py
@@ -163,13 +167,14 @@ When you are ready to write to your existing project:
 These Agents are retained for reuse. Cloud voice calls incur service charges.
 The sample's local preview and tests do not run this creation command.
 
-The script writes `bindings.local.json` and never overwrites an existing file.
-Rerunning with complete compatible local bindings makes no Azure changes;
-the server still verifies each saved version before a call. An incomplete or
-outdated mapping is rejected, not silently repaired. If setup fails, inspect
-Foundry for partially created Agents and remove those you no longer need.
-Use a fresh ignored file with `--output another.local.json` to retry, and set
-`BANKING_AGENT_BINDINGS` to that filename. Do not hand-edit bindings to point at
+The script writes `bindings.local.json` before its first Azure request and
+updates it after each pair succeeds. Rerun the same command after a failure or
+interruption: completed pairs are skipped and the remaining pairs reuse their
+planned Agent names, so a retry does not leave extra Agents behind. When this
+sample's Agent definition changes, rerunning setup publishes a new version under
+each existing Agent name. With complete, current bindings it makes no Azure
+changes; the server still verifies each saved version before a call and refuses
+incomplete or outdated bindings. Do not hand-edit bindings to point at
 unrelated Agents.
 
 Keep `.env` and every generated `*.local.json` private and out of source control.
@@ -202,14 +207,19 @@ profile B** and **EUR 4,500** savings. Neither profile represents a real person.
 Other details are unknown until the caller explores them hypothetically.
 
 The saved definition includes server-side echo cancellation, noise reduction,
-Azure Speech transcription and semantic VAD. The browser also requests echo
+Azure Speech transcription and multilingual semantic VAD
+(`azure_semantic_vad_multilingual`) for English, German and Chinese turns.
+The browser also requests echo
 cancellation and noise suppression. It resamples its native capture rate to
 24 kHz mono PCM16 and plays service PCM at 24 kHz.
 
 Speak over a reply to interrupt it. The service cancels/truncates the response,
 and the browser stops queued and scheduled playback. Audio upload and playback
 queues are bounded; unsupported configuration or lag ends the call explicitly.
-Leaving/backgrounding the page ends the call and releases the microphone.
+If one utterance cannot be transcribed or one reply does not finish, the
+captions say so and the call continues; ask again. Session-level service errors
+end the call. Switching tabs keeps the call open; closing or leaving the page
+ends it and releases the microphone.
 
 ## Fictional facts and privacy
 
@@ -251,8 +261,9 @@ node --test test_ui.mjs test_audio.mjs
 
 Tests cover model/voice legality and preference resets, lock behavior,
 original-language caption accumulation, PCM resampling and playback bounds,
-same-origin routing, private mappings, definition readback, pinned connection
-versions, and greeting buffering. Mock cloud tests assert that no Agent writes
+same-origin routing, private mappings, resumable setup and new versions,
+definition readback, pinned connection versions, greeting buffering and
+recoverable turn failures. Mock cloud tests assert that no Agent writes
 or voice overrides occur during a call. The preview and mocks are **not** live
 Azure or physical audio validation.
 

@@ -29,6 +29,13 @@ from banking import (
 LOG = logging.getLogger(__name__)
 MAX_FRAME = 128 * 1024
 ASSETS = {"app.mjs", "state.mjs", "i18n.mjs", "audio.mjs", "pcm.mjs", "pcm-worklet.mjs", "style.css", "mark.svg"}
+# Realtime error codes caused by a single request racing the current turn. The
+# session remains usable, so the call continues. Every other error ends it.
+RECOVERABLE_ERROR_CODES = {
+    "conversation_already_has_active_response",
+    "input_audio_buffer_commit_empty",
+    "response_cancel_not_active",
+}
 
 
 @dataclass
@@ -149,8 +156,18 @@ def verify_session(session: dict[str, Any], model: str, voice: str) -> None:
 def browser_event(event: dict[str, Any]) -> dict[str, Any] | None:
     """Project service events; never send saved prompts or raw service errors."""
     kind = event.get("type")
-    if kind in {"error", "conversation.item.input_audio_transcription.failed"}:
+    if kind == "error":
+        code = (event.get("error") or {}).get("code")
+        if code in RECOVERABLE_ERROR_CODES:
+            LOG.info("Voice service rejected one turn request (%s); the call continues.", code)
+            return None
         raise ValueError("The voice service could not process this conversation.")
+    if kind == "conversation.item.input_audio_transcription.failed":
+        # Only this utterance's caption is missing; the conversation continues.
+        item = event.get("item_id")
+        if not isinstance(item, str) or len(item) > 200:
+            raise ValueError("Invalid voice-service transcript.")
+        return {"type": "turn_failed", "role": "user", "id": item}
     if kind in {"response.audio.delta", "response.output_audio.delta"}:
         delta = event.get("delta")
         if not isinstance(delta, str) or len(delta) > 4 * 1024 * 1024:
@@ -187,10 +204,20 @@ def browser_event(event: dict[str, Any]) -> dict[str, Any] | None:
         return {"type": "response", "id": (event.get("response") or {}).get("id")}
     if kind == "response.done":
         response = event.get("response") or {}
-        if response.get("status") not in {"completed", "cancelled"}:
+        status = response.get("status")
+        if status not in {"completed", "cancelled", "failed", "incomplete"}:
             raise ValueError("The voice service did not complete its response.")
-        if any(item.get("type") == "function_call" for item in response.get("output", [])):
+        output = response.get("output") or []
+        if not isinstance(output, list) or any(
+            not isinstance(item, dict) or item.get("type") == "function_call" for item in output
+        ):
             raise ValueError("This fictional consultation has no execution tools.")
+        if status in {"failed", "incomplete"}:
+            # A single reply did not finish; the caller can simply ask again.
+            response_id = response.get("id")
+            if not isinstance(response_id, str) or len(response_id) > 200:
+                raise ValueError("Invalid voice-service response.")
+            return {"type": "turn_failed", "role": "assistant", "id": response_id}
         return {"type": "status", "status": "listening"}
     return None
 
@@ -320,8 +347,13 @@ async def voice_socket(request):
     if settings.sockets:
         raise web.HTTPServiceUnavailable(text="End the existing conversation first.")
     browser = web.WebSocketResponse(heartbeat=20, max_msg_size=MAX_FRAME)
-    await browser.prepare(request)
+    # Reserve the only call slot before awaiting, so concurrent requests cannot both pass.
     settings.sockets.add(browser)
+    try:
+        await browser.prepare(request)
+    except BaseException:
+        settings.sockets.discard(browser)
+        raise
     incoming = asyncio.Queue(maxsize=100)
     tasks = [
         asyncio.create_task(read_browser(browser, incoming)),
@@ -375,7 +407,8 @@ async def resources(app):
 
 async def shutdown(app):
     for socket in tuple(app[SETTINGS].sockets):
-        await socket.close(code=1001, message=b"Server shutdown")
+        if socket.prepared:
+            await socket.close(code=1001, message=b"Server shutdown")
 
 
 def create_app(settings: Settings) -> web.Application:

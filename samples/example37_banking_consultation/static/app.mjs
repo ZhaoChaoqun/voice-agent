@@ -151,6 +151,14 @@ function handle(event) {
     return;
   } else if (event.type === "transcript") {
     updateTranscript(messages, event);
+  } else if (event.type === "turn_failed") {
+    // One utterance or reply failed; keep the call open and say so in the captions.
+    if (!["user", "assistant"].includes(event.role)) throw new TypeError("Invalid failed turn.");
+    updateTranscript(messages, {
+      role: event.role, id: event.id, final: true,
+      text: event.role === "user" ? text().unheard : text().incompleteReply,
+    });
+    if (event.role === "assistant" && !audio?.nodes.size && !audio?.queue.length) status = "listening";
   } else if (event.type === "interrupt") {
     ignoredResponse = responseId;
     audio?.interrupt();
@@ -300,9 +308,6 @@ $("back-home").addEventListener("click", () => {
 });
 $("about").addEventListener("click", () => $("info-dialog").showModal());
 $("close-info").addEventListener("click", () => $("info-dialog").close());
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden && active) void finish("connection");
-});
 window.addEventListener("pagehide", () => { if (active) void finish(); });
 window.addEventListener("offline", () => { if (active) void finish("network"); });
 
