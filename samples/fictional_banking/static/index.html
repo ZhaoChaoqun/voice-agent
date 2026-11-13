@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#edf6f4">
+  <meta name="description" content="A fictional banking Voice Agent with synthetic data.">
+  <title>Northstar Demo Bank · Nora</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/mark.svg">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script type="module" src="/assets/app.mjs"></script>
+</head>
+<body>
+  <main class="phone" id="phone">
+    <header>
+      <div class="brand"><img src="/assets/mark.svg" width="32" height="32" alt=""><div><strong>Northstar Demo Bank</strong><small id="tagline"></small></div></div>
+      <button id="about" class="icon-button" type="button" aria-label="About this demo">i</button>
+    </header>
+    <section class="choices" aria-label="Voice settings">
+      <label><span id="model-label"></span><select id="model-select" disabled aria-describedby="selection-help"></select></label>
+      <label><span id="voice-label"></span><select id="voice-select" disabled aria-describedby="selection-help"></select></label>
+      <label class="language"><span id="language-label"></span><select id="language-select" disabled aria-describedby="selection-help"><option value="de" lang="de">Deutsch</option><option value="en" lang="en">English</option><option value="zh" lang="zh-CN">中文</option></select></label>
+      <p id="selection-help"></p>
+    </section>
+    <div class="mode-badge" id="mode-badge"></div>
+    <div class="screen" id="screen">
+      <section id="home">
+        <h1 id="headline"></h1><p class="introduction" id="introduction"></p>
+        <div class="voice-art" aria-hidden="true"><div class="halo"></div><div class="orb"><span>n</span></div></div>
+        <p class="assistant-name" id="assistant-name"></p>
+        <h2 id="topics-heading"></h2>
+        <button class="topic selected" type="button" data-scenario="overdraft" aria-pressed="true"><span class="topic-icon" aria-hidden="true">↗</span><span><strong id="overdraft-title"></strong><small id="overdraft-detail"></small></span></button>
+        <button class="topic" type="button" data-scenario="investing" aria-pressed="false"><span class="topic-icon" aria-hidden="true">◎</span><span><strong id="investing-title"></strong><small id="investing-detail"></small></span></button>
+      </section>
+      <section id="chat" hidden>
+        <div class="chat-heading"><h2 id="conversation-heading"></h2><button id="back-home" class="text-button" type="button" hidden></button></div>
+        <p class="caption-note" id="original"></p><p class="call-choice" id="call-choice"></p>
+        <div id="messages" role="log" aria-live="off"></div><p id="empty"></p>
+      </section>
+      <p id="error" class="error" role="alert" hidden></p>
+      <p id="storage-warning" class="notice" role="status" hidden></p>
+    </div>
+    <footer>
+      <p id="status" role="status" aria-live="polite"></p>
+      <div class="call-controls"><button id="mute" class="utility" type="button" disabled></button><button id="start" class="primary" type="button" disabled></button><button id="captions" class="utility" type="button" disabled aria-pressed="true"></button></div>
+      <button id="history" class="text-button" type="button" disabled></button>
+      <p class="privacy" id="privacy"></p>
+    </footer>
+  </main>
+  <dialog id="info-dialog" aria-labelledby="info-title">
+    <button id="close-info" class="text-button" type="button"></button>
+    <img src="/assets/mark.svg" width="44" height="44" alt="">
+    <h2 id="info-title"></h2><p id="info-body"></p>
+    <h3 id="products-title"></h3><p id="products"></p><p id="profile"></p>
+    <p id="risk"></p><p id="processing"></p><p id="offline-info"></p>
+  </dialog>
+</body>
+</html>
