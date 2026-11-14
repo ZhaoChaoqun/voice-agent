@@ -68,17 +68,24 @@ class HindiEvidenceTests(unittest.TestCase):
             self.assertIsNone(_month_day(spoken))
 
     def test_explicit_decisions_and_vague_answers(self):
-        for classifier, affirmative in (
-            (_classify_offer_response, "मैं स्वीकार करता हूँ"),
-            (_classify_bureau_response, "मैं सहमति देता हूँ"),
+        for classifier, affirmatives, negatives in (
+            (
+                _classify_offer_response,
+                ("मैं स्वीकार करता हूँ", "मैं स्वीकार करती हूँ", "मुझे यह प्रस्ताव स्वीकार है"),
+                ("मैं अस्वीकार करता हूँ", "मैं अस्वीकार करती हूँ", "मुझे यह प्रस्ताव स्वीकार नहीं है"),
+            ),
+            (
+                _classify_bureau_response,
+                ("मैं सहमति देता हूँ", "मैं सहमति देती हूँ", "मेरी सहमति है"),
+                ("मैं अस्वीकार करता हूँ", "मैं अस्वीकार करती हूँ", "मैं सहमति नहीं देता हूँ", "मैं सहमति नहीं देती हूँ", "मेरी सहमति नहीं है"),
+            ),
         ):
-            self.assertEqual("explicit_yes", classifier(affirmative))
-            self.assertEqual("explicit_no", classifier("मैं अस्वीकार करता हूँ"))
+            for affirmative in affirmatives:
+                self.assertEqual("explicit_yes", classifier(affirmative))
+            for negative in negatives:
+                self.assertEqual("explicit_no", classifier(negative))
             for vague in ("हाँ", "ठीक है", "हम्म", "आगे बताइए"):
                 self.assertEqual("unclear", classifier(vague))
-        self.assertEqual(
-            "explicit_no", _classify_bureau_response("मैं सहमति नहीं देता हूँ")
-        )
 
     def test_only_explicit_end_requests_close_the_call(self):
         for spoken in (

@@ -55,6 +55,45 @@ class TestTemplatePersonas:
                 assert "You are " not in subagent.get("instructions", "")
         assert len(names) == len(set(names)) == TEMPLATE_COUNT
 
+    def test_all_example_templates_align_shared_prompt_grammatical_gender_with_voice(self) -> None:
+        female_voices = {
+            "en-US-Emma:DragonHDOmniLatestNeural",
+            "en-US-Emma:DragonHDLatestNeural",
+            "en-US-Ava:DragonHDLatestNeural",
+            "en-IN-Diya:DragonHDLatestNeural",
+        }
+        male_voices = {
+            "en-US-Brian:DragonHDOmniLatestNeural",
+        }
+        paths = sorted(SAMPLES.glob("example*/agent.json"))
+        assert len(paths) == 39
+        for path in paths:
+            definition = json.loads(path.read_text(encoding="utf-8"))["definition"]
+            voice_name = definition["audio"]["output"]["voice"]["name"]
+            shared_header = definition["instructions"][:1200]
+            if voice_name in female_voices:
+                assert "Your spoken voice is" in shared_header and "female" in shared_header, path.parent.name
+                assert "feminine" in shared_header, path.parent.name
+                assert "Your spoken voice is male" not in definition["instructions"], path.parent.name
+            elif voice_name in male_voices:
+                assert "Your spoken voice is male" in shared_header, path.parent.name
+                assert "masculine self-reference" in shared_header, path.parent.name
+                assert "Your spoken voice is female" not in definition["instructions"], path.parent.name
+            else:
+                raise AssertionError(f"Unhandled voice {voice_name} in {path}")
+            assert "never assume" in shared_header.lower(), path.parent.name
+
+    def test_hindi_finance_templates_do_not_force_masculine_only_customer_prompts(self) -> None:
+        for folder in (
+            "example1_finance_with_handoff_cascade_hi_in",
+            "example1_finance_with_handoff_realtime_hi_in",
+        ):
+            raw = (SAMPLES / folder / "agent.json").read_text(encoding="utf-8")
+            assert "मैं स्वीकार करती हूँ" in raw, folder
+            assert "मैं अस्वीकार करती हूँ" in raw, folder
+            assert "मैं सहमति देती हूँ" in raw, folder
+            assert "रहा हूँ" not in raw, folder
+
     def test_billing_email_confirmation_precedes_lookup(self) -> None:
         path = SAMPLES / "example5_customer_support" / "agent.json"
         definition = json.loads(path.read_text(encoding="utf-8"))["definition"]

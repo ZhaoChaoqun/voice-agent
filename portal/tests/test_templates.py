@@ -498,7 +498,7 @@ class TemplateCatalogTests(unittest.TestCase):
         base, entrypoint = graph["instructions"].split(separator)
         self.assertEqual(
             hashlib.sha256(base.encode()).hexdigest(),
-            "fc89fd8aa4729b17d4a61c956de435798ca3fd77098e6b715378a7b3b74ad90c",
+            "aa20603cb187c5abf6427405e088bcb8d095925388e18cc0354d41a57683ae17",
         )
         self.assertIn("Handoff immediately to identify_intent without speaking.", entrypoint)
         expected_tools = {

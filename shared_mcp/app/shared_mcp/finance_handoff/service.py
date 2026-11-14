@@ -114,11 +114,14 @@ def _charge_response_matches_decision(value: str, accepted: bool) -> bool:
         re.search(r"\bi (reject|decline)\b", value)
         or negative_accept
     )
-    hindi_negative = "मैं" in value and (
+    hindi_first_person = any(
+        pronoun in value for pronoun in ("मैं", "मुझे", "मेरा", "मेरी")
+    )
+    hindi_negative = hindi_first_person and (
         "अस्वीकार" in value or ("स्वीकार" in value and "नहीं" in value)
     )
     hindi_affirmative = (
-        "मैं" in value
+        hindi_first_person
         and "स्वीकार" in value
         and not hindi_negative
     )
@@ -235,11 +238,14 @@ def _offer_response_matches_decision(value: str, accepted: bool) -> bool:
         re.search(r"\bi (reject|decline|am not interested)\b", value)
         or negative_want
     )
-    hindi_negative = "मैं" in value and (
+    hindi_first_person = any(
+        pronoun in value for pronoun in ("मैं", "मुझे", "मेरा", "मेरी")
+    )
+    hindi_negative = hindi_first_person and (
         "अस्वीकार" in value or ("स्वीकार" in value and "नहीं" in value)
     )
     hindi_affirmative = (
-        "मैं" in value
+        hindi_first_person
         and "स्वीकार" in value
         and not hindi_negative
     )
@@ -268,11 +274,13 @@ def _bureau_response_matches_decision(value: str, consented: bool) -> bool:
         or re.search(r"\bi (do not|don t) (give|grant) permission\b", value)
         or re.search(r"\bi (refuse|decline)\b", value)
     )
-    hindi_subject = "मैं" in value
+    hindi_subject = any(
+        pronoun in value for pronoun in ("मैं", "मुझे", "मेरा", "मेरी")
+    )
     hindi_consent = "सहमति" in value or "अनुमति" in value
     hindi_negative = hindi_subject and (
         (hindi_consent and "नहीं" in value)
-        or "मैं अस्वीकार" in value
+        or "अस्वीकार" in value
         or "मैं मना" in value
     )
     hindi_positive = hindi_subject and hindi_consent and not hindi_negative
