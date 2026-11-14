@@ -36,12 +36,18 @@ async def wait_until_ready(connection) -> None:
         if isinstance(event, models.RealtimeServerEventError):
             raise RuntimeError(event.error.message)
         if isinstance(event, models.RealtimeServerEventSessionUpdated):
-            turn_detection = event.session["audio"]["input"]["turn_detection"]
+            input_audio = event.session["audio"]["input"]
+            turn_detection = input_audio["turn_detection"]
             speech_start = "on" if turn_detection.get("speech_start_detection") else "off"
             eou = turn_detection.get("end_of_utterance_detection") or {}
+            if "noise_reduction" in input_audio:
+                noise_reduction = (input_audio["noise_reduction"] or {}).get("type", "off")
+            else:
+                noise_reduction = "not reported"
             print(
                 f"Session ready: speech_start_detection {speech_start}, "
-                f"end_of_utterance_detection model {eou.get('model')}"
+                f"end_of_utterance_detection model {eou.get('model')}, "
+                f"noise_reduction {noise_reduction}"
             )
             return
 
