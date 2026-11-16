@@ -15,7 +15,7 @@ to install and start the backend at <http://127.0.0.1:5178>.
 Then, in another terminal from the repository root:
 
 ```bash
-cd samples/example37_smart_home_appliance_agent/editions/modern
+cd samples/example38_smart_home_appliance_agent/editions/modern
 npm ci
 npm run dev
 ```

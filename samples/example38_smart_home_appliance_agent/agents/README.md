@@ -10,7 +10,7 @@ The only supported API model IDs are `microsoft-realtime-flash-1` and
 exact ID; product names and unversioned IDs are not aliases.
 
 These are **base templates, not upload-ready payloads**.
-From `samples/example37_smart_home_appliance_agent`, run:
+From `samples/example38_smart_home_appliance_agent`, run:
 
 ```bash
 npm run agents:render

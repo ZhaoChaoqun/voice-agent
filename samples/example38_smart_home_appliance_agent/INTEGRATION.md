@@ -53,7 +53,7 @@ export SMART_HOME_FLASH_AGENT="<your-flash-agent-name>"
 az login --tenant "$AZURE_TENANT_ID"
 az account set --subscription "$AZURE_SUBSCRIPTION_ID"
 
-cd samples/example37_smart_home_appliance_agent
+cd samples/example38_smart_home_appliance_agent
 npm ci
 ```
 

@@ -137,7 +137,7 @@ and [limits, quotas, and regions](https://learn.microsoft.com/azure/foundry/agen
 From the repository root:
 
 ```bash
-cd samples/example37_smart_home_appliance_agent
+cd samples/example38_smart_home_appliance_agent
 npm ci
 cp .env.example .env
 npm run dev
@@ -161,7 +161,7 @@ install Modern before Habitat because Habitat imports Modern source and needs
 its dependencies:
 
 ```bash
-cd samples/example37_smart_home_appliance_agent/editions/modern
+cd samples/example38_smart_home_appliance_agent/editions/modern
 npm ci
 cd ../habitat
 npm ci

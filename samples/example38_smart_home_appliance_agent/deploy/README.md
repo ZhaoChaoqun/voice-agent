@@ -38,7 +38,7 @@ source, image layers, or ordinary application environment variables.
 
 ## Build from source
 
-Use `samples/example37_smart_home_appliance_agent/` as Docker build context:
+Use `samples/example38_smart_home_appliance_agent/` as Docker build context:
 
 ```bash
 docker build -f deploy/Dockerfile -t "<your-registry>/voice-home:<your-tag>" .

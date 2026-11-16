@@ -16,7 +16,7 @@ In another terminal from the repository root, install Modern's dependencies
 **before** Habitat's, because Habitat imports Modern source:
 
 ```bash
-cd samples/example37_smart_home_appliance_agent/editions/modern
+cd samples/example38_smart_home_appliance_agent/editions/modern
 npm ci
 cd ../habitat
 npm ci
@@ -34,7 +34,7 @@ restarting another development server.
 Keep this directory structure intact:
 
 ```text
-example37_smart_home_appliance_agent/
+example38_smart_home_appliance_agent/
   src/                  # Classic hooks and knowledge UI
   shared/               # Protocol and loopback backend validation
   server/               # One backend and tool executor
