@@ -1,4 +1,4 @@
-# Integration guide: Voice Agent, transports, and optional real devices
+# Integration guide: Voice Agent, WebSocket, and optional real devices
 
 ## Conclusion
 
@@ -10,13 +10,11 @@ MCP server is connected.
 This guide covers:
 
 1. Reviewing and explicitly publishing a Flash Voice Agent in your own project.
-2. The implemented WebSocket flow and an **unwired, project-dependent Agent-mode
-   WebRTC reference**.
+2. The implemented Agent-mode WebSocket flow.
 3. The additional authorization, adapters, receipts, and testing needed for real
    device APIs or MCP.
 
-The separate model-mode WebRTC lab is not an implementation of step 2's
-Agent-mode flow. Optional Azure commands below change state only when you
+Optional Azure commands below change state only when you
 deliberately execute them and require authorization in your target environment.
 
 ## 1. Configure a Voice Agent
@@ -225,11 +223,11 @@ published, and new definitions do not rewrite already established sessions.
 
 ### Authentication and endpoint selection
 
-Agent-mode transports select the saved Agent **name**, not a model name,
+The Agent-mode connection selects the saved Agent **name**, not a model name,
 assistant ID, or resource ID. The backend acquires a token for
 `https://ai.azure.com/.default` (CLI resource `https://ai.azure.com`).
 SDK credentials reuse token caching. Do not echo tokens, put them in URLs,
-browser subprotocols, DataChannel payloads, localStorage, or logs.
+browser subprotocols, localStorage, or logs.
 
 A service token is not end-user or household authorization. The application must
 authenticate its users and enforce device ownership separately.
@@ -387,115 +385,8 @@ saved Agent and opens the Azure endpoint. These URLs are not interchangeable.
 Preserve same-origin checks, authentication, and household isolation when reusing
 the relay.
 
-### Agent-mode WebRTC reference — not wired into these UIs
-
-Where the target Agent/model supports it, the candidate signaling endpoint is:
-
-```text
-wss://<resource>.services.ai.azure.com/api/projects/<project>/agents/<agent-name>/endpoint/protocols/voice?api-version=v1&transport=webrtc&agent_session_id=<unique-id>
-```
-
-Verify transport availability for the exact Flash Agent/project. Success with
-another model or a direct model-mode lab does not establish Agent-mode support.
-The backend retains the authenticated WebSocket control channel; the browser
-exchanges SDP through your authenticated signaling API, then sends/receives
-audio as WebRTC RTP with realtime events over `voice-live-events`.
-
-```mermaid
-sequenceDiagram
-  participant B as Browser RTCPeerConnection
-  participant R as Authenticated signaling backend
-  participant A as Saved Foundry Voice Agent
-  B->>B: Microphone tracks + DataChannel + SDP offer
-  R->>A: Authenticated WS, transport=webrtc
-  B->>R: Complete SDP offer
-  R->>A: rtc.call.sdp.create
-  A-->>R: rtc.call.sdp.created + sdp_answer
-  R-->>B: SDP answer
-  B->>B: setRemoteDescription; wait for ICE and readiness
-  B->>A: WebRTC RTP microphone audio
-  A-->>B: RTP output audio / DataChannel events
-  Note over R,A: Keep control channel; retain server-side tool authorization
-```
-
-Create `RTCPeerConnection`, add microphone tracks initially disabled, and create
-the `voice-live-events` DataChannel **before** the SDP offer so it includes the
-SCTP/application media section. Configure STUN/TURN for your network and wait
-for bounded ICE gathering or the service-supported candidate flow.
-Send the complete offer through the authenticated backend:
-
-```json
-{
-  "type": "rtc.call.sdp.create",
-  "sdp_offer": "<the-full-browser-local-description-sdp>"
-}
-```
-
-The corresponding event is:
-
-```json
-{
-  "type": "rtc.call.sdp.created",
-  "sdp_answer": "<the-service-sdp-answer>"
-}
-```
-
-This browser fragment shows the integration points; it is **not** a complete
-standalone client:
-
-```javascript
-async function negotiateAgentWebRtc({
-  iceServers,
-  exchangeOffer,
-  remoteAudio,
-  onAgentEvent,
-}) {
-  const peer = new RTCPeerConnection({ iceServers });
-  const microphone = await navigator.mediaDevices.getUserMedia({
-    audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
-  });
-  microphone.getAudioTracks().forEach((track) => {
-    track.enabled = false; // Enable only after media, configuration, and greeting.
-    peer.addTrack(track, microphone);
-  });
-  const events = peer.createDataChannel("voice-live-events");
-  events.onmessage = ({ data }) => onAgentEvent(JSON.parse(data));
-  peer.ontrack = ({ streams }) => {
-    remoteAudio.srcObject = streams[0];
-  };
-  await peer.setLocalDescription(await peer.createOffer());
-  // exchangeOffer waits for bounded ICE gathering, then sends localDescription
-  // through authenticated signaling and returns the service's sdp_answer.
-  const answer = await exchangeOffer(peer);
-  await peer.setRemoteDescription({ type: "answer", sdp: answer });
-  return { peer, microphone, events };
-}
-```
-
-The client sets the remote answer and enables microphone tracks only after
-media, configuration, and greeting readiness. Implement user-gesture autoplay,
-timeouts, failure cleanup, session termination, track stopping, and control-channel
-closure. RTP codecs/rates are negotiated in SDP; RTP is not base64 PCM or JSON.
-
-Function authority remains server-side. Handle calls and return outputs on
-supported event/control paths, preserving authorization, call IDs, deduplication,
-and result continuation. If an event appears on both control and DataChannel,
-choose an authoritative source and do not execute twice. The short acknowledgement
-and result use standard realtime events, not custom client event-dropping rules.
-
-| Reference                                                                                                  | What it provides                                                                          |
-| ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| This sample's `server/voice.ts` and two editions                                                           | Complete WebSocket household flow; **no Agent-mode WebRTC wiring**.                       |
-| [`../foundry_voice_webrtc/server.py`](../foundry_voice_webrtc/server.py), `Config.voice_url()` / `relay()` | Saved-Agent endpoint and signaling reference.                                             |
-| [`../foundry_voice_webrtc/public/app.js`](../foundry_voice_webrtc/public/app.js), `connectWebRtc()`        | SDP, ICE, microphone, DataChannel, and remote audio reference.                            |
-| This sample's `server/webrtc-benchmark.ts`                                                                 | Tool-free, direct **Voice Live model-mode** lab; not the above Agent-mode implementation. |
-
-The reference sample has its own Agent setup/business logic, not this household
-executor. Do not run its create/reset/apply-settings flows against the saved
-smart-home Agent. Adding `transport=webrtc` to the current application route
-does not wire signaling, tools, or continuation. Agent-mode, direct model-mode,
-and Azure OpenAI `/openai/v1/realtime/calls` are different APIs. GPT Live's
-`/voice/live/sessions` flow is also outside this Flash integration.
+This sample does not implement WebRTC. For a browser WebRTC example, see
+[`foundry_voice_webrtc`](../foundry_voice_webrtc/README.md).
 
 ## 3. Optional real devices: direct API or MCP
 
@@ -605,11 +496,10 @@ Start with one authorized test appliance before adding devices/scenes:
    argument/authorization checks → command → confirmed receipt → one concise result.
 4. Test duplicate events, timeout, disconnection, device refusal, insufficient
    permission, cancellation, and partial failures; no duplicate execution or false success.
-5. Validate audio, barge-in, transcripts, and tool order separately for WebSocket
-   and any newly implemented Agent-mode WebRTC flow.
+5. Validate audio, barge-in, transcripts, and tool order over the WebSocket flow.
 6. Add identity, audit, limits/budgets, alerts, manual handling, and retention before
    real use. Repository access controls are not runtime authentication.
 
-Publishing, Agent-mode WebRTC integration, and real-device steps require an
+Publishing and real-device steps require an
 authorized isolated validation environment. Optional live tests are described
 in the [main README](README.md).

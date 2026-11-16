@@ -16,9 +16,8 @@ connected. All 3D content is procedurally authored in source code, with no exter
 product images or manufacturer specifications.
 
 The default model is **Microsoft Realtime Flash**, `microsoft-realtime-flash-1`.
-The complete application uses WebSocket. A separate, tool-free **Voice Live
-model-mode WebRTC latency lab** does not load this Voice Agent. Agent-mode WebRTC
-is described as an integration reference, but is not wired into these UIs.
+The application connects to the Voice Agent over Agent-mode WebSocket. For a
+browser WebRTC example, see [`foundry_voice_webrtc`](../foundry_voice_webrtc/README.md).
 
 ## When to use this example
 
@@ -245,7 +244,6 @@ for the full speech profile, publishing checks, and optional GPT Realtime compar
 | `SMART_HOME_PUBLIC_GUEST_ACCESS`                       | Defaults to `0`; `1` allows any visitor to incur service charges.           |
 | `SMART_HOME_DATA_PATH`                                 | Writable cloud household storage directory.                                 |
 | `SMART_HOME_WEB_ROOT`                                  | Production UI: `editions/habitat/dist` (default) or `editions/modern/dist`. |
-| `VOICE_LIVE_ENDPOINT` / `WEBRTC_MODEL`                 | Model-mode WebRTC lab only; no default resource endpoint.                   |
 
 Keep credentials on the server. Local runtime uses `AzureCliCredential`; cloud
 runtime uses managed identity, not API keys. Use project-scoped development and
@@ -307,37 +305,21 @@ The root browser spec drives the Modern edition. Both editions also run the
 shared `tests/browser/edition-live.spec.ts` through their own `npm run test:live`,
 guarded by `SMART_HOME_LIVE_BROWSER`.
 
-| Test variable                                                                   | Used by                                                       | Effect                                                                                       |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `RUN_LIVE_TESTS=1`                                                              | `npm run test:live`, `concise-control.spec.ts`                | Opts in to real Foundry calls; otherwise these skip or exit.                                 |
-| `SMART_HOME_LIVE_BROWSER=1`                                                     | Each edition's `npm run test:live`                            | Opts in to `edition-live.spec.ts`.                                                           |
-| `LIVE_MODEL`                                                                    | `tests/live.ts`, `concise-control.spec.ts`, edition live spec | Exact model ID to test; defaults to `microsoft-realtime-flash-1`.                            |
-| `LIVE_LANGUAGE`                                                                 | `tests/live.ts`                                               | Opening greeting language, `zh` (default) or `en`.                                           |
-| `LIVE_AUDIO_ZH` / `LIVE_AUDIO_EN`                                               | `tests/live.ts`                                               | Paths to raw 24 kHz 16-bit mono PCM utterances; both must be set to add the two audio turns. |
-| `LIVE_SAVE_AUDIO=1`                                                             | `tests/live.ts`                                               | Writes each turn's reply audio as `<model>-<turn>.pcm` in the current directory.             |
-| `SMART_HOME_LIVE_URL`                                                           | `concise-control.spec.ts`                                     | Modern edition URL; defaults to `http://127.0.0.1:5180`.                                     |
-| `SMART_HOME_MODERN_URL`                                                         | `editions/modern` Playwright configs                          | Modern base URL; defaults to `http://127.0.0.1:5180`.                                        |
-| `SMART_HOME_HABITAT_URL`                                                        | `editions/habitat` Playwright configs and `habitat.spec.ts`   | Habitat base URL; defaults to `http://127.0.0.1:5184`.                                       | These tests do not replace subjective |
-| microphone/speaker checks. Server E2Es                                          |
-| requiring native audio processing need a compatible isolated Linux environment; |
-| do not disable AEC or noise suppression to bypass missing libraries.            |
+| Test variable                     | Used by                                                       | Effect                                                                                       |
+| --------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `RUN_LIVE_TESTS=1`                | `npm run test:live`, `concise-control.spec.ts`                | Opts in to real Foundry calls; otherwise these skip or exit.                                 |
+| `SMART_HOME_LIVE_BROWSER=1`       | Each edition's `npm run test:live`                            | Opts in to `edition-live.spec.ts`.                                                           |
+| `LIVE_MODEL`                      | `tests/live.ts`, `concise-control.spec.ts`, edition live spec | Exact model ID to test; defaults to `microsoft-realtime-flash-1`.                            |
+| `LIVE_LANGUAGE`                   | `tests/live.ts`                                               | Opening greeting language, `zh` (default) or `en`.                                           |
+| `LIVE_AUDIO_ZH` / `LIVE_AUDIO_EN` | `tests/live.ts`                                               | Paths to raw 24 kHz 16-bit mono PCM utterances; both must be set to add the two audio turns. |
+| `LIVE_SAVE_AUDIO=1`               | `tests/live.ts`                                               | Writes each turn's reply audio as `<model>-<turn>.pcm` in the current directory.             |
+| `SMART_HOME_LIVE_URL`             | `concise-control.spec.ts`                                     | Modern edition URL; defaults to `http://127.0.0.1:5180`.                                     |
+| `SMART_HOME_MODERN_URL`           | `editions/modern` Playwright configs                          | Modern base URL; defaults to `http://127.0.0.1:5180`.                                        |
+| `SMART_HOME_HABITAT_URL`          | `editions/habitat` Playwright configs and `habitat.spec.ts`   | Habitat base URL; defaults to `http://127.0.0.1:5184`.                                       |
 
-### WebRTC latency lab
-
-Configure your own `VOICE_LIVE_ENDPOINT`, then from the sample root:
-
-```bash
-PORT=5188 npm run lab:webrtc
-```
-
-Open <http://127.0.0.1:5188>. `WEBRTC_MODEL` defaults to
-`microsoft-realtime-flash-1`. Audio uses WebRTC RTP, events use the
-`voice-live-events` DataChannel, and Node holds the authenticated control channel.
-The lab disables tools and does not load the household Agent, knowledge, or
-pre/post-tool workflow. TTFA runs from text submission to the **first**
-`output_audio_buffer.started` per turn: not physical speaker onset and not
-microphone/VAD end-to-end latency. STUN/ICE, UDP, browser policy, and regional
-availability affect results. Do not expose this unauthenticated lab publicly.
+These tests do not replace subjective microphone/speaker checks. Server E2Es
+requiring native audio processing need a compatible isolated Linux environment;
+do not disable AEC or noise suppression to bypass missing libraries.
 
 ## Boundaries
 
@@ -375,13 +357,12 @@ availability affect results. Do not expose this unauthenticated lab publicly.
 | `EADDRINUSE`                     | Choose your own unused port and matching edition proxy backend; do not stop another session's service.                   |
 | No WebGL                         | Browser/GPU support; the UI should show an error while text/device controls remain usable.                               |
 | Storage failure                  | Runtime write access to household JSON, uploads, and the cloud mount; unsaved state is not success.                      |
-| SDP/ICE failure                  | Correct model-mode API, supported model, UDP/ICE reachability; not an Agent-mode acceptance test.                        |
 | Missing saved definition fields  | Readback comparison; do not overwrite advanced fields with another serializer.                                           |
 
 ## Further reading
 
 [Architecture and security](ARCHITECTURE.md) ·
-[Integration: Agent, WebSocket, WebRTC, and optional devices/MCP](INTEGRATION.md) ·
+[Integration: Agent, WebSocket, and optional devices/MCP](INTEGRATION.md) ·
 [Agent definitions](agents/README.md) ·
 [Optional ACA deployment](deploy/README.md) ·
 [Modern](editions/modern/README.md) · [Habitat](editions/habitat/README.md).

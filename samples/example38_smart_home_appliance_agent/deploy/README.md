@@ -2,11 +2,10 @@
 
 ## Conclusion
 
-This directory provides source-built Docker images and an **offline** manifest
+This directory provides a source-built Docker image and an **offline** manifest
 renderer for the complete smart-home application. It has no default Azure
 resources, does not automatically provision infrastructure or roles, and does
-not publish the Voice Agent. The separate WebRTC lab helper has its own explicit
-apply guard and a different security boundary.
+not publish the Voice Agent.
 
 These are optional operator-run instructions. Review the build and deployment
 inputs and validate your target environment before applying any Azure changes.
@@ -143,60 +142,3 @@ household, consume paid AI capacity, and upload content. Signed cookies provide
 integrity/isolation, not identity, rate limiting, or billing protection.
 Public operation requires external identity or abuse protection, concurrency
 and request limits, budgets, monitoring, audit, and data governance.
-
-## Separate model-mode WebRTC lab
-
-`Dockerfile.webrtc` and `deploy-webrtc.mjs` are only for a separate, tool-free
-Voice Live **model-mode** latency experiment. They do not deploy the household
-Voice Agent or connect Agent-mode WebRTC to the UIs. The lab has no access code
-or end-user login; do not leave its externally exposed routes unprotected.
-
-The helper requires your own settings, for example:
-
-```dotenv
-AZURE_SUBSCRIPTION_ID=<your-subscription-id>
-AZURE_TENANT_ID=<your-tenant-id>
-SMART_HOME_WEBRTC_RESOURCE_GROUP=<your-resource-group>
-SMART_HOME_WEBRTC_ENVIRONMENT_NAME=<your-existing-environment>
-SMART_HOME_WEBRTC_REGISTRY_NAME=<your-existing-registry-name>
-SMART_HOME_WEBRTC_IDENTITY_NAME=<your-existing-identity-name>
-SMART_HOME_WEBRTC_LOCATION=<your-region>
-SMART_HOME_WEBRTC_ENDPOINT=https://<resource>.services.ai.azure.com
-SMART_HOME_WEBRTC_SECONDARY_MODEL_ID=microsoft-realtime-flash-1
-SMART_HOME_WEBRTC_SECONDARY_APP=<your-lab-app-name>
-SMART_HOME_WEBRTC_MIN_REPLICAS=0
-```
-
-Only `microsoft-realtime-flash-1` and `gpt-realtime-2.1` are accepted by the lab
-and its deployment helper. The lab defaults to Flash and
-`SMART_HOME_WEBRTC_MIN_REPLICAS=0` (unlike the
-full application's default `1`); maximum replicas remain one. Optional
-`SMART_HOME_WEBRTC_PRIMARY_APP` and `SMART_HOME_WEBRTC_PRIMARY_MODEL_ID` add
-a distinct comparison app/model. Model support must be checked in the target
-resource. `SMART_HOME_WEBRTC_IMAGE_TAG` selects a tag,
-`SMART_HOME_WEBRTC_DEPLOY_STATE` selects the private state-file path, and
-`SMART_HOME_WEBRTC_SKIP_BUILD=1` skips the `az acr build` step during `--apply`
-so an existing image with that tag is deployed.
-
-```bash
-# Default: offline rendering only, no Azure calls.
-node deploy/deploy-webrtc.mjs
-```
-
-This writes `.local/webrtc-manifests.json` by default. Offline placeholder
-identity context is not proof of a usable managed identity. Only an explicit
-`--apply --confirm-endpoint` matching the configured resource endpoint invokes
-Azure CLI operations:
-
-```bash
-# Optional and state-changing: only in an authorized, protected test environment.
-export SMART_HOME_WEBRTC_ENDPOINT="https://<resource>.services.ai.azure.com"
-node deploy/deploy-webrtc.mjs --apply --confirm-endpoint "$SMART_HOME_WEBRTC_ENDPOINT"
-```
-
-The apply path reads existing environment/identity/registry, builds unless
-`SMART_HOME_WEBRTC_SKIP_BUILD` is set, applies app manifests, and waits for revision readiness.
-It is not an offline check and does not supply missing infrastructure or
-end-user protection. `/api/sessions` disables tools and does not connect a
-Foundry Voice Agent. Use `Dockerfile` plus `render-container-app.mjs` for the
-complete application, not this lab.

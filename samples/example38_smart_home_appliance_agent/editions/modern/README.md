@@ -91,8 +91,7 @@ images, downloaded scenes, fonts, or manufacturer facts. Household/readings,
 food, replenishment, and saved entertainment are fictional fixtures: no real
 devices, MCP, purchase/payment/delivery, or actual media streaming.
 
-The complete UI uses WebSocket, not Agent-mode WebRTC. The separate tool-free
-model-mode WebRTC lab does not load this Agent or measure this tool workflow.
+The UI connects to the Voice Agent over Agent-mode WebSocket.
 Keep uploads, recordings, traces, secrets, and deployment values out of commits.
 Use your own npm registry configuration; lockfile versions and integrity checks
 remain the dependency source of truth.

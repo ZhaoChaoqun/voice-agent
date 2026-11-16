@@ -19,9 +19,8 @@
     "test:live": "tsx tests/live.ts",
     "agents:render": "tsx server/sync-agent-config.ts",
     "agents:publish": "tsx server/sync-agent-config.ts --publish",
-    "lab:webrtc": "tsx server/webrtc-benchmark.ts",
-    "format": "prettier --write shared server tests agents knowledge/*.json webrtc-benchmark/*.html deploy/*.mjs *.json *.ts *.md deploy/*.md",
-    "format:check": "prettier --check shared server tests agents knowledge/*.json webrtc-benchmark/*.html deploy/*.mjs *.json *.ts *.md deploy/*.md",
+    "format": "prettier --write shared server tests agents knowledge/*.json deploy/*.mjs *.json *.ts *.md deploy/*.md",
+    "format:check": "prettier --check shared server tests agents knowledge/*.json deploy/*.mjs *.json *.ts *.md deploy/*.md",
     "lint": "tsc --noEmit && npm run format:check"
   },
   "dependencies": {

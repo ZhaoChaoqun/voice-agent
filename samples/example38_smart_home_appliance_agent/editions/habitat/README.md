@@ -111,7 +111,6 @@ are simulated. No real device API or MCP is connected; no purchase, payment,
 delivery, or actual video/music streaming occurs. Local editions share one
 household; browser tests do not prove physical device execution.
 
-This UI is WebSocket-only. The tool-free model-mode WebRTC lab is separate,
-and Agent-mode WebRTC is not wired into Habitat. Live browser tests are not a
+This UI connects to the Voice Agent over Agent-mode WebSocket. Live browser tests are not a
 physical microphone/speaker acceptance test. Follow the root security and
 retention guidance before considering public use.

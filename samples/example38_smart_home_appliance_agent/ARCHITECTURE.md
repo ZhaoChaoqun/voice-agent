@@ -178,25 +178,6 @@ File persistence is single-replica, not distributed transactional storage.
 Fresh Agent templates use `store: false`; existing settings and service
 data-processing requirements must still be reviewed.
 
-## Separate model-mode WebRTC lab
-
-```mermaid
-flowchart LR
-  B["Browser<br/>RTCPeerConnection"] -->|"SDP / text, loopback HTTP"| N["Lab Node<br/>authenticated control channel"]
-  N -->|"MediaGateway WebSocket<br/>/voice-live/realtime/calls"| L["Voice Live model mode<br/>tool-free Flash latency experiment"]
-  B <-->|"WebRTC RTP audio<br/>voice-live-events DataChannel"| L
-```
-
-This lab has no Foundry Agent, household tools, knowledge/store, or application
-pre/post-tool flow. Per-turn timing uses the first `output_audio_buffer.started`,
-not physical DAC/speaker onset. Browser ICE/STUN and network conditions affect
-it. The local server has session-count and lifetime limits but no production
-user authentication; it is not a public WebRTC service.
-
-Agent-mode WebRTC instead selects a saved Agent and needs authenticated signaling
-plus server-side tool handling. It is **not wired into Modern or Habitat**;
-see [integration references](INTEGRATION.md).
-
 ## Optional deployment topology
 
 ```mermaid
@@ -213,4 +194,4 @@ Maximum replicas remain one. This does not eliminate model, credential, or
 network initialization overhead. The manifest renderer is offline and does not
 query/deploy Azure or create RBAC. Public operation needs identity, abuse
 protection, budgets, monitoring, and data governance beyond guest cookies.
-See [deployment](deploy/README.md) for the separate lab's defaults and apply guard.
+See [deployment](deploy/README.md) for the renderer's inputs and checks.
