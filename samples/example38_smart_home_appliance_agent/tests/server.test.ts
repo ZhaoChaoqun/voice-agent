@@ -172,7 +172,12 @@ describe("Portal-preserving Agent authoring", () => {
     );
     expect(prompt).toContain('"Sure." or "Got it." for an English request');
     expect(prompt).toContain('Before the function call: "好的。"');
-    expect(prompt).toContain('Answer: "电视打开啦。想轻松一点');
+    const rules = prompt.split("SAVED MEDIA REFERENCE (evidence")[0];
+    expect(rules).toContain(
+      "short confirmation based on the actual function result",
+    );
+    expect(rules).toContain("taken from the SAVED MEDIA REFERENCE");
+    expect(rules).not.toMatch(/电视打开啦|小镇日记|月下漫步/);
     expect(prompt).not.toContain("application relay");
     expect(prompt).toContain(
       "The completed device result and useful viewing suggestion belong in the single post-tool answer",

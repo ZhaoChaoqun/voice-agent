@@ -159,11 +159,11 @@ describe("browser voice lifecycle", () => {
     socket.emit({
       type: "response.output_audio_transcript.done",
       item_id: "post-tool-message",
-      transcript: "电视打开啦。",
+      transcript: "电视打开了。",
     });
     expect(
       client.getSnapshot().messages.map((message) => message.text),
-    ).toEqual(["好的。", "电视打开啦。"]);
+    ).toEqual(["好的。", "电视打开了。"]);
   });
 
   it("surfaces failed responses and unexpected socket closure", async () => {

@@ -127,7 +127,7 @@ for (const model of [LIVE_MODEL]) {
     }
     expect(completions).toHaveLength(1);
     expect(completions[0].text).not.toMatch(/^(好的|好。|收到)/);
-    expect(completions[0].text).toMatch(/^电视(打开啦|已打开)/);
+    expect(completions[0].text).toMatch(/^电视.{0,4}(打开|开)/);
     expect(completions[0].text).toMatch(/小镇日记|月下漫步|花园故事|四季之旅/);
     expect(completions[0].text).not.toMatch(
       /我先|然后.*结果|切到开机状态|稍等|马上|为你打开/,
