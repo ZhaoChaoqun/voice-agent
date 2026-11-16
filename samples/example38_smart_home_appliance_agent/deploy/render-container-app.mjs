@@ -39,9 +39,7 @@ const minimum = process.env.SMART_HOME_MIN_REPLICAS ?? "1";
 const webRoot = process.env.SMART_HOME_WEB_ROOT ?? "editions/habitat/dist";
 if (!["0", "1"].includes(minimum))
   throw new Error("SMART_HOME_MIN_REPLICAS must be 0 or 1.");
-if (
-  !["dist", "editions/modern/dist", "editions/habitat/dist"].includes(webRoot)
-)
+if (!["editions/modern/dist", "editions/habitat/dist"].includes(webRoot))
   throw new Error("SMART_HOME_WEB_ROOT must select a source-built edition.");
 if (!/^[a-z][a-z0-9-]{0,30}[a-z0-9]$/.test(appName))
   throw new Error("SMART_HOME_CONTAINER_APP_NAME must be a valid ACA name.");

@@ -5,7 +5,7 @@ import {
   VoiceClient,
   type VoiceOptions,
   type VoiceSnapshot,
-} from "@/lib/voice-client";
+} from "@shared/ui/lib/voice-client";
 
 export interface VoiceSession extends VoiceSnapshot {
   connect: (microphone: boolean) => Promise<boolean>;

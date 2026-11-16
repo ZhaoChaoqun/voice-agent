@@ -8,21 +8,19 @@ import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
 import { Reflector } from "three/addons/objects/Reflector.js";
 
 import type { DeviceId, HomeState } from "@shared/protocol";
-import {
-  architecture,
-  furnishings,
-  type Architecture,
-} from "@v2/scene/architecture";
-import { atmosphere, type World } from "@v2/scene/atmosphere";
-import { aquarium, type Aquarium } from "@v2/scene/aquarium";
-import { batchStatic, palette, type Palette } from "@v2/scene/craft";
+import { architecture, type Architecture } from "@modern/scene/architecture";
+import { furnishings } from "@shared/ui/scene/furnishings";
+import { atmosphere, type World } from "@modern/scene/atmosphere";
+import { aquarium, type Aquarium } from "@modern/scene/aquarium";
+import { batchStatic, palette, type Palette } from "@shared/ui/scene/craft";
 import {
   animateDevices,
   devices,
   updateDevices,
   type Devices3D,
-} from "@v2/scene/devices";
-import { advanceTime, homeFraming, type Atmosphere } from "@v2/scene/math";
+} from "@shared/ui/scene/devices";
+import { advanceTime, type Atmosphere } from "@shared/ui/scene/math";
+import { homeFraming } from "@modern/scene/math";
 
 export interface SceneSnapshot {
   ready: boolean;

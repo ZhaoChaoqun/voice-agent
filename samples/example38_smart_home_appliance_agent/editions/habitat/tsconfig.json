@@ -14,8 +14,6 @@
     "baseUrl": ".",
     "paths": {
       "@habitat/*": ["src/*"],
-      "@v2/*": ["../modern/src/*"],
-      "@/*": ["../../src/*"],
       "@shared/*": ["../../shared/*"]
     }
   },

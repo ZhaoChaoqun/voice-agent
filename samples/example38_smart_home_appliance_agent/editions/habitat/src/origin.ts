@@ -2,7 +2,7 @@
 import type { IncomingHttpHeaders } from "node:http";
 
 /**
- * Accept only the dedicated fourth edition's same-origin mutations/upgrades.
+ * Accept only the Habitat edition's same-origin mutations/upgrades.
  *
  * Parameters
  * ----------

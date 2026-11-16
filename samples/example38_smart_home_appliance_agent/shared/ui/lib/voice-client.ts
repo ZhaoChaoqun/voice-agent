@@ -5,13 +5,13 @@ import type {
   Language,
   ToolActivity,
 } from "@shared/protocol";
-import { errorMessage } from "@/lib/api";
-import { BrowserAudio } from "@/lib/audio";
+import { errorMessage } from "@shared/ui/lib/api";
+import { BrowserAudio } from "@shared/ui/lib/audio";
 import {
   parseEvent,
   type Transcript,
   updateTranscript,
-} from "@/lib/conversation";
+} from "@shared/ui/lib/conversation";
 
 export type VoiceStatus =
   "idle" | "connecting" | "listening" | "thinking" | "speaking" | "error";

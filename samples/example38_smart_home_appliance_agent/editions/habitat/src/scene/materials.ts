@@ -1,7 +1,7 @@
 /** Material recipes retain the shared appliance palette, with new authored PBR maps. */
 import * as THREE from "three";
 
-import { palette, type Palette } from "@v2/scene/craft";
+import { palette, type Palette } from "@shared/ui/scene/craft";
 import { surfacePixels, type SurfaceKind } from "@habitat/scene/surface";
 
 const SURFACE_ANISOTROPY = 4; // Preserve oblique floor grain without the cost of maximum driver anisotropy.

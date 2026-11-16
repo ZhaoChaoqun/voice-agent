@@ -13,9 +13,8 @@
     "types": ["node", "vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["shared/*"],
-      "@/*": ["src/*"]
+      "@shared/*": ["shared/*"]
     }
   },
-  "include": ["src", "server", "shared", "tests", "*.ts"]
+  "include": ["server", "shared", "tests", "*.ts"]
 }

@@ -11,14 +11,14 @@ import {
 } from "lucide-react";
 
 import type { DeviceId, Language, SceneId } from "@shared/protocol";
-import { Knowledge } from "@/components/Knowledge";
-import { useHome } from "@/hooks/useHome";
-import { useVoice } from "@/hooks/useVoice";
-import { DevicePanel } from "@v2/components/Devices";
-import { VoiceDock } from "@v2/components/VoiceDock";
-import { copy } from "@v2/copy";
-import type { Atmosphere } from "@v2/scene/math";
-import { defaultModel } from "@v2/model";
+import { Knowledge } from "@shared/ui/components/Knowledge";
+import { useHome } from "@shared/ui/hooks/useHome";
+import { useVoice } from "@shared/ui/hooks/useVoice";
+import { DevicePanel } from "@shared/ui/components/Devices";
+import { VoiceDock } from "@shared/ui/components/VoiceDock";
+import { copy } from "@shared/ui/copy";
+import type { Atmosphere } from "@shared/ui/scene/math";
+import { defaultModel } from "@shared/ui/model";
 
 const Stage = lazy(() =>
   import("@habitat/Stage").then((module) => ({ default: module.Stage })),
@@ -31,7 +31,7 @@ const LOOKS = [
 const SCENES: SceneId[] = ["comfort", "movie", "away"]; // These are the existing server-validated household presets.
 
 /**
- * Compose the fourth experience without forking voice or appliance business logic.
+ * Compose the Habitat experience without forking voice or appliance business logic.
  *
  * Returns
  * -------

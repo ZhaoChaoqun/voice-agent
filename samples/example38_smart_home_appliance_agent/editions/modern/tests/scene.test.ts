@@ -1,8 +1,9 @@
 /** Pure deterministic tests for bounded scene animation and framing. */
 import { describe, expect, it } from "vitest";
 
-import { advanceTime, homeFraming, seeded } from "../src/scene/math";
-import { copy } from "../src/copy";
+import { advanceTime, seeded } from "@shared/ui/scene/math";
+import { homeFraming } from "../src/scene/math";
+import { copy } from "@shared/ui/copy";
 
 describe("Atelier scene math", () => {
   it("frames both layouts at the same fixed eye level and rejects invalid viewports", () => {

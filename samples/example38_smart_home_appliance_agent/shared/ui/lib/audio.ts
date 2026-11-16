@@ -1,6 +1,6 @@
 /** Browser microphone capture, ordered PCM playback, and interruption cleanup. */
-import captureUrl from "@/lib/capture-worklet.ts?worker&url";
-import { decodePcm, encodePcm, SAMPLE_RATE } from "@/lib/pcm";
+import captureUrl from "@shared/ui/lib/capture-worklet.ts?worker&url";
+import { decodePcm, encodePcm, SAMPLE_RATE } from "@shared/ui/lib/pcm";
 
 // Playback gets a short lead to absorb transport jitter without a large delay.
 const PLAYBACK_LEAD_SECONDS = 0.045;

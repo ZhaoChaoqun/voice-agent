@@ -13,8 +13,7 @@
     "types": ["node", "vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@v2/*": ["src/*"],
-      "@/*": ["../../src/*"],
+      "@modern/*": ["src/*"],
       "@shared/*": ["../../shared/*"]
     }
   },

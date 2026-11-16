@@ -1,4 +1,4 @@
-/** Independent modern frontend; the classic backend remains the tool authority. */
+/** Independent Modern frontend; the sample backend remains the tool authority. */
 import { fileURLToPath, URL } from "node:url";
 
 import react from "@vitejs/plugin-react";
@@ -22,8 +22,7 @@ const BACKEND = localBackend(
     fileEnvironment.SMART_HOME_LOCAL_BACKEND,
 ); // Server-side loopback setting, never a browser-selected upstream.
 const aliases = {
-  "@v2": fileURLToPath(new URL("./src", import.meta.url)),
-  "@": fileURLToPath(new URL("../../src", import.meta.url)),
+  "@modern": fileURLToPath(new URL("./src", import.meta.url)),
   "@shared": fileURLToPath(new URL("../../shared", import.meta.url)),
 };
 

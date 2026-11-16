@@ -3,7 +3,13 @@ import * as THREE from "three";
 
 import type { DeviceId, HomeState } from "@shared/protocol";
 import { APPLIANCE_CATALOG } from "@shared/appliances";
-import { block, round, strip, textScreen, type Palette } from "@v2/scene/craft";
+import {
+  block,
+  round,
+  strip,
+  textScreen,
+  type Palette,
+} from "@shared/ui/scene/craft";
 
 type Screen = THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
 const MILLIMETERS_TO_SCENE = 0.0015; // Match all three fictional appliance proportions to the room's authored units.

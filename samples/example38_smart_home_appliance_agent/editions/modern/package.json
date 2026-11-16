@@ -9,6 +9,7 @@
     "start": "vite preview --host 127.0.0.1 --port 5180 --strictPort",
     "test": "vitest run",
     "test:browser": "playwright test",
+    "test:live": "playwright test --config playwright.live.config.ts",
     "format": "prettier --write src tests *.ts *.json *.html README.md",
     "format:check": "prettier --check src tests *.ts *.json *.html README.md"
   },

@@ -20,7 +20,7 @@ import type {
   DeviceId,
   Language,
 } from "@shared/protocol";
-import { copy, type Copy } from "@v2/copy";
+import { copy, type Copy } from "@shared/ui/copy";
 
 const icons = {
   tv: Tv,

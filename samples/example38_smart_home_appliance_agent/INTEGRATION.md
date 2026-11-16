@@ -326,8 +326,8 @@ WebM. This is only a wire-format example containing two silence samples:
 Stream appropriately sized chunks. Automatic VAD manages turns; do not
 commit/create for every chunk. Manual mode must follow its buffer protocol.
 Correctly resample browser audio, often 48 kHz; relabelling metadata is not
-resampling. See `src/lib/capture-worklet.ts`, `src/lib/audio.ts`, and
-`src/lib/pcm.ts`.
+resampling. See `shared/ui/lib/capture-worklet.ts`, `shared/ui/lib/audio.ts`,
+and `shared/ui/lib/pcm.ts`.
 
 | Event                                                                | Responsibility                                                                               |
 | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -379,7 +379,9 @@ To run the complete application, from the configured sample root:
 npm run dev
 ```
 
-Open <http://127.0.0.1:5178>. The browser connects to the application's
+In a second terminal, run `npm run dev` from `editions/habitat` and open
+<http://127.0.0.1:5184> (or `editions/modern` on port 5180). The edition's Vite
+proxy forwards `/api` to the backend on 5178. The browser connects to the application's
 `/api/voice?model=...&language=...`; Node maps an allowlisted model ID to the
 saved Agent and opens the Azure endpoint. These URLs are not interchangeable.
 Preserve same-origin checks, authentication, and household isolation when reusing
@@ -483,7 +485,7 @@ and result use standard realtime events, not custom client event-dropping rules.
 
 | Reference                                                                                                  | What it provides                                                                          |
 | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| This sample's `server/voice.ts` and three UIs                                                              | Complete WebSocket household flow; **no Agent-mode WebRTC wiring**.                       |
+| This sample's `server/voice.ts` and two editions                                                           | Complete WebSocket household flow; **no Agent-mode WebRTC wiring**.                       |
 | [`../foundry_voice_webrtc/server.py`](../foundry_voice_webrtc/server.py), `Config.voice_url()` / `relay()` | Saved-Agent endpoint and signaling reference.                                             |
 | [`../foundry_voice_webrtc/public/app.js`](../foundry_voice_webrtc/public/app.js), `connectWebRtc()`        | SDP, ICE, microphone, DataChannel, and remote audio reference.                            |
 | This sample's `server/webrtc-benchmark.ts`                                                                 | Tool-free, direct **Voice Live model-mode** lab; not the above Agent-mode implementation. |

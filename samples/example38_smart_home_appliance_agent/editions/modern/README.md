@@ -5,37 +5,35 @@
 Modern is a source-built frontend for the [smart-home sample](../../README.md),
 not a separate Agent or backend. It offers a bright WebGL room, bilingual
 controls, six simulated appliances, household scenes, local knowledge, and the
-shared WebSocket voice workflow. Its controls and scene utilities are also
-used by [Habitat](../habitat/README.md).
+shared WebSocket voice workflow. It shares controls, voice, knowledge, and scene
+utilities with [Habitat](../habitat/README.md) through the sample's `shared/ui/`.
 
 ## Run locally
 
 Use **Node.js 24.5+** and npm. Follow the [root instructions](../../README.md)
-to install and start the backend at <http://127.0.0.1:5178>.
+to install the sample workspace (one `npm ci` in the sample root installs both
+editions) and start the backend at <http://127.0.0.1:5178>.
 Then, in another terminal from the repository root:
 
 ```bash
 cd samples/example38_smart_home_appliance_agent/editions/modern
-npm ci
 npm run dev
 ```
 
 Open <http://127.0.0.1:5180>. The server binds only to loopback with
 `--strictPort`: a busy port is an error, not a reason to switch ports or stop
-another service. Classic remains at `5178`; Habitat uses `5184`.
+another service. The backend stays at `5178`; Habitat uses `5184`.
 Startup does not create, deploy, or configure Azure resources.
-
-The Classic navigation link defaults to the local Classic UI.
-Set `VITE_CLASSIC_URL` before building only if you need a different local URL
-or same-origin static layout. Never put secrets in `VITE_*`; Vite embeds those
-values in browser assets.
+Never put secrets in `VITE_*`; Vite embeds those values in browser assets.
 
 ## Shared source and API boundary
 
-Keep the full sample directory. Modern imports hooks/knowledge components
-from `../../src` and protocol/proxy validation from `../../shared`.
-Habitat imports Modern's controls, text, default model selection, and procedural
-scene utilities. Internal `@v2` aliases refer to Modern source.
+Keep the full sample directory. Modern's own source uses the `@modern` alias;
+everything shared with Habitat comes from `../../shared` through `@shared`:
+`shared/ui/` holds hooks, the voice client, controls, the voice dock, the
+knowledge dialog, copy, default model selection, shared styles, and procedural
+scene utilities, and `shared/` holds the protocol and proxy validation. Modern
+does not import Habitat source, and Habitat does not import Modern source.
 
 Vite proxies `/api`, including voice WebSocket, to <http://127.0.0.1:5178>.
 Optional `SMART_HOME_LOCAL_BACKEND` is server-only and validated as loopback;
@@ -76,10 +74,11 @@ npm start
 mocked voice transport. Start isolated backend/frontend instances and install a
 compatible Playwright browser first: tests reset and change household state.
 
-`tests/browser/live.spec.ts` is optional and guarded by `SMART_HOME_LIVE_BROWSER`:
+The shared real-model scenarios (`../../tests/browser/edition-live.spec.ts`) are
+optional and guarded by `SMART_HOME_LIVE_BROWSER`:
 
 ```bash
-SMART_HOME_LIVE_BROWSER=1 npm run test:browser -- tests/browser/live.spec.ts --workers=1
+SMART_HOME_LIVE_BROWSER=1 npm run test:live -- --workers=1
 ```
 
 This calls a real service and may incur charges. Offline checks and unconfigured

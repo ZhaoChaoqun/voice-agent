@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
-import { seeded } from "@v2/scene/math";
+import { seeded } from "@shared/ui/scene/math";
 
 export interface Piece {
   size: [number, number, number];

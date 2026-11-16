@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { DeviceId, HomeState, Language } from "@shared/protocol";
-import type { Atmosphere } from "@v2/scene/math";
+import type { Atmosphere } from "@shared/ui/scene/math";
 import { Habitat, type HabitatSnapshot } from "@habitat/scene/Habitat";
 
 interface StageProps {
@@ -21,7 +21,7 @@ declare global {
 }
 
 /**
- * Mount the original fourth-edition renderer with visible failure handling.
+ * Mount the Habitat renderer with visible failure handling.
  *
  * Parameters
  * ----------

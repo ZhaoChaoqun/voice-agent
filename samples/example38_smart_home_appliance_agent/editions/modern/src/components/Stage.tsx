@@ -2,8 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { DeviceId, HomeState, Language } from "@shared/protocol";
-import { Atelier, type SceneSnapshot } from "@v2/scene/Atelier";
-import type { Atmosphere } from "@v2/scene/math";
+import { Atelier, type SceneSnapshot } from "@modern/scene/Atelier";
+import type { Atmosphere } from "@shared/ui/scene/math";
 
 interface Props {
   home: HomeState;

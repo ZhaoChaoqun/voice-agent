@@ -7,8 +7,9 @@ import { habitatPalette } from "../src/scene/materials";
 import { qualityFor } from "../src/scene/math";
 import { Pipeline } from "../src/scene/pipeline";
 
-vi.mock("@v2/scene/craft", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@v2/scene/craft")>();
+vi.mock("@shared/ui/scene/craft", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@shared/ui/scene/craft")>();
   const three = await import("three");
   return {
     ...actual,

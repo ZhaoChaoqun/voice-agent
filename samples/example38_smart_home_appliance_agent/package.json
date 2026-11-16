@@ -6,9 +6,13 @@
   "engines": {
     "node": ">=24.5.0"
   },
+  "workspaces": [
+    "editions/modern",
+    "editions/habitat"
+  ],
   "scripts": {
     "dev": "tsx server/index.ts",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && npm run build --workspaces",
     "start": "NODE_ENV=production tsx server/index.ts",
     "test": "vitest run",
     "test:browser": "playwright test",
@@ -16,13 +20,12 @@
     "agents:render": "tsx server/sync-agent-config.ts",
     "agents:publish": "tsx server/sync-agent-config.ts --publish",
     "lab:webrtc": "tsx server/webrtc-benchmark.ts",
-    "format": "prettier --write src shared server tests agents knowledge/*.json webrtc-benchmark/*.html deploy/*.mjs *.json *.ts *.html *.md deploy/*.md",
-    "format:check": "prettier --check src shared server tests agents knowledge/*.json webrtc-benchmark/*.html deploy/*.mjs *.json *.ts *.html *.md deploy/*.md",
+    "format": "prettier --write shared server tests agents knowledge/*.json webrtc-benchmark/*.html deploy/*.mjs *.json *.ts *.md deploy/*.md",
+    "format:check": "prettier --check shared server tests agents knowledge/*.json webrtc-benchmark/*.html deploy/*.mjs *.json *.ts *.md deploy/*.md",
     "lint": "tsc --noEmit && npm run format:check"
   },
   "dependencies": {
     "@azure/identity": "^4.13.0",
-    "@vitejs/plugin-react": "^5.1.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "lucide-react": "^0.468.0",

@@ -1,16 +1,16 @@
-/** Fourth-edition scene ownership, real room reflections and truthful diagnostics. */
+/** Habitat scene ownership, real room reflections and truthful diagnostics. */
 import * as THREE from "three";
 
 import type { DeviceId, HomeState } from "@shared/protocol";
-import { furnishings } from "@v2/scene/architecture";
-import { batchStatic, type Palette } from "@v2/scene/craft";
+import { furnishings } from "@shared/ui/scene/furnishings";
+import { batchStatic, type Palette } from "@shared/ui/scene/craft";
 import {
   animateDevices,
   devices,
   updateDevices,
   type Devices3D,
-} from "@v2/scene/devices";
-import { advanceTime, type Atmosphere } from "@v2/scene/math";
+} from "@shared/ui/scene/devices";
+import { advanceTime, type Atmosphere } from "@shared/ui/scene/math";
 import { interior } from "@habitat/scene/interior";
 import { habitatPalette } from "@habitat/scene/materials";
 import { framing, qualityFor, ROOM_SCALE } from "@habitat/scene/math";

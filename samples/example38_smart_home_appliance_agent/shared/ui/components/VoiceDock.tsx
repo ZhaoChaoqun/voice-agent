@@ -18,9 +18,9 @@ import {
 } from "lucide-react";
 
 import type { Language } from "@shared/protocol";
-import type { VoiceSession } from "@/hooks/useVoice";
-import { readableTranscript } from "@/lib/conversation";
-import { copy } from "@v2/copy";
+import type { VoiceSession } from "@shared/ui/hooks/useVoice";
+import { readableTranscript } from "@shared/ui/lib/conversation";
+import { copy } from "@shared/ui/copy";
 
 interface Props {
   language: Language;

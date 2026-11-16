@@ -5,8 +5,8 @@ import {
   parseEvent,
   readableTranscript,
   updateTranscript,
-} from "../src/lib/conversation";
-import { decodePcm, encodePcm } from "../src/lib/pcm";
+} from "../shared/ui/lib/conversation";
+import { decodePcm, encodePcm } from "../shared/ui/lib/pcm";
 
 describe("PCM transport", () => {
   it("encodes and decodes signed little-endian PCM without losing byte order", () => {

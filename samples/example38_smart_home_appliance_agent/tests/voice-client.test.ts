@@ -1,7 +1,7 @@
 /** Mocked socket/audio regressions for connection, interruption, and replacement. */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { VoiceClient } from "../src/lib/voice-client";
+import { VoiceClient } from "../shared/ui/lib/voice-client";
 
 const audio = vi.hoisted(() => ({
   initialize: vi.fn(async () => {}),
@@ -13,7 +13,7 @@ const audio = vi.hoisted(() => ({
   playing: false,
 }));
 
-vi.mock("@/lib/audio", () => ({
+vi.mock("@shared/ui/lib/audio", () => ({
   BrowserAudio: class {
     initialize = audio.initialize;
     startCapture = audio.startCapture;

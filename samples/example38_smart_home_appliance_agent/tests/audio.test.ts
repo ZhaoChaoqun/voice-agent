@@ -1,8 +1,8 @@
 /** Mock browser audio nodes to verify timing and resource cleanup deterministically. */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { BrowserAudio } from "../src/lib/audio";
-import { encodePcm } from "../src/lib/pcm";
+import { BrowserAudio } from "../shared/ui/lib/audio";
+import { encodePcm } from "../shared/ui/lib/pcm";
 
 class SourceStub {
   buffer: { duration: number } | null = null;

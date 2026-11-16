@@ -2,8 +2,8 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
-import { block, type Palette } from "@v2/scene/craft";
-import { seeded } from "@v2/scene/math";
+import { block, type Palette } from "@shared/ui/scene/craft";
+import { seeded } from "@shared/ui/scene/math";
 
 export interface Aquarium {
   fish: THREE.InstancedMesh;

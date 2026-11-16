@@ -1,4 +1,4 @@
-/** Atelier: an independent immersive frontend sharing V1's proven real AI transport. */
+/** Modern (Atelier): an immersive frontend using the shared voice transport and controls. */
 import { lazy, Suspense, useEffect, useState } from "react";
 import {
   Armchair,
@@ -24,21 +24,23 @@ import {
 } from "lucide-react";
 
 import type { DeviceId, Language, SceneId } from "@shared/protocol";
-import { useHome } from "@/hooks/useHome";
-import { useVoice } from "@/hooks/useVoice";
-import { Knowledge } from "@/components/Knowledge";
-import { copy } from "@v2/copy";
-import { DevicePanel } from "@v2/components/Devices";
-import { VoiceDock } from "@v2/components/VoiceDock";
-import type { Atmosphere } from "@v2/scene/math";
-import { defaultModel } from "@v2/model";
+import { useHome } from "@shared/ui/hooks/useHome";
+import { useVoice } from "@shared/ui/hooks/useVoice";
+import { Knowledge } from "@shared/ui/components/Knowledge";
+import { copy } from "@shared/ui/copy";
+import { DevicePanel } from "@shared/ui/components/Devices";
+import { VoiceDock } from "@shared/ui/components/VoiceDock";
+import type { Atmosphere } from "@shared/ui/scene/math";
+import { defaultModel } from "@shared/ui/model";
 
 const Stage = lazy(() =>
-  import("@v2/components/Stage").then((module) => ({ default: module.Stage })),
+  import("@modern/components/Stage").then((module) => ({
+    default: module.Stage,
+  })),
 );
 const atmosphereIcons = { day: Sun, dusk: Sunset, cinema: Moon }; // Distinguish daylight, sunset and night even without labels.
 
-/** Own the new composition while keeping household and voice transport shared with V1. */
+/** Own the Modern composition while household and voice transport stay in shared/ui. */
 export function App(): React.JSX.Element {
   const [language, setLanguage] = useState<Language>("zh");
   const [model, setModel] = useState("");
@@ -273,13 +275,6 @@ export function App(): React.JSX.Element {
                 {option.reason}
               </p>
             ))}
-          <a
-            href={import.meta.env.VITE_CLASSIC_URL ?? "http://127.0.0.1:5178"}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {t.original}
-          </a>
           <button onClick={() => void home.reset()} disabled={home.busy}>
             <RotateCcw size={12} />
             {t.reset}

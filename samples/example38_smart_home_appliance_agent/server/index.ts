@@ -34,21 +34,23 @@ const demo = createDemoServer({
 });
 
 if (process.env.NODE_ENV === "production") {
-  const webRoot = resolve(root, process.env.SMART_HOME_WEB_ROOT ?? "dist");
+  const webRoot = resolve(
+    root,
+    process.env.SMART_HOME_WEB_ROOT ?? "editions/habitat/dist",
+  );
   demo.app.use(express.static(webRoot));
   demo.app.get("/{*path}", (_request, response) =>
     response.sendFile(resolve(webRoot, "index.html")),
   );
 } else {
-  const { createServer } = await import("vite");
-  const vite = await createServer({
-    root,
-    server: { middlewareMode: true, hmr: { server: demo.server } },
-    appType: "spa",
-  });
-  demo.app.use(vite.middlewares);
-  process.once("SIGTERM", () => void vite.close());
-  process.once("SIGINT", () => void vite.close());
+  // Development serves only the API and voice relay; each edition runs its own Vite server.
+  demo.app.get("/", (_request, response) =>
+    response
+      .type("text/plain")
+      .send(
+        "Smart Home backend. Run an edition: editions/modern (http://127.0.0.1:5180) or editions/habitat (http://127.0.0.1:5184).",
+      ),
+  );
 }
 
 demo.server.on("error", (error: NodeJS.ErrnoException) => {

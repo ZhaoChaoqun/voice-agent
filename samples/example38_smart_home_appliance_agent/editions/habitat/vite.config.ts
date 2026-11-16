@@ -1,4 +1,4 @@
-/** Habitat shares the classic backend without duplicating tool authority. */
+/** Habitat shares the sample backend without duplicating tool authority. */
 import { fileURLToPath, URL } from "node:url";
 
 import react from "@vitejs/plugin-react";
@@ -25,9 +25,7 @@ const BACKEND = localBackend(
 ); // Developer-controlled loopback setting; browsers cannot choose destinations.
 const aliases = {
   "@habitat": fileURLToPath(new URL("./src", import.meta.url)),
-  "@v2": fileURLToPath(new URL("../modern/src", import.meta.url)),
   "@shared": fileURLToPath(new URL("../../shared", import.meta.url)),
-  "@": fileURLToPath(new URL("../../src", import.meta.url)),
 };
 
 const api: ProxyOptions = {

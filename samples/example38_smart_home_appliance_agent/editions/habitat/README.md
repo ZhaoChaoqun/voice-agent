@@ -6,25 +6,22 @@ Habitat is a source-built frontend for the [smart-home sample](../../README.md).
 Its eye-level WebGL interior uses procedurally authored wood, linen, plaster,
 and limestone surfaces, physically based materials, ambient occlusion, restrained
 bloom, and desktop/mobile rendering budgets. Bilingual controls, scenes,
-knowledge, and WebSocket voice reuse the same maintained application source.
+knowledge, and WebSocket voice reuse the sample's shared UI modules.
 
 ## Run locally
 
 Use **Node.js 24.5+** and npm. Follow the [root instructions](../../README.md)
-to install and start the backend at <http://127.0.0.1:5178>.
-In another terminal from the repository root, install Modern's dependencies
-**before** Habitat's, because Habitat imports Modern source:
+to install the sample workspace (one `npm ci` in the sample root installs both
+editions) and start the backend at <http://127.0.0.1:5178>.
+Then, in another terminal from the repository root:
 
 ```bash
-cd samples/example38_smart_home_appliance_agent/editions/modern
-npm ci
-cd ../habitat
-npm ci
+cd samples/example38_smart_home_appliance_agent/editions/habitat
 npm run dev
 ```
 
 Open <http://127.0.0.1:5184>. Habitat is loopback-only and uses
-`--strictPort`; a busy port is an error. Classic stays at `5178`;
+`--strictPort`; a busy port is an error. The backend stays at `5178`;
 [Modern](../modern/README.md) runs independently at `5180`.
 Starting Habitat does not create, deploy, or modify Azure resources or require
 restarting another development server.
@@ -35,20 +32,21 @@ Keep this directory structure intact:
 
 ```text
 example38_smart_home_appliance_agent/
-  src/                  # Classic hooks and knowledge UI
   shared/               # Protocol and loopback backend validation
+    ui/                 # Browser code shared by both editions
   server/               # One backend and tool executor
   editions/
-    modern/src/         # Shared controls and procedural scene utilities
+    modern/src/         # Modern UI and rendering
     habitat/src/        # Habitat UI and rendering
 ```
 
-Habitat imports `../../src`, `../../shared`, and `../modern/src`.
-The internal `@v2` alias refers to Modern source. Vite deduplicates React,
+Habitat imports only its own source (`@habitat`) and `../../shared` (`@shared`);
+it does not import Modern source and builds without Modern. The sample root is an
+npm workspace, so dependencies are installed once there. Vite deduplicates React,
 React DOM, and Three.js. The edition builds its own static assets without
 external product images, model binaries, scene downloads, CDN scripts, fonts,
 or browser credentials. Dependency downloads use your npm registry
-configuration and the lockfiles' versions/integrity checks.
+configuration and the sample lockfile's versions/integrity checks.
 
 ## API and model boundary
 
@@ -95,7 +93,8 @@ calls. `build` runs TypeScript and Vite; preview retains the API proxy.
 mocked voice. Start isolated root-backend and Habitat instances and install a
 compatible Playwright browser first. Tests reset and modify household state.
 
-Habitat reuses Modern's real-model scenarios through its live configuration:
+Habitat runs the sample's shared real-model scenarios
+(`../../tests/browser/edition-live.spec.ts`) through its live configuration:
 
 ```bash
 SMART_HOME_LIVE_BROWSER=1 npm run test:live -- --workers=1

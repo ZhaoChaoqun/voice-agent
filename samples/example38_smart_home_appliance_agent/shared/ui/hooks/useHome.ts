@@ -8,7 +8,7 @@ import type {
   KnowledgeSource,
   SceneId,
 } from "@shared/protocol";
-import { errorMessage, request } from "@/lib/api";
+import { errorMessage, request } from "@shared/ui/lib/api";
 
 export interface HomeController {
   config: DemoConfig | null;

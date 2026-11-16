@@ -63,7 +63,6 @@ const en = {
   resetView: "Reset camera",
   fullscreen: "Fullscreen",
   source: "Source-grounded knowledge",
-  original: "Classic edition ↗",
   disclaimer:
     "Independent concept · Fictional appliances. Voice Agent requires your own configured service.",
   fridgeTemp: "Fridge",
@@ -143,7 +142,6 @@ const zh: typeof en = {
   resetView: "恢复视角",
   fullscreen: "全屏体验",
   source: "有出处的产品解答",
-  original: "经典版本 ↗",
   disclaimer:
     "独立概念演示 · 家电与环境均为虚构，Voice Agent 需要配置自己的服务。",
   fridgeTemp: "冷藏温度",

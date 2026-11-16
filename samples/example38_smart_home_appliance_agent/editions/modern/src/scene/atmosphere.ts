@@ -2,8 +2,8 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
-import type { Palette } from "@v2/scene/craft";
-import { seeded } from "@v2/scene/math";
+import type { Palette } from "@shared/ui/scene/craft";
+import { seeded } from "@shared/ui/scene/math";
 
 export interface World {
   environment: THREE.WebGLRenderTarget;

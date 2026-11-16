@@ -1,4 +1,4 @@
-/** Opt-in acceptance: browser -> modern or Habitat proxy -> backend -> Foundry. */
+/** Opt-in acceptance: browser -> Modern or Habitat proxy -> backend -> Foundry. */
 import { expect, test } from "@playwright/test";
 
 test.skip(

@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/browser",
+  testIgnore: "edition-live.spec.ts", // Run through each edition's test:live.
   fullyParallel: false,
   use: {
     baseURL: process.env.DEMO_TEST_URL ?? "http://127.0.0.1:5178",

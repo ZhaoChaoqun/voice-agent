@@ -44,11 +44,11 @@ Use `samples/example38_smart_home_appliance_agent/` as Docker build context:
 docker build -f deploy/Dockerfile -t "<your-registry>/voice-home:<your-tag>" .
 ```
 
-The Dockerfile installs locked dependencies and builds Classic, Modern, then
-Habitat. Production Node runs as the non-root `node` user. Build exclusions
-omit `.env*`, `.azure`, `.local`, uploads, test results, and certificates.
-The default UI is Habitat; `SMART_HOME_WEB_ROOT` may select another built
-edition. The image does not run a Vite development server.
+The Dockerfile installs the locked npm workspace once and builds both the Modern
+and Habitat editions into one image. Production Node runs as the non-root `node`
+user. Build exclusions omit `.env*`, `.azure`, `.local`, uploads, test results,
+and certificates. The default UI is Habitat; set `SMART_HOME_WEB_ROOT` to
+`editions/modern/dist` to serve Modern from the same image. The image does not run a Vite development server.
 Push the resulting image to your own registry using your approved process.
 
 ## Configure and render offline

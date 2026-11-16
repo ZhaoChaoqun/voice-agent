@@ -1,5 +1,5 @@
 /** Original deterministic PBR artwork: separate color, tangent normal and roughness. */
-import { seeded } from "@v2/scene/math";
+import { seeded } from "@shared/ui/scene/math";
 
 export type SurfaceKind = "oak" | "linen" | "plaster" | "limestone";
 export interface SurfacePixels {

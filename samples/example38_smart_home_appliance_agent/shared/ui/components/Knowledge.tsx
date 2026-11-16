@@ -11,9 +11,9 @@ import {
 } from "lucide-react";
 
 import type { KnowledgeSource, Language } from "@shared/protocol";
-import { text } from "@/i18n";
-import { useDialog } from "@/hooks/useDialog";
-import { errorMessage, request } from "@/lib/api";
+import { text } from "@shared/ui/i18n";
+import { useDialog } from "@shared/ui/hooks/useDialog";
+import { errorMessage, request } from "@shared/ui/lib/api";
 
 const MAX_DOCUMENT_CHARACTERS = 50_000; // Bound client-side text imports before the server's own limit.
 

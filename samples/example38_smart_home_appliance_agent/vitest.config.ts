@@ -1,10 +1,13 @@
 /** Keep mocked unit tests separate from Playwright and opt-in live validation. */
-import { mergeConfig } from "vite";
+import { fileURLToPath, URL } from "node:url";
+
 import { defineConfig } from "vitest/config";
 
-import viteConfig from "./vite.config";
-
-export default mergeConfig(
-  viteConfig,
-  defineConfig({ test: { include: ["tests/**/*.test.ts"] } }),
-);
+export default defineConfig({
+  resolve: {
+    alias: {
+      "@shared": fileURLToPath(new URL("./shared", import.meta.url)),
+    },
+  },
+  test: { include: ["tests/**/*.test.ts"] },
+});

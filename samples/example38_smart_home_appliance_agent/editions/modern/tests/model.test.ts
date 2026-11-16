@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { defaultModel } from "../src/model";
+import { defaultModel } from "@shared/ui/model";
 
 describe("default model selection", () => {
   it("prefers Microsoft Realtime Flash even when Realtime is listed first", () => {

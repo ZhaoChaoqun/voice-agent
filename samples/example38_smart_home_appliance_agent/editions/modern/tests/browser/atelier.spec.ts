@@ -20,9 +20,7 @@ test.beforeEach(async ({ page }) => {
     .toBe(true);
 });
 
-test("immersive scene, bilingual controls, and preserved classic edition", async ({
-  page,
-}) => {
+test("immersive scene and bilingual controls", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await expect(
@@ -49,8 +47,6 @@ test("immersive scene, bilingual controls, and preserved classic edition", async
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  const classic = await page.request.get("http://127.0.0.1:5178");
-  expect(await classic.text()).toContain("Smart Home · Home, in harmony");
   expect(errors).toEqual([]);
 });
 

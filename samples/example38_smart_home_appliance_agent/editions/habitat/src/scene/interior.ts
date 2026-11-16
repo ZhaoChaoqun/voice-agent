@@ -1,7 +1,7 @@
 /** Original enclosed architecture: oak joinery, warm plaster and real window openings. */
 import * as THREE from "three";
 
-import { block, round, strip, type Palette } from "@v2/scene/craft";
+import { block, round, strip, type Palette } from "@shared/ui/scene/craft";
 
 const ROOM = { width: 14, depth: 12, height: 4.7 }; // Shared geometry coordinates become meters through ROOM_SCALE.
 const PLANK = { width: 0.54, length: 3, gap: 0.012 }; // Physical seams catch contact AO rather than painted black lines.

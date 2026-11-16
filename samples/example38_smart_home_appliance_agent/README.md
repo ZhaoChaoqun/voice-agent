@@ -2,8 +2,8 @@
 
 ## Conclusion
 
-This sample combines a Foundry **Voice Agent**, a Node WebSocket relay, and three
-React / Three.js browser interfaces: Classic, Modern, and Habitat. The Voice Agent
+This sample combines a Foundry **Voice Agent**, a Node WebSocket relay, and two
+React / Three.js browser editions: Modern and Habitat. The Voice Agent
 uses **Voice Live** for speech input and output; they are different layers, not
 two names for the same product. Node executes the Agent's allowlisted functions
 and owns the sample household state.
@@ -25,7 +25,8 @@ is described as an integration reference, but is not wired into these UIs.
 Use it to explore bilingual voice control of a visible household, knowledge-grounded
 answers, and a model-authored short acknowledgement before a control function,
 followed by a concise answer grounded in the actual tool result. Compare the
-three interfaces without duplicating the backend or the tool contracts.
+two editions without duplicating the backend, the tool contracts, or the shared
+UI modules in `shared/ui/`.
 
 For a real device integration, use the [integration guide](INTEGRATION.md).
 The simulated executor is a starting point, not a hardware adapter.
@@ -143,34 +144,33 @@ cp .env.example .env
 npm run dev
 ```
 
-Leave the Foundry endpoint and verified models unset for offline use. Open
-<http://127.0.0.1:5178>. One Node service serves Vite, the HTTP API, and the
-WebSocket relay. It binds to loopback by default and fails if the port is busy;
-it does not stop other services or choose another port. Local tabs and editions
-share one simulated household.
+Leave the Foundry endpoint and verified models unset for offline use. The sample
+directory is an npm workspace: one `npm ci` installs the backend and both
+editions. `npm run dev` starts the HTTP API and the WebSocket relay at
+<http://127.0.0.1:5178>; it serves no UI in development. It binds to loopback by
+default and fails if the port is busy; it does not stop other services or choose
+another port.
 
-To preview a production build locally:
-
-```bash
-npm run build
-npm start
-```
-
-Keep the root backend running. In another terminal, from the repository root,
-install Modern before Habitat because Habitat imports Modern source and needs
-its dependencies:
+Keep the backend running. In another terminal, from the repository root, start
+an edition:
 
 ```bash
-cd samples/example38_smart_home_appliance_agent/editions/modern
-npm ci
-cd ../habitat
-npm ci
+cd samples/example38_smart_home_appliance_agent/editions/habitat
 npm run dev
 ```
 
 Habitat opens at <http://127.0.0.1:5184>. To run Modern instead, run
 `npm run dev` from `editions/modern` and open <http://127.0.0.1:5180>.
 These Vite proxies are loopback development conveniences, not public gateways.
+Both editions share one simulated household.
+
+To preview a production build locally, build both editions and let Node serve
+one of them (Habitat by default, or set `SMART_HOME_WEB_ROOT=editions/modern/dist`):
+
+```bash
+npm run build
+npm start
+```
 
 ## Configure live voice explicitly
 
@@ -228,23 +228,23 @@ for the full speech profile, publishing checks, and optional GPT Realtime compar
 
 ### Environment variables
 
-| Variable                                               | Purpose / default                                                      |
-| ------------------------------------------------------ | ---------------------------------------------------------------------- |
-| `FOUNDRY_PROJECT_ENDPOINT`                             | The only allowed project HTTPS endpoint; no default resource.          |
-| `SMART_HOME_FLASH_AGENT`                               | Your Flash Agent name; required explicitly for publishing.             |
-| `SMART_HOME_REALTIME_AGENT`                            | Explicit GPT Realtime comparison Agent name; not a Flash prerequisite. |
-| `SMART_HOME_VERIFIED_MODELS`                           | Comma-separated exact model IDs; no voice model enabled by default.    |
-| `AZURE_TENANT_ID`                                      | Optional local Azure CLI tenant.                                       |
-| `AZURE_CLIENT_ID`                                      | Cloud user-assigned managed identity client ID.                        |
-| `HOST` / `PORT`                                        | Defaults: `127.0.0.1` / `5178`.                                        |
-| `SMART_HOME_LOCAL_BACKEND`                             | Optional validated loopback backend for edition development proxies.   |
-| `SMART_HOME_LOCAL_STATE_PATH`                          | Local household JSON; defaults to `.azure/home.json`.                  |
-| `SMART_HOME_PUBLIC_ORIGIN`                             | Exact HTTPS origin for protected cloud mode.                           |
-| `SMART_HOME_ACCESS_CODE` / `SMART_HOME_SESSION_SECRET` | Independent cloud secrets, at least 24 / 32 characters.                |
-| `SMART_HOME_PUBLIC_GUEST_ACCESS`                       | Defaults to `0`; `1` allows any visitor to incur service charges.      |
-| `SMART_HOME_DATA_PATH`                                 | Writable cloud household storage directory.                            |
-| `SMART_HOME_WEB_ROOT`                                  | `dist`, `editions/modern/dist`, or `editions/habitat/dist`.            |
-| `VOICE_LIVE_ENDPOINT` / `WEBRTC_MODEL`                 | Model-mode WebRTC lab only; no default resource endpoint.              |
+| Variable                                               | Purpose / default                                                           |
+| ------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `FOUNDRY_PROJECT_ENDPOINT`                             | The only allowed project HTTPS endpoint; no default resource.               |
+| `SMART_HOME_FLASH_AGENT`                               | Your Flash Agent name; required explicitly for publishing.                  |
+| `SMART_HOME_REALTIME_AGENT`                            | Explicit GPT Realtime comparison Agent name; not a Flash prerequisite.      |
+| `SMART_HOME_VERIFIED_MODELS`                           | Comma-separated exact model IDs; no voice model enabled by default.         |
+| `AZURE_TENANT_ID`                                      | Optional local Azure CLI tenant.                                            |
+| `AZURE_CLIENT_ID`                                      | Cloud user-assigned managed identity client ID.                             |
+| `HOST` / `PORT`                                        | Defaults: `127.0.0.1` / `5178`.                                             |
+| `SMART_HOME_LOCAL_BACKEND`                             | Optional validated loopback backend for edition development proxies.        |
+| `SMART_HOME_LOCAL_STATE_PATH`                          | Local household JSON; defaults to `.azure/home.json`.                       |
+| `SMART_HOME_PUBLIC_ORIGIN`                             | Exact HTTPS origin for protected cloud mode.                                |
+| `SMART_HOME_ACCESS_CODE` / `SMART_HOME_SESSION_SECRET` | Independent cloud secrets, at least 24 / 32 characters.                     |
+| `SMART_HOME_PUBLIC_GUEST_ACCESS`                       | Defaults to `0`; `1` allows any visitor to incur service charges.           |
+| `SMART_HOME_DATA_PATH`                                 | Writable cloud household storage directory.                                 |
+| `SMART_HOME_WEB_ROOT`                                  | Production UI: `editions/habitat/dist` (default) or `editions/modern/dist`. |
+| `VOICE_LIVE_ENDPOINT` / `WEBRTC_MODEL`                 | Model-mode WebRTC lab only; no default resource endpoint.                   |
 
 Keep credentials on the server. Local runtime uses `AzureCliCredential`; cloud
 runtime uses managed identity, not API keys. Use project-scoped development and
@@ -281,15 +281,15 @@ npm run build
 npm run format:check
 npm run lint
 npm run agents:render
-# With the backend running on 5178 and compatible Playwright Chromium installed:
-npm run test:browser -- tests/browser/ui.spec.ts
 ```
 
+Root `build` type-checks the backend and `shared/`, then builds both editions.
 Run `npm test`, `npm run build`, and `npm run format:check` separately in
-`editions/modern` and `editions/habitat`. All three packages also provide
-`npm run format` to write formatting; root `lint` combines strict TypeScript
-and Prettier. Browser tests reset and modify household state: use isolated
-instances. Unit tests mock cloud boundaries; mocked browser scenarios do not
+`editions/modern` and `editions/habitat`. Each edition's `npm run test:browser`
+needs the backend on 5178, that edition's dev server, and a compatible
+Playwright Chromium. Run the suites one at a time: they reset and modify the
+shared household state. The sample root and both editions provide `npm run format` to write
+formatting; root `lint` combines strict TypeScript and Prettier. Unit tests mock cloud boundaries; mocked browser scenarios do not
 prove Azure connectivity.
 
 Vite may warn when a generated chunk exceeds roughly 500 kB. This warning is
@@ -299,11 +299,12 @@ Real-service tests are **optional, explicit opt-in, and potentially billable**:
 
 ```bash
 RUN_LIVE_TESTS=1 npm run test:live
-SMART_HOME_LIVE_BROWSER=1 npm run test:browser -- tests/browser/live-ui.spec.ts --workers=1
+RUN_LIVE_TESTS=1 SMART_HOME_LIVE_URL=http://127.0.0.1:5180 npm run test:browser -- tests/browser/concise-control.spec.ts --workers=1
 ```
 
-Modern has an opt-in live browser spec; Habitat provides `npm run test:live`,
-also guarded by `SMART_HOME_LIVE_BROWSER`. These tests do not replace subjective
+The root browser spec drives the Modern edition. Both editions also run the
+shared `tests/browser/edition-live.spec.ts` through their own `npm run test:live`,
+guarded by `SMART_HOME_LIVE_BROWSER`. These tests do not replace subjective
 microphone/speaker checks. Server E2Es
 requiring native audio processing need a compatible isolated Linux environment;
 do not disable AEC or noise suppression to bypass missing libraries.
