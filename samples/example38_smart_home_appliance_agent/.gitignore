@@ -1,0 +1,17 @@
+node_modules/
+dist/
+dist-server/
+.env*
+!.env.example
+.azure/
+.foundry/
+.local/
+playwright-report/
+test-results/
+knowledge/uploads/
+*.local
+*.pem
+*.key
+*.pfx
+*.p12
+*.log
