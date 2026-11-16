@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { DeviceId, HomeState, Language } from "@shared/protocol";
-import { Atelier, type SceneSnapshot } from "@modern/scene/Atelier";
+import { ModernScene, type SceneSnapshot } from "@modern/scene/ModernScene";
 import type { Atmosphere } from "@shared/ui/scene/math";
 
 interface Props {
@@ -17,7 +17,7 @@ interface Props {
 
 declare global {
   interface Window {
-    __atelier?: { snapshot: () => SceneSnapshot };
+    __modern?: { snapshot: () => SceneSnapshot };
   }
 }
 
@@ -25,26 +25,26 @@ declare global {
 export function Stage(props: Props): React.JSX.Element {
   const host = useRef<HTMLDivElement>(null);
   const markers = useRef(new Map<DeviceId, HTMLButtonElement>());
-  const scene = useRef<Atelier | null>(null);
+  const scene = useRef<ModernScene | null>(null);
   const select = useRef(props.onSelect);
   const [failed, setFailed] = useState(false);
   select.current = props.onSelect;
   useEffect(() => {
     if (!host.current) return;
     try {
-      const current = new Atelier(host.current, markers.current, (id) =>
+      const current = new ModernScene(host.current, markers.current, (id) =>
         select.current(id),
       );
       scene.current = current;
-      window.__atelier = { snapshot: () => current.snapshot() };
+      window.__modern = { snapshot: () => current.snapshot() };
     } catch (error) {
-      console.error("Atelier WebGL initialization failed", error);
+      console.error("Modern WebGL initialization failed", error);
       setFailed(true);
     }
     return () => {
       scene.current?.dispose();
       scene.current = null;
-      delete window.__atelier;
+      delete window.__modern;
     };
   }, []);
   useEffect(() => {

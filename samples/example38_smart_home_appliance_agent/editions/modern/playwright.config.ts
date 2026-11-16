@@ -8,7 +8,7 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 20_000 },
   use: {
-    baseURL: process.env.SMART_HOME_ATELIER_URL ?? "http://127.0.0.1:5180",
+    baseURL: process.env.SMART_HOME_MODERN_URL ?? "http://127.0.0.1:5180",
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
     launchOptions: {

@@ -36,7 +36,7 @@ export interface SceneSnapshot {
 
 const PIXEL_RATIO_LIMIT = 1.6; // Keep reflections and postprocessing bounded on retina displays.
 
-export class Atelier {
+export class ModernScene {
   private readonly scene = new THREE.Scene();
   private readonly renderer: THREE.WebGLRenderer;
   private readonly camera = new THREE.PerspectiveCamera(43, 1, 0.1, 350);
@@ -110,7 +110,7 @@ export class Atelier {
     renderer.info.autoReset = false;
     renderer.domElement.setAttribute(
       "aria-label",
-      "Smart Home Atelier interactive three-dimensional penthouse",
+      "Smart Home Modern interactive three-dimensional penthouse",
     );
     return renderer;
   }

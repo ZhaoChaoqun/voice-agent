@@ -7,7 +7,7 @@ import "@shared/ui/style.css";
 import "@modern/style.css";
 
 const root = document.getElementById("root");
-if (!root) throw new Error("Missing Atelier root");
+if (!root) throw new Error("Missing Modern root");
 createRoot(root).render(
   <StrictMode>
     <App />

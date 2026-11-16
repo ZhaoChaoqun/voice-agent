@@ -2,7 +2,7 @@
 import type { Language } from "@shared/protocol";
 
 const en = {
-  edition: "ATELIER / 02",
+  edition: "MODERN / 02",
   live: "A LIVING INTELLIGENCE",
   title: "A home.\nIn harmony.",
   subtitle: "Not another smart device.\nA home that understands you.",
@@ -81,7 +81,7 @@ const en = {
     "Allow microphone access in your browser, or continue by text.",
 };
 const zh: typeof en = {
-  edition: "ATELIER / 02",
+  edition: "MODERN / 02",
   live: "让生活，自有回应",
   title: "让家，\n回应你。",
   subtitle: "不止是智能设备。\n是一个，懂你的家。",

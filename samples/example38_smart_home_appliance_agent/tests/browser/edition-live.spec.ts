@@ -49,9 +49,9 @@ for (const model of [process.env.LIVE_MODEL ?? "microsoft-realtime-flash-1"]) {
         }
       };
     });
-    await page.locator("#atelier-model").selectOption(model);
+    await page.locator("#voice-model").selectOption(model);
     await page
-      .locator("#atelier-message")
+      .locator("#voice-message")
       .fill("请打开空调，把温度调到二十五度。");
     await page.getByRole("button", { name: "发送消息", exact: true }).click();
     await expect(
@@ -65,7 +65,7 @@ for (const model of [process.env.LIVE_MODEL ?? "microsoft-realtime-flash-1"]) {
       { timeout: TURN_TIMEOUT_MS },
     );
     await page
-      .locator("#atelier-message")
+      .locator("#voice-message")
       .fill(
         "Please answer in English. What is the refrigerator model and what is the variable-temperature zone for?",
       );

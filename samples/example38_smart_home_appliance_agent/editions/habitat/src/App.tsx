@@ -189,9 +189,9 @@ export function App(): React.JSX.Element {
                 onControl={home.control}
               />
               <div className="habitat-engine">
-                <label htmlFor="atelier-model">{t.model}</label>
+                <label htmlFor="voice-model">{t.model}</label>
                 <select
-                  id="atelier-model"
+                  id="voice-model"
                   value={model}
                   onChange={(event) => setModel(event.target.value)}
                   title={t.modelHint}

@@ -34,7 +34,7 @@ const api: ProxyOptions = {
     proxy.on("proxyReq", (request) => request.setHeader("Origin", BACKEND));
     proxy.on("proxyReqWs", (request) => request.setHeader("Origin", BACKEND));
     proxy.on("error", (error) =>
-      console.error("Atelier backend connection failed:", error.message),
+      console.error("Modern backend connection failed:", error.message),
     );
   },
 };
@@ -42,7 +42,7 @@ const api: ProxyOptions = {
 // Reject cross-site mutations before the trusted local proxy rewrites Origin.
 function originGuard(): Plugin {
   return {
-    name: "atelier-loopback-origin",
+    name: "modern-loopback-origin",
     configureServer: guardServer,
     configurePreviewServer: guardServer,
   };

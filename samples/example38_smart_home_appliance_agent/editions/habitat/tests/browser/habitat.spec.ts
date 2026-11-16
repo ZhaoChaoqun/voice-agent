@@ -108,8 +108,8 @@ test("title stays separate, text is readable and all layouts remain within the v
   for (const [selector, minimum] of [
     [".device-select strong", 14],
     [".device-select small", 12],
-    ["#atelier-model", 14],
-    ["#atelier-message", 16],
+    ["#voice-model", 14],
+    ["#voice-message", 16],
     [".habitat-metric-labels", 12],
   ] as const) {
     const sizes = await page
@@ -240,17 +240,17 @@ test("curtains ease between open and closed positions instead of snapping", asyn
 test("bilingual UI keeps offline models clearly unavailable", async ({
   page,
 }) => {
-  await expect(page.locator("#atelier-model")).toHaveValue("");
+  await expect(page.locator("#voice-model")).toHaveValue("");
   await expect(
-    page.locator("#atelier-model option[value='gpt-realtime-2.1']"),
+    page.locator("#voice-model option[value='gpt-realtime-2.1']"),
   ).toBeDisabled();
   await expect(
-    page.locator("#atelier-model option[value='gpt-realtime-2.1']"),
+    page.locator("#voice-model option[value='gpt-realtime-2.1']"),
   ).toContainText("暂不可用");
   await expect(
-    page.locator("#atelier-model option[value='microsoft-realtime-flash-1']"),
+    page.locator("#voice-model option[value='microsoft-realtime-flash-1']"),
   ).toBeDisabled();
-  await expect(page.locator("#atelier-message")).toBeDisabled();
+  await expect(page.locator("#voice-message")).toBeDisabled();
   await page.getByRole("button", { name: "EN", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Live in the light. Feel at home." }),
@@ -385,7 +385,7 @@ test("explicitly mocked voice transport preserves transcripts, sources and tool 
       );
     });
   });
-  await page.locator("#atelier-message").fill("冰箱是什么型号");
+  await page.locator("#voice-message").fill("冰箱是什么型号");
   await page.getByRole("button", { name: "发送消息", exact: true }).click();
   await expect(page.locator(".chat-message.assistant")).toContainText(
     "SAMPLE-FRIDGE-01",
@@ -476,7 +476,7 @@ test("unavailable WebGL initialization shows an honest error instead of a fake r
     await page.evaluate(() => window.__habitat?.snapshot().ready ?? false),
   ).toBe(false);
   await expect(page.locator(".device-row")).toHaveCount(6);
-  await expect(page.locator("#atelier-message")).toBeEnabled();
+  await expect(page.locator("#voice-message")).toBeEnabled();
 });
 
 test("explicitly mocked backend failure stays actionable instead of hiding the error", async ({

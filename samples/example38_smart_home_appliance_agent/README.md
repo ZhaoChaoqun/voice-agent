@@ -92,7 +92,8 @@ The away scene keeps the refrigerator on. Food entries are scenario context, not
 observations of freshness or safety.
 
 [`knowledge/products.json`](knowledge/products.json) contains fictional appliance
-guidance and sample room proportions. Every entry has `kind: "demo"` and the
+guidance for the three sample models plus one household-level `HOME` guide that
+covers control limits and comfort scenes for all six appliances. Every entry has `kind: "demo"` and the
 fixture contains no URLs. [`shared/appliances.ts`](shared/appliances.ts) defines
 the displayed models and links to that checked-in fixture in this public
 repository, not to a manufacturer. Retrieval boosts exact model matches so a
@@ -299,15 +300,27 @@ Real-service tests are **optional, explicit opt-in, and potentially billable**:
 
 ```bash
 RUN_LIVE_TESTS=1 npm run test:live
-RUN_LIVE_TESTS=1 SMART_HOME_LIVE_URL=http://127.0.0.1:5180 npm run test:browser -- tests/browser/concise-control.spec.ts --workers=1
+RUN_LIVE_TESTS=1 npm run test:browser -- tests/browser/concise-control.spec.ts --workers=1
 ```
 
 The root browser spec drives the Modern edition. Both editions also run the
 shared `tests/browser/edition-live.spec.ts` through their own `npm run test:live`,
-guarded by `SMART_HOME_LIVE_BROWSER`. These tests do not replace subjective
-microphone/speaker checks. Server E2Es
-requiring native audio processing need a compatible isolated Linux environment;
-do not disable AEC or noise suppression to bypass missing libraries.
+guarded by `SMART_HOME_LIVE_BROWSER`.
+
+| Test variable                                                                   | Used by                                                       | Effect                                                                                       |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `RUN_LIVE_TESTS=1`                                                              | `npm run test:live`, `concise-control.spec.ts`                | Opts in to real Foundry calls; otherwise these skip or exit.                                 |
+| `SMART_HOME_LIVE_BROWSER=1`                                                     | Each edition's `npm run test:live`                            | Opts in to `edition-live.spec.ts`.                                                           |
+| `LIVE_MODEL`                                                                    | `tests/live.ts`, `concise-control.spec.ts`, edition live spec | Exact model ID to test; defaults to `microsoft-realtime-flash-1`.                            |
+| `LIVE_LANGUAGE`                                                                 | `tests/live.ts`                                               | Opening greeting language, `zh` (default) or `en`.                                           |
+| `LIVE_AUDIO_ZH` / `LIVE_AUDIO_EN`                                               | `tests/live.ts`                                               | Paths to raw 24 kHz 16-bit mono PCM utterances; both must be set to add the two audio turns. |
+| `LIVE_SAVE_AUDIO=1`                                                             | `tests/live.ts`                                               | Writes each turn's reply audio as `<model>-<turn>.pcm` in the current directory.             |
+| `SMART_HOME_LIVE_URL`                                                           | `concise-control.spec.ts`                                     | Modern edition URL; defaults to `http://127.0.0.1:5180`.                                     |
+| `SMART_HOME_MODERN_URL`                                                         | `editions/modern` Playwright configs                          | Modern base URL; defaults to `http://127.0.0.1:5180`.                                        |
+| `SMART_HOME_HABITAT_URL`                                                        | `editions/habitat` Playwright configs and `habitat.spec.ts`   | Habitat base URL; defaults to `http://127.0.0.1:5184`.                                       | These tests do not replace subjective |
+| microphone/speaker checks. Server E2Es                                          |
+| requiring native audio processing need a compatible isolated Linux environment; |
+| do not disable AEC or noise suppression to bypass missing libraries.            |
 
 ### WebRTC latency lab
 

@@ -142,7 +142,8 @@ records do not come from a camera.
 
 `KnowledgeStore` is bounded text retrieval, not a production vector database or
 RAG pipeline. Checked-in guidance in `knowledge/products.json` concerns fictional
-models `SAMPLE-TV-01`, `SAMPLE-FRIDGE-01`, and `SAMPLE-AC-01`, not manufacturers.
+models `SAMPLE-TV-01`, `SAMPLE-FRIDGE-01`, and `SAMPLE-AC-01`, plus a
+household-level `HOME` guide for control limits and comfort scenes, not manufacturers.
 All product entries are `kind: "demo"` and the fixture contains no URLs;
 `shared/appliances.ts` points to the checked-in public fixture as its source.
 Retrieval ranking boosts exact model matches, so neutral sample identifiers

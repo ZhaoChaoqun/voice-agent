@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("canvas")).toBeVisible();
   await expect
-    .poll(() => page.evaluate(() => window.__atelier?.snapshot().ready), {
+    .poll(() => page.evaluate(() => window.__modern?.snapshot().ready), {
       timeout: 20_000,
     })
     .toBe(true);
@@ -57,12 +57,12 @@ test("bright surfaces, fixed eye-level camera, selection and motion pause", asyn
     page.getByRole("button", { name: "日光漫居", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   const original = await page.evaluate(
-    () => window.__atelier?.snapshot().camera,
+    () => window.__modern?.snapshot().camera,
   );
   expect(Math.abs(original?.direction[0] ?? 1)).toBeLessThan(1e-10);
   expect(Math.abs(original?.direction[1] ?? 1)).toBeLessThan(1e-10);
   expect(original?.direction[2]).toBe(-1);
-  await expect(page.locator(".atelier-brand > strong")).toHaveCSS(
+  await expect(page.locator(".modern-brand > strong")).toHaveCSS(
     "color",
     "rgb(0, 90, 170)",
   );
@@ -75,24 +75,24 @@ test("bright surfaces, fixed eye-level camera, selection and motion pause", asyn
   }
   await page.getByRole("button", { name: "日光漫居", exact: true }).click();
   await expect
-    .poll(() => page.evaluate(() => window.__atelier?.snapshot().atmosphere))
+    .poll(() => page.evaluate(() => window.__modern?.snapshot().atmosphere))
     .toBe("day");
   await page.getByRole("button", { name: "暂停动态", exact: true }).click();
   const pausedTime = await page.evaluate(
-    () => window.__atelier?.snapshot().time,
+    () => window.__modern?.snapshot().time,
   );
   await page.waitForTimeout(600);
-  expect(await page.evaluate(() => window.__atelier?.snapshot().time)).toBe(
+  expect(await page.evaluate(() => window.__modern?.snapshot().time)).toBe(
     pausedTime,
   );
   await page.locator(".device-select").filter({ hasText: "示例空调" }).click();
   await expect(page.getByTestId("device-detail")).toContainText("SAMPLE-AC-01");
   await expect
-    .poll(() => page.evaluate(() => window.__atelier?.snapshot().selected))
+    .poll(() => page.evaluate(() => window.__modern?.snapshot().selected))
     .toBe("ac");
-  expect(
-    await page.evaluate(() => window.__atelier?.snapshot().camera),
-  ).toEqual(original);
+  expect(await page.evaluate(() => window.__modern?.snapshot().camera)).toEqual(
+    original,
+  );
   const canvas = page.locator("canvas");
   await canvas.scrollIntoViewIfNeeded();
   const bounds = await canvas.boundingBox();
@@ -109,9 +109,9 @@ test("bright surfaces, fixed eye-level camera, selection and motion pause", asyn
   );
   await page.mouse.up();
   await page.mouse.wheel(0, -400);
-  expect(
-    await page.evaluate(() => window.__atelier?.snapshot().camera),
-  ).toEqual(original);
+  expect(await page.evaluate(() => window.__modern?.snapshot().camera)).toEqual(
+    original,
+  );
   await page.getByRole("button", { name: "关闭控制", exact: true }).click();
   await expect(page.locator(".device-row")).toHaveCount(6);
 });
@@ -121,7 +121,7 @@ test("title never overlaps the room, header is populated, and business text is r
 }) => {
   const heading = await page.locator(".editorial h1").boundingBox();
   const canvas = await page.locator("canvas").boundingBox();
-  const brand = await page.locator(".atelier-brand").boundingBox();
+  const brand = await page.locator(".modern-brand").boundingBox();
   if (!heading || !canvas || !brand)
     throw new Error("Missing required presentation surfaces");
   expect(heading.y + heading.height).toBeLessThanOrEqual(canvas.y);
@@ -167,21 +167,21 @@ test("real appliance mutation uses the preserved backend and rejects cross-origi
     page.getByRole("button", { name: "沉浸观影", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   await expect
-    .poll(() => page.evaluate(() => window.__atelier?.snapshot().atmosphere))
+    .poll(() => page.evaluate(() => window.__modern?.snapshot().atmosphere))
     .toBe("cinema");
 });
 
 test("knowledge and offline model availability remain honest", async ({
   page,
 }) => {
-  await expect(page.locator("#atelier-model")).toHaveValue("");
+  await expect(page.locator("#voice-model")).toHaveValue("");
   await expect(
-    page.locator("#atelier-model option[value='gpt-realtime-2.1']"),
+    page.locator("#voice-model option[value='gpt-realtime-2.1']"),
   ).toBeDisabled();
   await expect(
-    page.locator("#atelier-model option[value='microsoft-realtime-flash-1']"),
+    page.locator("#voice-model option[value='microsoft-realtime-flash-1']"),
   ).toBeDisabled();
-  await expect(page.locator("#atelier-message")).toBeDisabled();
+  await expect(page.locator("#voice-message")).toBeDisabled();
   await page.getByRole("button", { name: "产品知识库", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.getByRole("dialog")).toContainText("SAMPLE-FRIDGE-01");
@@ -224,7 +224,7 @@ test("mocked transport renders streamed text, tool audit, and explicit failures"
       );
     });
   });
-  await page.locator("#atelier-message").fill("冰箱型号是什么");
+  await page.locator("#voice-message").fill("冰箱型号是什么");
   await page.getByRole("button", { name: "发送消息", exact: true }).click();
   await expect(page.locator(".chat-message.assistant")).toContainText(
     "SAMPLE-FRIDGE-01",
@@ -238,10 +238,10 @@ test("mocked transport renders streamed text, tool audit, and explicit failures"
 test("screenshots and local rendering diagnostics", async ({ page }, info) => {
   await page.getByRole("button", { name: "蓝调时刻", exact: true }).click();
   await page.screenshot({
-    path: `test-results/atelier-${info.project.name}-dusk.png`,
+    path: `test-results/modern-${info.project.name}-dusk.png`,
     fullPage: true,
   });
-  const snapshot = await page.evaluate(() => window.__atelier?.snapshot());
+  const snapshot = await page.evaluate(() => window.__modern?.snapshot());
   expect(snapshot?.calls).toBeGreaterThan(1);
   expect(snapshot?.triangles).toBeGreaterThan(1000);
   expect(snapshot?.triangles).toBeLessThan(2_000_000);
@@ -253,11 +253,11 @@ test("reduced motion starts paused and narrow layouts never overflow", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.reload();
   await expect
-    .poll(() => page.evaluate(() => window.__atelier?.snapshot().paused))
+    .poll(() => page.evaluate(() => window.__modern?.snapshot().paused))
     .toBe(true);
-  const before = await page.evaluate(() => window.__atelier?.snapshot().time);
+  const before = await page.evaluate(() => window.__modern?.snapshot().time);
   await page.waitForTimeout(300);
-  expect(await page.evaluate(() => window.__atelier?.snapshot().time)).toBe(
+  expect(await page.evaluate(() => window.__modern?.snapshot().time)).toBe(
     before,
   );
   for (const viewport of [

@@ -1,5 +1,5 @@
 /* Modern-only styles; shared/ui/style.css loads first. */
-.atelier {
+.modern {
   height: 100svh;
   min-height: 800px;
   position: relative;
@@ -47,33 +47,33 @@
   border-bottom-color: #e9edf2;
 }
 
-.atelier-brand {
+.modern-brand {
   display: flex;
   align-items: center;
   gap: 20px;
 }
 
-.atelier-brand > strong {
+.modern-brand > strong {
   font-family: Arial, sans-serif;
   font-size: 35px;
   letter-spacing: -2px;
   color: #005aaa;
 }
 
-.atelier-brand > i {
+.modern-brand > i {
   height: 27px;
   width: 1px;
   background: #d7dfe8;
 }
 
-.atelier-brand > span {
+.modern-brand > span {
   font-size: 16px;
   letter-spacing: 0.3em;
   color: #252b32;
   font-weight: 500;
 }
 
-.atelier-brand small {
+.modern-brand small {
   font-size: 12px;
   letter-spacing: 0.28em;
   display: block;
@@ -528,7 +528,7 @@
 }
 
 @media (max-width: 900px) {
-  .atelier {
+  .modern {
     height: auto;
     min-height: 100svh;
     padding-bottom: 30px;
@@ -648,17 +648,17 @@
     margin: 0 21px;
     height: 78px;
   }
-  .atelier-brand {
+  .modern-brand {
     gap: 12px;
   }
-  .atelier-brand > strong {
+  .modern-brand > strong {
     font-size: 30px;
   }
-  .atelier-brand > span {
+  .modern-brand > span {
     font-size: 12px;
     letter-spacing: 0.24em;
   }
-  .atelier-brand small {
+  .modern-brand small {
     font-size: 12px;
   }
   .masthead-actions {
@@ -788,7 +788,7 @@
 
 /* Keep editorial text outside the rendered room and give controls readable space. */
 
-.atelier {
+.modern {
   display: grid;
   grid-template-columns: 340px minmax(0, 1fr) 340px;
   grid-template-rows: 72px 96px minmax(420px, 1fr) 180px 44px;
@@ -918,7 +918,7 @@
 }
 
 @media (max-width: 1100px) {
-  .atelier {
+  .modern {
     display: flex;
     flex-direction: column;
     height: auto;
@@ -936,19 +936,19 @@
     padding: 0 20px;
     margin: 0;
   }
-  .atelier-brand {
+  .modern-brand {
     grid-column: 1;
     grid-row: 1;
     gap: 12px;
   }
-  .atelier-brand > strong {
+  .modern-brand > strong {
     font-size: 30px;
   }
-  .atelier-brand > span {
+  .modern-brand > span {
     font-size: 14px;
     letter-spacing: 0.16em;
   }
-  .atelier-brand small {
+  .modern-brand small {
     display: none;
   }
   .masthead-actions {

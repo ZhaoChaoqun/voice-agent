@@ -173,8 +173,10 @@ and its deployment helper. The lab defaults to Flash and
 full application's default `1`); maximum replicas remain one. Optional
 `SMART_HOME_WEBRTC_PRIMARY_APP` and `SMART_HOME_WEBRTC_PRIMARY_MODEL_ID` add
 a distinct comparison app/model. Model support must be checked in the target
-resource. `SMART_HOME_WEBRTC_IMAGE_TAG` selects a tag, and
-`SMART_HOME_WEBRTC_DEPLOY_STATE` selects the private state-file path.
+resource. `SMART_HOME_WEBRTC_IMAGE_TAG` selects a tag,
+`SMART_HOME_WEBRTC_DEPLOY_STATE` selects the private state-file path, and
+`SMART_HOME_WEBRTC_SKIP_BUILD=1` skips the `az acr build` step during `--apply`
+so an existing image with that tag is deployed.
 
 ```bash
 # Default: offline rendering only, no Azure calls.
@@ -193,7 +195,7 @@ node deploy/deploy-webrtc.mjs --apply --confirm-endpoint "$SMART_HOME_WEBRTC_END
 ```
 
 The apply path reads existing environment/identity/registry, builds unless
-explicitly skipped, applies app manifests, and waits for revision readiness.
+`SMART_HOME_WEBRTC_SKIP_BUILD` is set, applies app manifests, and waits for revision readiness.
 It is not an offline check and does not supply missing infrastructure or
 end-user protection. `/api/sessions` disables tools and does not connect a
 Foundry Voice Agent. Use `Dockerfile` plus `render-container-app.mjs` for the

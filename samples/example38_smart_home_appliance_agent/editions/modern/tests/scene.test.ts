@@ -5,7 +5,7 @@ import { advanceTime, seeded } from "@shared/ui/scene/math";
 import { homeFraming } from "../src/scene/math";
 import { copy } from "@shared/ui/copy";
 
-describe("Atelier scene math", () => {
+describe("Modern scene math", () => {
   it("frames both layouts at the same fixed eye level and rejects invalid viewports", () => {
     const portrait = homeFraming(390 / 680);
     const desktop = homeFraming(1172 / 594);

@@ -1,4 +1,4 @@
-/** Modern (Atelier): an immersive frontend using the shared voice transport and controls. */
+/** Modern: an immersive frontend using the shared voice transport and controls. */
 import { lazy, Suspense, useEffect, useState } from "react";
 import {
   Armchair,
@@ -75,7 +75,7 @@ export function App(): React.JSX.Element {
     await home.scene(id);
   };
   return (
-    <main className="atelier" data-mode={mode}>
+    <main className="modern" data-mode={mode}>
       {home.config && (
         <Suspense
           fallback={
@@ -100,11 +100,11 @@ export function App(): React.JSX.Element {
       )}
       <div className="cinematic-shade" />
       <header className="masthead">
-        <a className="atelier-brand" href="/" aria-label="Smart Home Atelier">
+        <a className="modern-brand" href="/" aria-label="Smart Home Modern">
           <strong>Smart Home</strong>
           <i />
           <span>
-            ATELIER<small>INTELLIGENT LIVING</small>
+            MODERN<small>INTELLIGENT LIVING</small>
           </span>
         </a>
         <div className="atmosphere-picker" aria-label={t.atmosphere}>
@@ -217,13 +217,13 @@ export function App(): React.JSX.Element {
         )}
         {home.config && (
           <div className="engine-panel">
-            <label htmlFor="atelier-model">
+            <label htmlFor="voice-model">
               {t.model}
               <span>✦</span>
             </label>
             <div>
               <select
-                id="atelier-model"
+                id="voice-model"
                 value={model}
                 onChange={(event) => setModel(event.target.value)}
                 title={t.modelHint}

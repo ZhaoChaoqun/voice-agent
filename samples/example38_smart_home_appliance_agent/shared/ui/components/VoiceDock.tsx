@@ -94,7 +94,7 @@ export function VoiceDock(props: Props): React.JSX.Element {
           </span>
           <form onSubmit={(event) => void submit(event)}>
             <input
-              id="atelier-message"
+              id="voice-message"
               value={draft}
               maxLength={4000}
               onChange={(event) => setDraft(event.target.value)}

@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { installSilentSink } from "./audio-helper";
 import { homeGreeting } from "../../server/greeting";
 
-const BASE_URL = process.env.SMART_HOME_LIVE_URL ?? "http://127.0.0.1:5197";
+const BASE_URL = process.env.SMART_HOME_LIVE_URL ?? "http://127.0.0.1:5180";
 const TURN_TIMEOUT_MS = 90_000; // Include managed-Agent setup and one real tool continuation.
 const LIVE_MODEL = process.env.LIVE_MODEL ?? "microsoft-realtime-flash-1";
 
@@ -20,7 +20,7 @@ for (const model of [LIVE_MODEL]) {
   }) => {
     test.setTimeout(180_000);
     await page.goto(BASE_URL);
-    await expect(page.locator("#atelier-model")).toBeVisible({
+    await expect(page.locator("#voice-model")).toBeVisible({
       timeout: TURN_TIMEOUT_MS,
     });
     await installSilentSink(page);
@@ -41,8 +41,8 @@ for (const model of [LIVE_MODEL]) {
       });
       browserSocket.onMessage((raw) => backend.send(raw));
     });
-    await page.locator("#atelier-model").selectOption(model);
-    await page.locator("#atelier-message").fill("请帮我打开电视。");
+    await page.locator("#voice-model").selectOption(model);
+    await page.locator("#voice-message").fill("请帮我打开电视。");
     const send = page.getByRole("button", {
       name: "发送消息",
       exact: true,
