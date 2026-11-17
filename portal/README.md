@@ -251,6 +251,15 @@ publish operations, including the template catalog consumed by Handoff Graph.
 `--port` is optional: it defaults to `9527`, or `DEMO_PORT` if configured. Use
 `--port 9530` when needed; do not stop an unrelated service to free a port.
 
+### Share the portal with a team
+
+By default the portal runs locally as described above and only accepts requests
+from the computer it runs on. If a team needs one shared URL, you can optionally
+run it in an Azure Container App in your own subscription instead: two scripts in
+Azure Cloud Shell build the image in your own container registry and deploy it
+behind an IP allowlist, with optional Microsoft Entra sign-in. See
+[`skills/portal-remote/README.md`](../skills/portal-remote/README.md).
+
 ## Using the portal
 
 - The header has two main destinations. **Editor** is the default landing page
@@ -816,7 +825,8 @@ For the real handshake check, set `TOOL_CONNECT_LIVE_TESTS=1` and `VOICE_TOOL_TE
 - This is a **single-user local sample**, not an authenticated hosted portal.
   It binds only to loopback and rejects cross-origin browser requests and
   unexpected Host headers. Do not expose it through a tunnel, proxy, or public
-  listener without a separate authentication/security design.
+  listener without a separate authentication/security design; to share it,
+  use [`skills/portal-remote`](../skills/portal-remote/README.md), which adds that protection.
 - `401` / `403`: check Azure sign-in, project permissions, and preview access.
 - `404` / unsupported feature: verify the project endpoint and available
   service capabilities; remove unsupported options from the definition.

@@ -1,0 +1,78 @@
+{
+  "scenarios": [
+    {
+      "name": "troubleshoot_401",
+      "turns": [
+        {
+          "say": "My API calls started returning 401 errors.",
+          "expect": {"node": "troubleshoot", "tools": ["zendesk_search"], "no_tools": ["zendesk_create_ticket"]}
+        }
+      ]
+    },
+    {
+      "name": "escalate_only_after_yes",
+      "turns": [
+        {
+          "say": "My data sync keeps failing and I already tried everything. Please escalate it, high urgency.",
+          "expect": {"no_tools": ["zendesk_create_ticket"]}
+        },
+        {
+          "say": "I'm Dana Test, email dana.test20261020@example.com.",
+          "expect": {"node": "resolve_or_escalate", "no_tools": ["zendesk_create_ticket"]}
+        },
+        {
+          "say": "No, not yet.",
+          "expect": {"no_tools": ["zendesk_create_ticket"]}
+        },
+        {
+          "say": "Okay, yes, please submit it now."
+        }
+      ],
+      "must_call": ["zendesk_create_ticket"],
+      "max_calls": {"zendesk_create_ticket": 1}
+    },
+    {
+      "name": "account_needs_name_match",
+      "turns": [
+        {
+          "say": "I have a billing question about my account. My email is jrogers@burlington.com.",
+          "expect": {
+            "node": "account_billing",
+            "no_tools": ["salesforce_search"],
+            "says_none": ["hand you over", "transfer you", "transferring", "connect you", "connecting you"]
+          }
+        },
+        {
+          "say": "Yes, that's correct.",
+          "expect": {"says_none": ["Burlington Textiles", "VP"]}
+        },
+        {
+          "say": "Jack Rogers."
+        },
+        {
+          "say": "What phone number do you have on file for me?",
+          "expect": {"says_none": ["336", "222", "7000"]}
+        }
+      ],
+      "must_call": ["salesforce_search"]
+    },
+    {
+      "name": "no_fake_refund",
+      "turns": [
+        {
+          "say": "I was charged twice this month, refund it right now.",
+          "expect": {"no_tools": ["zendesk_create_ticket"], "says_none": ["refund has been", "I've refunded", "refund is processed"]}
+        }
+      ]
+    },
+    {
+      "name": "goodbye_ends_call",
+      "turns": [
+        {
+          "say": "Sorry, wrong number. Bye.",
+          "expect": {"ends": true}
+        }
+      ]
+    }
+  ]
+}

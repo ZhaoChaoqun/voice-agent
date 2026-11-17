@@ -164,6 +164,7 @@ curl -fsS http://127.0.0.1:9527/healthz
 | Goal | Start here | What it owns |
 | --- | --- | --- |
 | Run the general Voice Agent UI | [`portal/README.md`](portal/README.md) | Agent editor, YAML version editing, Templates, voice playground, and standalone WebRTC page |
+| Share the portal with your team on Azure (optional) | [`skills/portal-remote/README.md`](skills/portal-remote/README.md) | The portal runs locally by default; optionally, three Azure Cloud Shell commands with no parameters check your permissions, build it in your own container registry and run it in an Azure Container App in your subscription, behind an IP allowlist with optional Microsoft Entra sign-in |
 | Choose a demo use case or run a sample | [`samples/README.md`](samples/README.md#choose-a-sample) | Project tables explaining the caller's goal and demonstrated outcome, grouped into customer experiences, industry workflows, developer integrations, and evaluation tools; includes Python, C#, and Java setup links |
 | Migrate Voice Live to Voice Agent | [`samples/voice_live_to_voice_agent/README.md`](samples/voice_live_to_voice_agent/README.md) | Two Python files with identical STT, GPT-4.1 mini, TTS, and audio settings; move from session configuration to a reusable agent |
 | Run realtime speech transcription | [`samples/realtime_stt/README.md`](samples/realtime_stt/README.md) | MAI Transcribe 2 or Azure Speech with VAD, microphone or WAV input, disabled LLM responses, and reported session usage |
@@ -176,7 +177,7 @@ curl -fsS http://127.0.0.1:9527/healthz
 | Work on or deploy the Finance MCP (optional; not needed for the Portal or its Templates) | [`shared_mcp/README.md`](shared_mcp/README.md) | Customer-owned MCP source for the Finance CLI samples, local Dev Tunnel hosting, and Azure Container Apps deployment |
 | Create an IQ + voice + avatar Agent | [`samples/create_agent_with_iq_avatar_voice/README.md`](samples/create_agent_with_iq_avatar_voice/README.md) | Portal-first Andrew Dragon HD, Harry Business, Knowledge IQ, and optional Python creation |
 | Inspect SDK package information | [`dist/README.md`](dist/README.md) | Public Python and .NET SDK dependencies and historical preview build records |
-| Use the coding-agent workflows | [`skills/`](skills/) | Voice Agent creation, IQ/Toolbox provisioning, and local-session debugging |
+| Use the coding-agent workflows | [`skills/`](skills/) | Voice Agent creation, handoff graph design with command-line publish, test, and one-change iteration ([`voice-agent-making`](skills/voice-agent-making/SKILL.md)), IQ/Toolbox provisioning, and local-session debugging |
 
 ### Instructions for coding agents
 

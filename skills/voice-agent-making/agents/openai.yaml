@@ -1,0 +1,4 @@
+interface:
+  display_name: "Voice Agent Making"
+  short_description: "Design, publish, test, and improve a handoff voice agent"
+  default_prompt: "Use $voice-agent-making to design, publish, and test a voice agent from my requirement."

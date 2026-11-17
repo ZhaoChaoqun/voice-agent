@@ -1,0 +1,57 @@
+{
+  "scenarios": [
+    {
+      "name": "book_only_after_yes",
+      "turns": [
+        {
+          "say": "I'd like a room for two adults, arriving Friday, December 4, 2026 and leaving Sunday, December 6.",
+          "expect": {"node": "new_booking", "tools": ["hotel_check_availability"], "no_tools": ["hotel_create_reservation"]}
+        },
+        {
+          "say": "The Classic King, please. The name is Dana Test, email dana.test20261020@example.com.",
+          "expect": {"no_tools": ["hotel_create_reservation"]}
+        },
+        {
+          "say": "Yes, book it."
+        }
+      ],
+      "must_call": ["hotel_create_reservation"],
+      "max_calls": {"hotel_create_reservation": 1}
+    },
+    {
+      "name": "cancel_after_lookup_and_yes",
+      "turns": [
+        {
+          "say": "I need to cancel my reservation. Confirmation A1B2C3, last name Test.",
+          "expect": {"node": "manage_existing", "tools": ["hotel_get_reservation"], "no_tools": ["hotel_cancel_reservation"]}
+        },
+        {
+          "say": "Yes, please cancel it."
+        },
+        {
+          "say": "Yes, go ahead."
+        }
+      ],
+      "must_call": ["hotel_cancel_reservation"],
+      "max_calls": {"hotel_cancel_reservation": 1}
+    },
+    {
+      "name": "unknown_reservation_no_guess",
+      "turns": [
+        {
+          "say": "I want to change my stay. Confirmation Z Z Z 9 9 9, last name Test.",
+          "expect": {"tools": ["hotel_get_reservation"], "no_tools": ["hotel_cancel_reservation", "hotel_create_reservation"]}
+        }
+      ]
+    },
+    {
+      "name": "policy_answer_from_facts",
+      "turns": [
+        {
+          "say": "Can I bring my dog, and how does parking work?",
+          "expect": {"node": "general_inquiry", "no_tools": ["*"], "says_any": ["valet"]}
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+---
+interface:
+  display_name: "Portal on Azure"
+  short_description: "Deploy the Voice Agent portal to your Azure subscription"
+  default_prompt: "Use $portal-remote to deploy the Voice Agent portal to Azure Container Apps for my team."
