@@ -35,6 +35,18 @@
     },
     {
       "productName": "Azure OpenAI GPT5",
+      "skuName": "5.6 luna ShortCo Cd Wr Std Gl",
+      "meterName": "5.6 luna ShortCo Cd Wr Std Gl 1M Tokens",
+      "armRegionName": "southindia",
+      "processingScope": "Global",
+      "retailPrice": 0.25,
+      "unitOfMeasure": "1M",
+      "meterId": "48e2705f-b13a-59cb-90ba-d4ae84312507",
+      "effectiveStartDate": "2026-08-01T00:00:00Z",
+      "retrievedAt": "2026-11-17"
+    },
+    {
+      "productName": "Azure OpenAI GPT5",
       "skuName": "5.6 luna ShortCo Opt Std Gl",
       "meterName": "5.6 luna ShortCo Opt Std Gl 1M Tokens",
       "armRegionName": "southindia",
@@ -584,6 +596,18 @@
       "unitOfMeasure": "1M",
       "meterId": "abacf1bc-1e6b-56dc-8703-44a4b360d94e",
       "effectiveStartDate": "2026-09-01T00:00:00Z"
+    },
+    {
+      "productName": "Azure OpenAI GPT6",
+      "skuName": "6-sol ShortCo Cd Wr Std Gl",
+      "meterName": "6-sol ShortCo Cd Wr Std Gl 1M Tokens",
+      "armRegionName": "southindia",
+      "processingScope": "Global",
+      "retailPrice": 2.5,
+      "unitOfMeasure": "1M",
+      "meterId": "b074fdec-2209-5976-9b15-30dca9e4048c",
+      "effectiveStartDate": "2026-09-01T00:00:00Z",
+      "retrievedAt": "2026-11-17"
     },
     {
       "productName": "Azure OpenAI GPT6",

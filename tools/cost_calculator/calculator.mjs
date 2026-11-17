@@ -129,6 +129,7 @@ export function getRates(snapshot, model, hosting, pipeline = model.managedPipel
       const p = model.id === "gpt-6-sol" ? "6-sol" : "5.6 luna";
       read("textInput", `${p} ShortCo Inp Std Gl 1M Tokens`);
       read("textCached", `${p} ShortCo Cd Inp Std Gl 1M Tokens`);
+      read("textCacheWrite", `${p} ShortCo Cd Wr Std Gl 1M Tokens`);
       read("textOutput", `${p} ShortCo Opt Std Gl 1M Tokens`);
     } else if (model.byomPrefix) {
       const p = model.byomPrefix;
@@ -164,8 +165,13 @@ export function calculate(a, pipeline, rates) {
     }
     rows.push({ label, quantity, key, unit, rate, list });
   }
+  // GPT-5.6 and later bill uncached prompt tokens written to the prompt cache at a
+  // separate cache-write rate. A 0% cache hit models caching disabled (no writes).
+  const billsCacheWrites = Object.hasOwn(rates, "textCacheWrite") && hit > 0;
   function input(label, fresh, reused, normal, cached) {
-    add(`${label} / fresh + cache misses`, fresh + reused * (1 - hit), normal);
+    const write = billsCacheWrites && normal === "textInput";
+    add(`${label} / fresh + cache misses${write ? " (cache write)" : ""}`, fresh + reused * (1 - hit),
+      write ? "textCacheWrite" : normal);
     add(`${label} / cached`, reused * hit, cached);
   }
   input("System prompt", a.prompt, a.prompt * (a.turns - 1), "textInput", "textCached");

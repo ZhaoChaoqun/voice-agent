@@ -116,8 +116,17 @@ The GPT Live meter is hourly and is divided by 60 for USD-per-minute pricing.
   Luna is available for the text-LLM cascade and GPT Live backend scenarios,
   with Central India BYO speech rates for the cascade. Managed-mode rows
   use the existing explicitly labeled Global-model/BYO-speech reference,
-  not a verified managed Luna tariff. Long-context, Flex, Priority, and
-  cache-write rates are not substituted.
+  not a verified managed Luna tariff. Long-context, Flex, and Priority rates
+  are not substituted.
+- **Prompt-cache writes (GPT-5.6 Luna, GPT-6 Sol):** GPT-5.6 and later models
+  [bill cache writes separately](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/prompt-caching).
+  Fresh and cache-miss text input for these models uses the South India Global
+  short-context cache-write meter: **$0.25 per 1M for Luna** (`5.6 luna ShortCo
+  Cd Wr Std Gl`, meter `48e2705f-b13a-59cb-90ba-d4ae84312507`) and **$2.50 per
+  1M for GPT-6 Sol** (`6-sol ShortCo Cd Wr Std Gl`, meter
+  `b074fdec-2209-5976-9b15-30dca9e4048c`), retrieved 2026-11-17. A 0% cache hit
+  models prompt caching disabled and uses the regular input rate. Earlier
+  models have no cache-write charge.
 - **GPT-6 reasoning is explicitly GPT-6 Sol**, using South India Global
   short-context Standard prices: **$2 input / $0.20 cached input / $10 output
   per 1M tokens**. The generic, unspecified GPT-6 placeholder is replaced
@@ -188,7 +197,7 @@ Each call starts cold; the system prompt costs `P * input_rate` on its
 first turn. Its `P * (turns - 1)` reused tokens are charged at the selected
 cache hit rate. With equal turn lengths, each side's total conversation
 tokens are replayed `(turns - 1) / 2` times across later turns. Cache misses
-use the full input rate. Native mode reuses caller and assistant audio.
+use the full input rate, or the cache-write rate for GPT-5.6 and later. Native mode reuses caller and assistant audio.
 Realtime-to-HD mode reuses caller audio and assistant text. Cascade and
 GPT Live's reasoning backend reuse user/assistant text. Hidden reasoning is
 billed as output but not replayed as visible transcript history.

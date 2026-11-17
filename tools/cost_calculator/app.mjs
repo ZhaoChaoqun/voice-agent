@@ -6,7 +6,8 @@ const money = value => value === null ? "Needs rate" : `$${value.toFixed(6)}`;
 const volumeMoney = value => value === null ? "Needs rate" :
   value.toLocaleString("en-US", { style: "currency", currency: "USD" });
 const labels = {
-  textInput: "Text input", textCached: "Cached text input", textOutput: "Text output",
+  textInput: "Text input", textCached: "Cached text input", textCacheWrite: "Cache-write text input",
+  textOutput: "Text output",
   audioInput: "Native audio input", audioCached: "Cached native audio", audioOutput: "Native audio output",
   speechInput: "Azure STT input", speechOutput: "Azure HD output", liveMinute: "GPT Live session ($/min)",
 };
@@ -74,7 +75,8 @@ function showError(error) {
 
 function rateEditor(model, pipeline, book) {
   selectedKey = rateKey(model, pipeline);
-  const fields = ["textInput", "textCached", "textOutput"];
+  const fields = ["textInput", "textCached",
+    ...(Object.hasOwn(book.rates, "textCacheWrite") ? ["textCacheWrite"] : []), "textOutput"];
   if (["native", "hybrid"].includes(pipeline)) fields.push("audioInput", "audioCached");
   if (pipeline === "native") fields.push("audioOutput");
   if (pipeline === "cascade") fields.push("speechInput");
@@ -110,6 +112,7 @@ function rateEditor(model, pipeline, book) {
     $("price-note").textContent = "No published managed Voice Live tier was found for this model. This is an AOAI Global model-price reference plus Central India BYO speech, not a confirmed managed Voice Live tariff or availability claim. Published model rates use South India Global meters; missing inference prices remain manual. All token fields below are USD per 1M.";
   }
   if (pipeline === "live") $("price-note").textContent += " GPT Live uses Azure OpenAI's South India Global voice rate: $3/hour = $0.05/minute in this snapshot. Backend model usage is charged separately. GPT Live generates its own audio, so no Azure HD charge is added.";
+  if (Object.hasOwn(book.rates, "textCacheWrite")) $("price-note").textContent += " GPT-5.6 and later bill prompt-cache writes separately: fresh and cache-miss text input uses the cache-write rate. Set the cache hit to 0% to model prompt caching disabled (regular input rate).";
   if (model.oss && (hosting === "byom" || book.usesGlobalReference)) $("price-note").textContent += " No OSS cached-input meter was found; reused text is conservatively charged at full input price.";
   if (model.managedPipeline) {
     $("price-note").textContent += ` ${model.name} uses native audio input/output billing; no separate Azure STT, HD voice, or GPT Live session charge is added.`;

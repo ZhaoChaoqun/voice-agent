@@ -125,20 +125,43 @@ test("GPT-5.6 Luna BYOM uses exact Standard Global inference meters and BYO spee
   close(rates.textInput, 0.2);
   close(rates.textCached, 0.02);
   close(rates.textOutput, 1.2);
+  close(rates.textCacheWrite, 0.25);
   close(rates.speechInput, 12.5);
   close(rates.speechOutput, 23);
-  for (const key of ["textInput", "textCached", "textOutput"]) {
+  for (const key of ["textInput", "textCached", "textCacheWrite", "textOutput"]) {
     assert.match(sources[key].meterName, /^5\.6 luna ShortCo .* Std Gl 1M Tokens$/);
-    assert.equal(sources[key].retrievedAt, "2026-10-26");
+    assert.equal(sources[key].retrievedAt, key === "textCacheWrite" ? "2026-11-17" : "2026-10-26");
     assert.equal(sources[key].armRegionName, "southindia");
     assert.equal(sources[key].processingScope, "Global");
   }
-  const textCost = (5000 * 0.2 + 15000 * 0.02 + 150 * 0.2 + 450 * 0.02 + 150 * 1.2) / 1e6;
+  // Fresh prompt and transcript tokens are written to the prompt cache at the cache-write rate.
+  const textCost = (5000 * 0.25 + 15000 * 0.02 + 150 * 0.25 + 450 * 0.02 + 150 * 1.2) / 1e6;
   const cascade = calculate(DEFAULTS, "cascade", rates);
   close(cascade.list, textCost + (427.5 * 12.5 + 855 * 23) / 1e6);
   close(cascade.listPerMinute, cascade.list / 1.5);
   const live = calculate(DEFAULTS, "live", book("gpt-5.6-luna", "byom", "live"));
   close(live.list, textCost + 1.5 * 0.05);
+});
+
+test("GPT-5.6 and GPT-6 Sol bill fresh and missed text input as prompt-cache writes", () => {
+  const sol = book("gpt-6-sol", "byom");
+  close(sol.textCacheWrite, 2.5);
+  const solRow = calculate({ ...DEFAULTS, cachePercent: 50 }, "cascade", sol).rows
+    .find(r => r.label === "System prompt / fresh + cache misses (cache write)");
+  assert.equal(solRow.key, "textCacheWrite");
+  close(solRow.quantity, 5000 + 15000 * 0.5);
+
+  const luna = book("gpt-5.6-luna", "byom");
+  const disabled = calculate({ ...DEFAULTS, cachePercent: 0 }, "cascade", luna);
+  assert.ok(disabled.rows.every(r => r.key !== "textCacheWrite"));
+  close(disabled.rows.find(r => r.label === "System prompt / fresh + cache misses").rate, 0.2);
+
+  const unknown = calculate(DEFAULTS, "cascade", { ...luna, textCacheWrite: null });
+  assert.equal(unknown.list, null);
+  assert.deepEqual(unknown.missing, ["textCacheWrite"]);
+
+  assert.ok(!Object.hasOwn(book("gpt-5.4", "byom"), "textCacheWrite"));
+  assert.ok(calculate(DEFAULTS, "cascade", book("gpt-5.4", "byom")).rows.every(r => r.key !== "textCacheWrite"));
 });
 
 test("all selectable models have priced scenarios across both hosting modes", () => {
@@ -244,8 +267,9 @@ test("GPT Live uses South India GPT-6 Sol backend and AOAI voice prices", () => 
   close(rates.textInput, 2);
   close(rates.textCached, 0.2);
   close(rates.textOutput, 10);
+  close(rates.textCacheWrite, 2.5);
   const result = calculate({ ...DEFAULTS, prompt: 0 }, "live", rates);
-  close(result.list, (150 * 2 + 450 * 0.2 + 150 * 10) / 1e6 + 1.5 * 0.05);
+  close(result.list, (150 * 2.5 + 450 * 0.2 + 150 * 10) / 1e6 + 1.5 * 0.05);
   assert.ok(result.rows.every(r => !r.label.includes("Azure")));
 });
 
