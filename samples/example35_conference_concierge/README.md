@@ -10,6 +10,14 @@ clash detection, reports what is starting now and official room and time changes
 answers FAQ and on-site logistics questions, replies in the attendee's language and
 time zone, and explains its own design in dev mode.
 
+`agent.json` is exported from the agent that answered real phone calls during the
+event, so the instructions, audio settings, handoff graph, and tool contract are the
+shipped configuration rather than a simplified illustration. Two production
+dependencies are not public: the speaker lookup tool and the email tool. The [hosted
+tools](#use-the-hosted-tools) cover both, the second with a mock that sends nothing, and
+you can supply your own instead (see [Differences from the production
+agent](#differences-from-the-production-agent)).
+
 It is meant for external attendees, so it uses **only official data**. Where no
 official source exists (walking routes, restroom and booth locations, Wi-Fi, full
 rooms, cancellations), it points to the official interactive map, the Microsoft Events
@@ -34,15 +42,23 @@ before_event`, and the agent says the event has not started and helps plan inste
 
 ## Design
 
-- Model `gpt-realtime` (speech to speech), voice `en-US-Emma:DragonHDLatestNeural`
-  (Emma Dragon HD), Azure semantic VAD with barge-in (800 ms
-  prefix padding, 400 ms silence), server echo cancellation and noise suppression,
+- Model `gpt-realtime-2.1` (speech to speech), voice `en-US-Ava:DragonHDLatestNeural`
+  (Ava Dragon HD), Azure semantic VAD with barge-in (800 ms prefix padding, 200 ms
+  silence), server echo cancellation and headset noise suppression,
   LLM-generated interim acknowledgements while a tool runs, `store: false`.
-- **One node, no handoff graph.** With a three-stage handoff graph, Voice Live
-  intermittently emitted the MCP tools as plain function calls that were never
-  executed, and the entrypoint sometimes spoke tool JSON aloud (1 of 4 repeated
-  runs correct). The single-node agent was correct in 4 of 4 runs and in the full
-  acceptance. Dev mode is a section of the instructions.
+- **Three inline subagents with a handoff graph**: `$entrypoint` (concierge),
+  `email`, and `end`. The concierge keeps the conference tools; the email stage owns
+  the privacy notice and address collection; the end stage says goodbye and calls
+  `end_conversation`. Each handoff condition names the exact caller wording that
+  triggers it, including the cases that must *not* trigger it, because a vague
+  condition transfers on "thanks" alone. An earlier revision of this sample ran as a
+  single node after a three-stage graph emitted MCP tools as unexecuted function
+  calls; the current contract is stable with `response_scheduling: when_idle` on the
+  MCP tools. Dev mode is a section of the instructions.
+- **Transcription is disclosed in the greeting** and the one-time email requires
+  two-step verbal consent: the concierge asks before transferring, and the email
+  stage states the Microsoft privacy notice before collecting an address.
+  With `store: false` no audio is persisted, and traces stay text-only.
 - The agenda is stateless: every agenda tool takes the current list of session
   IDs and returns the new one, so no sign-in or stored profile is needed.
 - Short spoken answers: at most three sentences and two sessions, then
@@ -50,10 +66,12 @@ before_event`, and the agent says the event has not started and helps plan inste
 - Replies in the language of the attendee's latest message; tool arguments are
   always English keywords. Times are Pacific; with `time_zone` (for example
   `Beijing`) the session tools add `your_time` for online attendees.
-- No calendar, email, knowledge, or avatar tool is attached, so the Template needs no
-  user-specific connection. Asked to add a session to a calendar or send an email, the
-  agent says it can't and offers to read the agenda back. Knowledge IQ was not used:
-  combined with an FAQ-style tool it intermittently left MCP calls unexecuted.
+- No calendar, knowledge, or avatar tool is attached, and the conference tools need no
+  user-specific connection, so the Template works as soon as it is created. The one
+  email tool is optional and ships without a `server_url`. Asked to add a session to a
+  calendar, the agent says it can't and offers to read the agenda back or email it.
+  Knowledge IQ was not used: combined with an FAQ-style tool it intermittently left
+  MCP calls unexecuted.
 - GPT Live was evaluated and is not used: its tools must run behind a delegation
   backend, and the delegated calls failed with `invalid_delegation_result`.
 
@@ -63,6 +81,7 @@ before_event`, and the agent says the event has not started and helps plan inste
 | --- | --- |
 | `conference_get_event_info` | Dates, current event time, keynotes, topics, types, levels, catalog freshness, dev-mode facts |
 | `conference_search_sessions` | Keywords plus day, part of day, time window, topic, level, type, speaker, in-person/online, recorded |
+| `conference_find_speaker` | Finds a speaker from how the caller pronounced the name and returns their title, company, and bio. **Not in the public `conference` pack**: see [Differences from the production agent](#differences-from-the-production-agent) |
 | `conference_get_session` | One session's details, with alternatives if it is no longer in the catalog |
 | `conference_recommend_sessions` | Non-overlapping picks per day from role and interests, avoiding the agenda |
 | `conference_similar_sessions` | Similar sessions by topic, speakers, and content (no attendance data) |
@@ -73,11 +92,120 @@ before_event`, and the agent says the event has not started and helps plan inste
 
 Session, recommendation, agenda, and event-info tools take an optional `time_zone`.
 
-## Run locally
+## Differences from the production agent
 
-The hosted no-auth MCP does not serve `/mcp/conference` yet, so run the pack
-locally and expose it with a Dev Tunnel (Foundry calls MCP servers from the
-cloud). From the repository root, in PowerShell, after `az login` and
+The shipped agent calls two more tools that have no public implementation in this
+repository. `agent.json` keeps their structure so the shape is visible, and leaves
+`server_url` empty for you to fill in.
+
+| Production tool | What it does | How to get it |
+| --- | --- | --- |
+| `conference_find_speaker` | Finds a speaker by how a caller pronounced the name, so an accent or a recognition error still reaches the right person, and returns their title, company, and bio. The instructions call it every time a caller says a person's name | Use the [hosted tools](#use-the-hosted-tools), which include it. To run the pack yourself, implement it or drop it from `allowed_tools` and delete the two instruction paragraphs that call it; speakers stay searchable through the `speaker` filter of `conference_search_sessions` |
+| `ignite_email_sessions` | Sends the one-time email of saved sessions through an Office 365 shared mailbox | The [hosted tools](#use-the-hosted-tools) include a mock that validates the request and delivers nothing, which is enough to hear the stage. To really send, point the `email` subagent at your own email MCP server, or delete the subagent together with the `to_email` and `email_to_*` handoff conditions. The privacy notice and address confirmation live in the subagent's instructions |
+
+Everything else, including every instruction, handoff condition, and audio setting,
+is the configuration that served live calls.
+
+**A missing tool is silent, not an error.** This matters when you run the pack yourself;
+the hosted tools already include the speaker lookup. `allowed_tools` filters what the MCP server
+lists; it does not require it. If the server does not expose `conference_find_speaker`,
+the other tools still register, the model never sees it, and the two instruction
+paragraphs that call it cannot be followed. Speaker questions then fall back to the
+`speaker` filter of `conference_search_sessions`, which matches words rather than
+pronunciation, so "Zakia" or "Sathiya" no longer reaches "Satya Nadella", and
+`tell me about <name>` has no biography source.
+
+### Implementing `conference_find_speaker`
+
+Only needed if you run the pack yourself. The contract is small, and this repository
+already ships a working phonetic matcher you can port:
+[`samples/ignite_planner/web/name-search.mjs`](../ignite_planner/web/name-search.mjs)
+with its tuning data [`name-search-data.json`](../ignite_planner/data/name-search-data.json)
+(letter-to-sound rules, phoneme confusion costs, nicknames, and the score thresholds).
+
+Input: `spoken_names`, the name as the agent heard it followed by up to two other
+spellings. Never correct the name before calling; the matcher compares sound.
+
+Return:
+
+| Field | Value |
+| --- | --- |
+| `status` | `likely` (one speaker is clearly meant), `choose` (up to three candidates), `no_match`, or `no_name_heard` |
+| `heard` | The readings you matched, so the agent can read a name back |
+| `choices` | Speakers, best first, each with `name`, `job_title`, `company`, `bio`, their sessions, and `profile_note` when the catalog has no details |
+| `next_step` | One sentence telling the model what to do with this status, for example "Ask which speaker the caller meant, naming each choice" |
+
+Keeping `next_step` in the result is what lets the instructions stay short: the tool,
+not the prompt, decides whether the agent answers directly or asks the caller to choose.
+
+### Configuring the email tool
+
+The `email` subagent already contains the privacy notice, the address read-back, and the
+handoffs, so what is missing is only a server that exposes one tool. The [hosted
+tools](#use-the-hosted-tools) include a mock of it, so you can hear the stage before you
+write anything. To send real mail, point the subagent's `server_url` at any MCP server of
+your own that implements:
+
+```jsonc
+// ignite_email_sessions
+{
+  "email": "jane.doe@contoso.com",        // confirmed with the caller first
+  "session_codes": ["BRK244", "TT1663"]   // official codes, at least one
+}
+```
+
+The production server builds the message from the official catalog and attaches a
+calendar file with one-tap Outlook and Google buttons, but the agent only needs a
+success or failure result, so a simpler server works.
+
+Three things to keep in mind when you write it:
+
+- The instructions call the tool **once**, after the caller confirms the spelled-out
+  address, so the server does not need to handle retries or de-duplication.
+- A caller's address is personal data. Keep it out of logs, and send only to the address
+  given on that call.
+- Nothing is sent until this `server_url` is set. The stage still runs, the agent still
+  asks for consent and reads the address back, and the handoff back to the concierge
+  still works, so the conversation is complete even before you add the server.
+
+To remove the feature instead, delete the `email` subagent together with the `to_email`
+handoff on `$entrypoint` and the two `email_to_*` handoffs, and drop the paragraphs about
+emailing from the instructions.
+
+## Use the hosted tools
+
+The conference tools are served without a sign-in at
+
+```
+https://voice-agent-noauth-mcp.lemonsky-36682081.westus2.azurecontainerapps.io/mcp/conference
+```
+
+Put that in the `conference` tool's `server_url` and the Agent is ready; the
+catalog behind it refreshes from the official source. This is the fastest way to
+hear the Agent, and the only way to get `conference_find_speaker`, which the pack
+in this repository does not implement.
+
+The email stage has a mock at
+
+```
+https://voice-agent-noauth-mcp.lemonsky-36682081.westus2.azurecontainerapps.io/mcp/ignite-email-mock
+```
+
+It takes the same arguments as the production tool and applies the same validation,
+including looking the session codes up in the official catalog, but it never delivers:
+the result says `delivered: false` and tells the Agent to say the request was taken and
+no email went out. **It is a mock on purpose.** The server needs no sign-in, so anyone
+who finds the URL can call it; a route that really sent mail would let anyone make it
+send to any address they chose. Use it to hear the stage end to end, and run your own
+server when you want the mail to arrive.
+
+Run the pack yourself instead when you want to change a tool, use your own event
+data, or keep every call inside your own subscription.
+
+## Run the tools yourself
+
+Foundry calls MCP servers from the cloud, so a local pack needs a Dev Tunnel.
+From the repository root, in PowerShell, after `az login` and
 `devtunnel user login`:
 
 ```powershell

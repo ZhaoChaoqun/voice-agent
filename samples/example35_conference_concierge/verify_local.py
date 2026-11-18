@@ -92,6 +92,9 @@ def publish(base: str, agent: str) -> dict:
         for tool in [*(latest.get("tools") or []), *(
             tool for node in (latest.get("handoff") or {}).get("nodes") or []
             for tool in (node.get("config") or {}).get("tools") or []
+        ), *(
+            tool for subagent in (latest.get("subagent_config") or {}).get("subagents") or []
+            for tool in subagent.get("tools") or []
         )]
         if tool.get("type") == "mcp"
     })
