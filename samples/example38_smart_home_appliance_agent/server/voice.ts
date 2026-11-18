@@ -88,7 +88,11 @@ interface PendingToolCall {
 
 export interface VoiceDependencies {
   getToken: () => Promise<string>;
-  connect: (url: string, token: string) => WebSocket;
+  connect: (
+    url: string,
+    token: string,
+    headers?: Record<string, string>,
+  ) => WebSocket;
 }
 
 /** Use managed identity in ACA and preserve Azure CLI identity for loopback development. */
@@ -102,9 +106,9 @@ export function voiceDependencies(config: RuntimeConfig): VoiceDependencies {
   return {
     getToken: async () =>
       (await credential.getToken("https://ai.azure.com/.default")).token,
-    connect: (url, token) =>
+    connect: (url, token, headers = {}) =>
       new WebSocket(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { ...headers, Authorization: `Bearer ${token}` },
         maxPayload: MAX_BACKPRESSURE,
         handshakeTimeout: READY_TIMEOUT_MS,
         perMessageDeflate: false,

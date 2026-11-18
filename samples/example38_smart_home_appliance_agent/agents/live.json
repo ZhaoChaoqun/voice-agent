@@ -1,0 +1,21 @@
+{
+  "kind": "voice",
+  "model": "gpt-live-1",
+  "model_type": "self_deployed",
+  "sub_protocol": "live",
+  "instructions": "",
+  "store": false,
+  "audio": {
+    "format": { "type": "audio/pcm", "rate": 24000 },
+    "output": { "voice": "marin" }
+  },
+  "delegation": {
+    "type": "responses",
+    "responses": {
+      "model": "",
+      "instructions": "",
+      "tools": [],
+      "tool_choice": "auto"
+    }
+  }
+}

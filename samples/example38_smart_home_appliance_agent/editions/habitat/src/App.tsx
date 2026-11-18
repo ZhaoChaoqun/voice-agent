@@ -201,6 +201,7 @@ export function App(): React.JSX.Element {
                       key={option.id}
                       value={option.id}
                       disabled={!option.available}
+                      title={option.available ? undefined : option.reason}
                     >
                       {option.label}
                       {!option.available &&

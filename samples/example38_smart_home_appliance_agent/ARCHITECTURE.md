@@ -92,6 +92,39 @@ greeting and interface; recognition stays `zh-CN,en-US`, and replies follow the
 latest user turn. Switching models ends the old session; it does not transfer
 its conversation context.
 
+### Optional GPT Live flow
+
+`gpt-live-1` is routed to `GptLiveSession` (`server/gpt-live.ts`) instead of
+`VoiceSession`. It uses the same browser events, ToolRunner, and stores, but a
+different upstream protocol: the native GPT Live session route with the
+`Foundry-Features: VoiceAgents=V1Preview` header. The saved Agent owns its
+instructions and Responses-delegation tools, so the relay sends no `session.update`.
+
+```mermaid
+sequenceDiagram
+  participant B as Browser
+  participant N as Node GptLiveSession
+  participant L as GPT Live Agent
+  participant R as Responses delegation
+  participant T as ToolRunner / Stores
+  B->>N: /api/voice?model=gpt-live-1&language=...
+  N->>L: .../voice/live/sessions + welcome_text
+  L-->>N: session.started, greeting audio
+  N-->>B: response.output_audio.delta, then demo.ready
+  B->>N: PCM append or input_text
+  N->>L: session.input_audio.append or response.item.create + response.create
+  L->>R: Delegate household work after a brief filler
+  R-->>N: response.event: function_call ... response.completed
+  N->>T: Validate / deduplicate / execute
+  N-->>B: demo.tool / demo.state / demo.sources
+  N->>L: function_call_output(s) + one response.create
+  L-->>B: Spoken result through relay
+```
+
+GPT Live has no transcript-done or response-done event in this flow. The relay
+finalizes transcripts after a short pause and treats sustained silent output audio
+as the end of speech; both are heuristics. Live verification is pending.
+
 ## Speech profile and pre/post-tool orchestration
 
 Verify this Flash profile in the actual target project:

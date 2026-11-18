@@ -140,7 +140,50 @@ describe("Portal-preserving Agent authoring", () => {
     expect(config.models.map((model) => model.id)).toEqual([
       "gpt-realtime-2.1",
       "microsoft-realtime-flash-1",
+      "gpt-live-1",
     ]);
+  });
+
+  it("keeps GPT Live unavailable with a reason until every prerequisite is explicit", () => {
+    const endpoint =
+      "https://example.services.ai.azure.com/api/projects/example";
+    const live = (env: NodeJS.ProcessEnv) =>
+      runtimeConfig(env).models.find((model) => model.id === "gpt-live-1");
+    for (const env of [
+      { SMART_HOME_GPT_LIVE_AGENT: "unit-live" },
+      {
+        FOUNDRY_PROJECT_ENDPOINT: endpoint,
+        SMART_HOME_GPT_LIVE_AGENT: "unit-live",
+      },
+      {
+        FOUNDRY_PROJECT_ENDPOINT: endpoint,
+        SMART_HOME_VERIFIED_MODELS: "gpt-live-1",
+      },
+    ])
+      expect(live(env)).toMatchObject({
+        available: false,
+        reason: expect.stringContaining("SMART_HOME_GPT_LIVE_AGENT"),
+      });
+    const other = "https://other.services.ai.azure.com/api/projects/other";
+    const config = runtimeConfig({
+      SMART_HOME_GPT_LIVE_PROJECT_ENDPOINT: other,
+      SMART_HOME_GPT_LIVE_AGENT: "unit-live",
+      SMART_HOME_VERIFIED_MODELS: "gpt-live-1",
+    });
+    expect(config.liveProjectEndpoint).toBe(other);
+    expect(config.models.filter((model) => model.available)).toEqual([
+      {
+        id: "gpt-live-1",
+        label: "GPT Live",
+        available: true,
+        agentName: "unit-live",
+      },
+    ]);
+    expect(() =>
+      runtimeConfig({
+        SMART_HOME_GPT_LIVE_PROJECT_ENDPOINT: "https://evil.example",
+      }),
+    ).toThrow("SMART_HOME_GPT_LIVE_PROJECT_ENDPOINT");
   });
 
   it("rejects unsupported verified models instead of silently selecting a different model", () => {
@@ -761,7 +804,7 @@ describe("local HTTP API", () => {
     const base = await listen();
     const config = await (await fetch(`${base}/api/config`)).json();
     expect(config.backend.configured).toBe(false);
-    expect(config.models).toHaveLength(2);
+    expect(config.models).toHaveLength(3);
     expect(
       config.models.every((entry: { available: boolean }) => !entry.available),
     ).toBe(true);
@@ -850,5 +893,22 @@ describe("local HTTP API", () => {
       socket.on("error", () => undefined);
     });
     expect(status).toBe(403);
+  });
+
+  it("refuses an unconfigured GPT Live session instead of aliasing another model", async () => {
+    const base = await listen();
+    const socket = new WebSocket(
+      `${base.replace("http:", "ws:")}/api/voice?model=gpt-live-1&language=zh`,
+      { origin: base },
+    );
+    const status = await new Promise<number | undefined>((resolve) => {
+      socket.on("unexpected-response", (_request, response) => {
+        response.resume();
+        resolve(response.statusCode);
+        socket.terminate();
+      });
+      socket.on("error", () => undefined);
+    });
+    expect(status).toBe(400);
   });
 });

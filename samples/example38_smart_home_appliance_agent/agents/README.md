@@ -5,8 +5,8 @@
 `flash.json` is the default base template: `kind: voice`,
 `model_type: managed`, and model `microsoft-realtime-flash-1`. It contains no
 endpoint, subscription, tenant, project, or saved Agent version.
-The only supported API model IDs are `microsoft-realtime-flash-1` and
-`gpt-realtime-2.1`. Template and verified-model declaration must match the
+The only supported API model IDs are `microsoft-realtime-flash-1`,
+`gpt-realtime-2.1`, and `gpt-live-1`. Template and verified-model declaration must match the
 exact ID; product names and unversioned IDs are not aliases.
 
 These are **base templates, not upload-ready payloads**.
@@ -26,6 +26,7 @@ created directory mode `0700`).
 | `server/voice-profile.ts`                            | Dynamic VAD, AEC, noise suppression, and bilingual transcription constants.                      |
 | `server/instructions.txt` / `server/instructions.ts` | Short pre-control acknowledgement, concise actual-result answers, language, and grounding rules. |
 | `server/tools.ts` / `shared/controls.ts`             | All eight function schemas and server control limits.                                            |
+| `server/gpt-live-instructions.ts`                    | Compact GPT Live voice and Responses-delegation instructions.                                    |
 | `server/greeting.ts`                                 | English/Chinese `welcome_text` and structured greeting defaults.                                 |
 | `server/agent-config.ts`                             | Wire-definition merge and preservation of other Portal-owned fields.                             |
 | `server/sync-agent-config.ts`                        | Offline rendering, explicit publishing, concurrency checks, and readback.                        |
@@ -106,3 +107,26 @@ Agent name; the publisher refuses to change an existing Agent's model.
 After checking the saved definition, include `gpt-realtime-2.1` in
 `SMART_HOME_VERIFIED_MODELS` to enable it in the UI. A successful comparison does
 not establish Flash access, regional support, or equivalent behaviour.
+
+## Optional GPT Live
+
+`live.json` is a GPT Live template: `kind: voice`, `sub_protocol: live`,
+model `gpt-live-1`, and `model_type: self_deployed`, with Responses delegation.
+Rendering fills in compact voice instructions, backend instructions, the structured
+greeting, and the eight function tools under `delegation.responses`. Its Responses
+deployment stays empty until you publish:
+
+```bash
+export SMART_HOME_GPT_LIVE_AGENT="<your-gpt-live-agent-name>"
+# Required only to create a new Agent.
+export SMART_HOME_GPT_LIVE_DELEGATION_DEPLOYMENT="<your-responses-deployment>"
+npm run agents:publish -- --live --confirm-project "$FOUNDRY_PROJECT_ENDPOINT"
+```
+
+`--live` selects only the GPT Live Agent and cannot be combined with
+`--comparison`. The confirmed project is `SMART_HOME_GPT_LIVE_PROJECT_ENDPOINT`
+when set, otherwise `FOUNDRY_PROJECT_ENDPOINT`. The publisher refuses an existing
+Agent that is not a `gpt-live-1` Live Agent, keeps its saved model type and
+Responses deployment unless you override the deployment, and applies the same
+concurrency and readback checks. After checking the Agent, include `gpt-live-1`
+in `SMART_HOME_VERIFIED_MODELS`.

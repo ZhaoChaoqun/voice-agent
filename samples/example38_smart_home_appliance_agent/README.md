@@ -19,6 +19,15 @@ The default model is **Microsoft Realtime Flash**, `microsoft-realtime-flash-1`.
 The application connects to the Voice Agent over Agent-mode WebSocket. For a
 browser WebRTC example, see [`foundry_voice_webrtc`](../foundry_voice_webrtc/README.md).
 
+| Model ID                     | Selector label           | Server route                                      | Status                                               |
+| ---------------------------- | ------------------------ | ------------------------------------------------- | ---------------------------------------------------- |
+| `microsoft-realtime-flash-1` | Microsoft Realtime Flash | Agent-mode realtime WebSocket                     | Default                                              |
+| `gpt-realtime-2.1`           | GPT Realtime 2.1         | Agent-mode realtime WebSocket                     | Optional comparison                                  |
+| `gpt-live-1`                 | GPT Live                 | Native GPT Live session with Responses delegation | Optional preview; see [GPT Live](#optional-gpt-live) |
+
+Every model is unavailable until you configure and verify it. The selector shows an
+unavailable model with its reason and never substitutes another model.
+
 ## When to use this example
 
 Use it to explore bilingual voice control of a visible household, knowledge-grounded
@@ -221,8 +230,8 @@ SMART_HOME_VERIFIED_MODELS=microsoft-realtime-flash-1
 
 This is an operator declaration, not automated acceptance evidence. Validate
 live connectivity before using it in a demonstration. The only supported API
-model IDs are `microsoft-realtime-flash-1` and `gpt-realtime-2.1`; unsupported
-verified-model declarations are rejected rather than aliased to another model.
+model IDs are `microsoft-realtime-flash-1`, `gpt-realtime-2.1`, and `gpt-live-1`;
+unsupported verified-model declarations are rejected rather than aliased to another model.
 See [Agent definitions](agents/README.md) and the [integration guide](INTEGRATION.md)
 for the full speech profile, publishing checks, and optional GPT Realtime comparison.
 
@@ -233,6 +242,9 @@ for the full speech profile, publishing checks, and optional GPT Realtime compar
 | `FOUNDRY_PROJECT_ENDPOINT`                             | The only allowed project HTTPS endpoint; no default resource.               |
 | `SMART_HOME_FLASH_AGENT`                               | Your Flash Agent name; required explicitly for publishing.                  |
 | `SMART_HOME_REALTIME_AGENT`                            | Explicit GPT Realtime comparison Agent name; not a Flash prerequisite.      |
+| `SMART_HOME_GPT_LIVE_AGENT`                            | Optional GPT Live Agent name; no default. Required to select GPT Live.      |
+| `SMART_HOME_GPT_LIVE_PROJECT_ENDPOINT`                 | Optional project hosting GPT Live; defaults to `FOUNDRY_PROJECT_ENDPOINT`.  |
+| `SMART_HOME_GPT_LIVE_DELEGATION_DEPLOYMENT`            | Publishing only: Responses deployment for a new GPT Live Agent.             |
 | `SMART_HOME_VERIFIED_MODELS`                           | Comma-separated exact model IDs; no voice model enabled by default.         |
 | `AZURE_TENANT_ID`                                      | Optional local Azure CLI tenant.                                            |
 | `AZURE_CLIENT_ID`                                      | Cloud user-assigned managed identity client ID.                             |
@@ -250,6 +262,61 @@ runtime uses managed identity, not API keys. Use project-scoped development and
 consumption permissions (such as Foundry Agent Developer and Foundry Agent
 Consumer) appropriate to the actual role definitions, not subscription Owner
 for convenience. Do not put secrets in `VITE_*`: those values reach the browser.
+
+### Optional GPT Live
+
+GPT Live is a separate Voice Agent sub-protocol, `sub_protocol: "live"`, documented by
+the [GPT Live samples](../gpt_live/README.md). Here it is an optional third model,
+`gpt-live-1`, for comparing the same household with a native GPT Live voice. GPT Live
+speaks and handles conversation; household work is delegated to a **Responses**
+backend that holds the same eight function tools. Node runs every delegated function
+locally against the same household, as it does for the realtime models.
+
+`agents/live.json` is the GPT Live template. `npm run agents:render` adds a `live` entry
+to `.local/agent-definitions.json` with compact voice instructions, backend
+instructions, the structured greeting, and the tools on `delegation.responses`. To
+publish it explicitly to your own project:
+
+```bash
+export SMART_HOME_GPT_LIVE_AGENT="<your-gpt-live-agent-name>"
+# Only when creating a new Agent: your Responses (text) deployment for delegation.
+export SMART_HOME_GPT_LIVE_DELEGATION_DEPLOYMENT="<your-responses-deployment>"
+npm run agents:publish -- --live --confirm-project "$FOUNDRY_PROJECT_ENDPOINT"
+```
+
+If `SMART_HOME_GPT_LIVE_PROJECT_ENDPOINT` is set, confirm that endpoint instead.
+Publishing creates a missing Agent or versions an existing one. It refuses an existing
+Agent unless it is a voice Agent with `model: "gpt-live-1"` and `sub_protocol: "live"`.
+An existing Agent keeps its saved Responses deployment unless you set
+`SMART_HOME_GPT_LIVE_DELEGATION_DEPLOYMENT`. New Agents use
+`model_type: "self_deployed"`, so your project needs a GPT Live deployment named
+`gpt-live-1`. Readback and concurrency checks are the same as for the other Agents.
+Then add `gpt-live-1` to `SMART_HOME_VERIFIED_MODELS` once you have checked the Agent.
+
+At run time the relay opens
+`/agents/<name>/endpoint/protocols/voice/live/sessions?api-version=v1` with the
+`Foundry-Features: VoiceAgents=V1Preview` header and the `welcome_text` structured input.
+The relay translates events in both directions:
+
+| Browser or Live event                       | Relay action                                                                                                 |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Microphone `input_audio_buffer.append`      | Sent as `session.input_audio.append`; silence keeps the Live audio clock running when idle.                  |
+| Typed `conversation.item.create`            | Sent as `response.item.create` plus `response.create`, so the Responses backend answers it.                  |
+| `session.output_audio.delta`                | Forwarded as `response.output_audio.delta`; trailing silence after speech is dropped.                        |
+| `session.*_transcript.delta`                | Mapped to the browser's realtime transcript events; a short pause finalizes each message.                    |
+| Backend `function_call` in `response.event` | Run locally after `response.completed`; each `function_call_output` is returned, then one `response.create`. |
+
+Realtime-only controls such as `response.cancel` and `conversation.item.truncate` are
+ignored, because GPT Live handles interruption itself.
+
+**Limitations.** GPT Live is a preview. This integration has not been verified end to
+end against a live service: test it with your own `gpt-live-1` Agent before a
+demonstration. Returning function results to a Responses delegation follows the public
+sample's managed prompt-agent pattern, and the end-of-speech and transcript timing are
+heuristics, not service events. Keep the GPT Live instructions compact: very large
+instructions can fail with `context_injection_incomplete`. Typed input needs
+Responses (or managed) delegation. The tool-call acknowledgement comes from the GPT
+Live instructions, not the realtime `tool_choice` flow. WebRTC is not used.
 
 ## Try these turns
 
@@ -349,6 +416,8 @@ do not disable AEC or noise suppression to bypass missing libraries.
 | Symptom                          | Check                                                                                                                    |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | No available model               | Endpoint, Agent name, `SMART_HOME_VERIFIED_MODELS`, model access, region, quota; restart Node after environment changes. |
+| GPT Live unavailable             | `SMART_HOME_GPT_LIVE_AGENT`, its project endpoint, and `gpt-live-1` in `SMART_HOME_VERIFIED_MODELS`.                     |
+| `context_injection_incomplete`   | GPT Live instructions are too large; keep them compact and re-render.                                                    |
 | `401` / `403`                    | CLI sign-in, tenant, project consumption/development permissions; never send a browser token as a workaround.            |
 | `realtime_requires_language`     | Saved Azure Speech streaming transcription with `zh-CN,en-US`.                                                           |
 | Connection waits indefinitely    | Structured greeting, `session.updated`, greeting completion, output voice, and sanitized server errors.                  |

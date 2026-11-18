@@ -1,6 +1,6 @@
 /** Preserve Portal-owned settings while authoring the shared concierge behavior. */
 import { z } from "zod";
-import { VOICE_MODEL_IDS } from "@shared/protocol";
+import { GPT_LIVE_MODEL_ID, VOICE_MODEL_IDS } from "@shared/protocol";
 import { homeGreeting } from "#server/greeting";
 import {
   FLASH_TURN_DETECTION,
@@ -36,6 +36,93 @@ export interface ConciergeDefinition {
   tools: object[];
 }
 
+const liveDefinitionSchema = z
+  .object({
+    kind: z.literal("voice"),
+    model: z.literal(GPT_LIVE_MODEL_ID),
+    model_type: z.enum(["managed", "self_deployed"]),
+    sub_protocol: z.literal("live"),
+    instructions: z.string(),
+    structured_inputs: objectSchema.optional(),
+    delegation: z
+      .object({
+        type: z.literal("responses"),
+        responses: z.object({ model: z.string() }).passthrough(),
+      })
+      .passthrough(),
+  })
+  .passthrough();
+
+export interface LiveConciergeDefinition {
+  instructions: string;
+  backendInstructions: string;
+  tools: { name: string; description: string; parameters: object }[];
+  /** Responses deployment; omit to keep the saved one. */
+  delegationDeployment?: string;
+}
+
+const welcomeInput = (description: string) => ({
+  welcome_text: {
+    description,
+    schema: { type: "string", minLength: 1, maxLength: 200 },
+    default_value: homeGreeting("zh").text,
+  },
+});
+
+/**
+ * Merge GPT Live voice and Responses-delegation changes without losing opaque fields.
+ *
+ * Parameters
+ * ----------
+ * definition : unknown
+ *     Template or latest remote definition; it must be a gpt-live-1 Live Agent.
+ * concierge : LiveConciergeDefinition
+ *     Live persona, backend instructions, household tools and optional deployment.
+ *
+ * Returns
+ * -------
+ * Record<string, unknown>
+ *     Complete authoring API definition for the same model and Agent identity.
+ */
+export function liveAgentDefinition(
+  definition: unknown,
+  concierge: LiveConciergeDefinition,
+): Record<string, unknown> {
+  const current = liveDefinitionSchema.parse(definition);
+  const responses = current.delegation.responses;
+  return {
+    ...current,
+    instructions: concierge.instructions,
+    structured_inputs: {
+      ...current.structured_inputs,
+      ...welcomeInput(
+        "Initial welcome only; speech recognition remains bilingual.",
+      ),
+    },
+    greeting: {
+      ...objectSchema.parse(current.greeting ?? {}),
+      type: "template",
+      text: "{{{welcome_text}}}",
+    },
+    delegation: {
+      ...current.delegation,
+      responses: {
+        ...responses,
+        model: concierge.delegationDeployment ?? responses.model,
+        instructions: concierge.backendInstructions,
+        tool_choice: "auto",
+        tools: concierge.tools.map(({ name, description, parameters }) => ({
+          type: "function",
+          name,
+          description,
+          parameters,
+          strict: false,
+        })),
+      },
+    },
+  };
+}
+
 type VoiceDefinition = z.infer<typeof definitionSchema>;
 
 /**
@@ -64,12 +151,9 @@ export function voiceAgentDefinition(
     tools: concierge.tools,
     structured_inputs: {
       ...current.structured_inputs,
-      welcome_text: {
-        description:
-          "Initial welcome only; speech recognition remains bilingual.",
-        schema: { type: "string", minLength: 1, maxLength: 200 },
-        default_value: homeGreeting("zh").text,
-      },
+      ...welcomeInput(
+        "Initial welcome only; speech recognition remains bilingual.",
+      ),
     },
     greeting: {
       ...objectSchema.parse(current.greeting ?? {}),

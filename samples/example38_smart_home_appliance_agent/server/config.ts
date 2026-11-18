@@ -1,43 +1,53 @@
 /** Server-only Foundry configuration; no credential is returned to the browser. */
 import type { DemoConfig, ModelOption } from "@shared/protocol";
-import { VOICE_MODEL_IDS } from "@shared/protocol";
+import { GPT_LIVE_MODEL_ID, SUPPORTED_MODEL_IDS } from "@shared/protocol";
 import { z } from "zod";
 import { HomeStore } from "#server/home";
 import { KnowledgeStore } from "#server/knowledge";
 
 const nameSchema = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,80}$/);
+const PROJECT_ENDPOINT_PATTERN =
+  /^https:\/\/[a-zA-Z0-9-]+\.services\.ai\.azure\.com\/api\/projects\/[a-zA-Z0-9_-]+$/;
 
 export interface RuntimeConfig {
   projectEndpoint?: string;
+  /** Project that hosts the GPT Live Agent; defaults to projectEndpoint. */
+  liveProjectEndpoint?: string;
   tenantId?: string;
   models: ModelOption[];
+}
+
+function projectEndpointSetting(
+  env: NodeJS.ProcessEnv,
+  name: string,
+): string | undefined {
+  const endpoint = env[name]?.replace(/\/$/, "");
+  if (endpoint && !PROJECT_ENDPOINT_PATTERN.test(endpoint))
+    throw new Error(`${name} must be a public Foundry project HTTPS endpoint.`);
+  return endpoint || undefined;
 }
 
 /** Accept only Foundry project URLs; clients cannot choose an upstream endpoint. */
 export function runtimeConfig(
   env: NodeJS.ProcessEnv = process.env,
 ): RuntimeConfig {
-  const projectEndpoint = env.FOUNDRY_PROJECT_ENDPOINT?.replace(/\/$/, "");
-  if (
-    projectEndpoint &&
-    !/^https:\/\/[a-zA-Z0-9-]+\.services\.ai\.azure\.com\/api\/projects\/[a-zA-Z0-9_-]+$/.test(
-      projectEndpoint,
-    )
-  ) {
-    throw new Error(
-      "FOUNDRY_PROJECT_ENDPOINT must be a public Foundry project HTTPS endpoint.",
-    );
-  }
+  const projectEndpoint = projectEndpointSetting(
+    env,
+    "FOUNDRY_PROJECT_ENDPOINT",
+  );
+  const liveProjectEndpoint =
+    projectEndpointSetting(env, "SMART_HOME_GPT_LIVE_PROJECT_ENDPOINT") ??
+    projectEndpoint;
   const verifiedIds = (env.SMART_HOME_VERIFIED_MODELS ?? "")
     .split(",")
     .map((entry) => entry.trim())
     .filter(Boolean);
   const verifiedModels = z
-    .array(z.enum(VOICE_MODEL_IDS))
+    .array(z.enum(SUPPORTED_MODEL_IDS))
     .safeParse(verifiedIds);
   if (!verifiedModels.success)
     throw new Error(
-      `SMART_HOME_VERIFIED_MODELS must contain only ${VOICE_MODEL_IDS.join(", ")}.`,
+      `SMART_HOME_VERIFIED_MODELS must contain only ${SUPPORTED_MODEL_IDS.join(", ")}.`,
     );
   const verified = new Set<string>(verifiedModels.data);
   const models: ModelOption[] = [
@@ -62,7 +72,39 @@ export function runtimeConfig(
       model.reason =
         "This managed agent has not passed the opt-in live verification for this project.";
   }
-  return { projectEndpoint, tenantId: env.AZURE_TENANT_ID, models };
+  models.push(gptLiveOption(env, liveProjectEndpoint, verified));
+  return {
+    projectEndpoint,
+    liveProjectEndpoint,
+    tenantId: env.AZURE_TENANT_ID,
+    models,
+  };
+}
+
+/** GPT Live has no default Agent name; every prerequisite must be explicit. */
+function gptLiveOption(
+  env: NodeJS.ProcessEnv,
+  endpoint: string | undefined,
+  verified: Set<string>,
+): ModelOption {
+  const agentName = env.SMART_HOME_GPT_LIVE_AGENT
+    ? nameSchema.parse(env.SMART_HOME_GPT_LIVE_AGENT)
+    : undefined;
+  const available = Boolean(
+    endpoint && agentName && verified.has(GPT_LIVE_MODEL_ID),
+  );
+  return {
+    id: GPT_LIVE_MODEL_ID,
+    label: "GPT Live",
+    available,
+    agentName,
+    ...(available
+      ? {}
+      : {
+          reason:
+            "GPT Live needs a Foundry project endpoint, SMART_HOME_GPT_LIVE_AGENT and opt-in live verification of your own gpt-live-1 Agent.",
+        }),
+  };
 }
 
 /** Build the browser-safe configuration and truthful connectivity indicator. */
@@ -71,9 +113,8 @@ export function demoConfig(
   home: HomeStore,
   knowledge: KnowledgeStore,
 ): DemoConfig {
-  const configured = Boolean(
-    config.projectEndpoint && config.models.some((model) => model.available),
-  );
+  // Availability already requires the endpoint that serves each model.
+  const configured = config.models.some((model) => model.available);
   return {
     models: config.models.map((model) => ({ ...model })),
     home: home.snapshot(),

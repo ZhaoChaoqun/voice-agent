@@ -250,6 +250,10 @@ test("bilingual UI keeps offline models clearly unavailable", async ({
   await expect(
     page.locator("#voice-model option[value='microsoft-realtime-flash-1']"),
   ).toBeDisabled();
+  const live = page.locator("#voice-model option[value='gpt-live-1']");
+  await expect(live).toBeDisabled();
+  await expect(live).toContainText("暂不可用");
+  await expect(live).toHaveAttribute("title", /SMART_HOME_GPT_LIVE_AGENT/);
   await expect(page.locator("#voice-message")).toBeDisabled();
   await page.getByRole("button", { name: "EN", exact: true }).click();
   await expect(

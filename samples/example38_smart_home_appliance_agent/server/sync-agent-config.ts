@@ -5,8 +5,15 @@ import { pathToFileURL } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 import { AzureCliCredential } from "@azure/identity";
 import { z } from "zod";
-import { voiceAgentDefinition } from "#server/agent-config";
+import {
+  liveAgentDefinition,
+  voiceAgentDefinition,
+} from "#server/agent-config";
 import { runtimeConfig } from "#server/config";
+import {
+  gptLiveBackendInstructions,
+  gptLiveInstructions,
+} from "#server/gpt-live-instructions";
 import { homeInstructions } from "#server/instructions";
 import { tools } from "#server/tools";
 
@@ -18,25 +25,36 @@ const versionSchema = z.object({
   definition: z.record(z.string(), z.unknown()),
 });
 type Version = z.infer<typeof versionSchema>;
-type Edition = "flash" | "realtime";
+type Edition = "flash" | "realtime" | "live";
 export type AuthoringRequest = (
   path: string,
   body?: object,
 ) => Promise<unknown>;
 
-/** Expand the two supported templates without contacting the service. */
+const template = (edition: Edition): unknown =>
+  JSON.parse(
+    readFileSync(new URL(`../agents/${edition}.json`, import.meta.url), "utf8"),
+  );
+
+const liveConcierge = (delegationDeployment?: string) => ({
+  instructions: gptLiveInstructions(),
+  backendInstructions: gptLiveBackendInstructions(),
+  tools,
+  delegationDeployment,
+});
+
+/** Expand the three supported templates without contacting the service. */
 export function agentDefinitions(): Record<Edition, Record<string, unknown>> {
   const render = (edition: Edition): Record<string, unknown> =>
-    voiceAgentDefinition(
-      JSON.parse(
-        readFileSync(
-          new URL(`../agents/${edition}.json`, import.meta.url),
-          "utf8",
-        ),
-      ),
-      { instructions: homeInstructions(), tools },
-    );
-  return { flash: render("flash"), realtime: render("realtime") };
+    voiceAgentDefinition(template(edition), {
+      instructions: homeInstructions(),
+      tools,
+    });
+  return {
+    flash: render("flash"),
+    realtime: render("realtime"),
+    live: liveAgentDefinition(template("live"), liveConcierge()),
+  };
 }
 
 /** Select Flash by default or the explicitly requested Realtime comparison. */
@@ -65,6 +83,36 @@ export function publishSettings(
   )
     throw new Error("Replace the example placeholders before publishing.");
   return { endpoint, agents };
+}
+
+/** Select the optional GPT Live Agent; its project may differ from the realtime Agents'. */
+export function livePublishSettings(
+  env: NodeJS.ProcessEnv,
+  confirmation: string | undefined,
+): {
+  endpoint: string;
+  agents: { edition: Edition; name: string }[];
+  delegationDeployment?: string;
+} {
+  const endpoint = runtimeConfig(env).liveProjectEndpoint;
+  if (!endpoint || endpoint !== confirmation)
+    throw new Error(
+      "Publishing GPT Live requires its project endpoint and --confirm-project with the same exact HTTPS project URL.",
+    );
+  const name = names.parse(env.SMART_HOME_GPT_LIVE_AGENT);
+  const deployment = env.SMART_HOME_GPT_LIVE_DELEGATION_DEPLOYMENT?.trim();
+  const delegationDeployment = deployment ? names.parse(deployment) : undefined;
+  if (
+    /placeholder|replace|example/i.test(
+      `${endpoint} ${name} ${delegationDeployment ?? ""}`,
+    )
+  )
+    throw new Error("Replace the example placeholders before publishing.");
+  return {
+    endpoint,
+    agents: [{ edition: "live", name }],
+    delegationDeployment,
+  };
 }
 
 function assertSaved(
@@ -103,23 +151,39 @@ export async function publishAgent(
   request: AuthoringRequest,
   name: string,
   template: Record<string, unknown>,
+  { delegationDeployment }: { delegationDeployment?: string } = {},
 ): Promise<void> {
+  const live = template.sub_protocol === "live";
   const base = await latest(request, name);
   if (
     base &&
     (base.definition.kind !== "voice" ||
       base.definition.model !== template.model ||
-      base.definition.model_type !== template.model_type)
+      (live
+        ? base.definition.sub_protocol !== "live"
+        : base.definition.model_type !== template.model_type))
   )
     throw new Error(
       `Refusing to change an existing Agent's kind or model: ${name}`,
     );
-  const definition = base
-    ? voiceAgentDefinition(base.definition, {
-        instructions: homeInstructions(),
-        tools,
-      })
-    : template;
+  const definition = live
+    ? liveAgentDefinition(
+        base?.definition ?? template,
+        liveConcierge(delegationDeployment),
+      )
+    : base
+      ? voiceAgentDefinition(base.definition, {
+          instructions: homeInstructions(),
+          tools,
+        })
+      : template;
+  if (
+    live &&
+    !(definition.delegation as { responses: { model: string } }).responses.model
+  )
+    throw new Error(
+      "Creating a GPT Live Agent requires SMART_HOME_GPT_LIVE_DELEGATION_DEPLOYMENT.",
+    );
   if (base && (await latest(request, name))?.version !== base.version)
     throw new Error(`Agent changed concurrently: ${name}`);
   const created = versionSchema.parse(
@@ -151,12 +215,13 @@ async function main(): Promise<void> {
       (arg, index) =>
         arg !== "--publish" &&
         arg !== "--comparison" &&
+        arg !== "--live" &&
         arg !== "--confirm-project" &&
         args[index - 1] !== "--confirm-project",
     )
   )
     throw new Error(
-      "Supported options: --publish [--comparison] --confirm-project <project-url>",
+      "Supported options: --publish [--comparison | --live] --confirm-project <project-url>",
     );
   const definitions = agentDefinitions();
   if (!publish) {
@@ -172,11 +237,13 @@ async function main(): Promise<void> {
     );
     return;
   }
-  const settings = publishSettings(
-    process.env,
-    confirmation,
-    args.includes("--comparison"),
-  );
+  if (args.includes("--comparison") && args.includes("--live"))
+    throw new Error("Choose either --comparison or --live.");
+  const settings: ReturnType<typeof livePublishSettings> = args.includes(
+    "--live",
+  )
+    ? livePublishSettings(process.env, confirmation)
+    : publishSettings(process.env, confirmation, args.includes("--comparison"));
   const credential = new AzureCliCredential(
     process.env.AZURE_TENANT_ID
       ? { tenantId: process.env.AZURE_TENANT_ID }
@@ -205,7 +272,9 @@ async function main(): Promise<void> {
     return response.json();
   };
   for (const agent of settings.agents)
-    await publishAgent(request, agent.name, definitions[agent.edition]!);
+    await publishAgent(request, agent.name, definitions[agent.edition]!, {
+      delegationDeployment: settings.delegationDeployment,
+    });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)

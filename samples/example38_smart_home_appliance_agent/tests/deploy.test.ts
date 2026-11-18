@@ -113,4 +113,41 @@ describe("offline ACA manifest renderer", () => {
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
+  it("includes the explicit GPT Live Agent only when GPT Live is verified", () => {
+    const directory = mkdtempSync(join(tmpdir(), "smart-home-deploy-test-"));
+    try {
+      const live = {
+        ...env,
+        SMART_HOME_VERIFIED_MODELS: "microsoft-realtime-flash-1,gpt-live-1",
+      };
+      expect(
+        spawnSync(process.execPath, [renderer], { env: live }).status,
+      ).not.toBe(0);
+      execFileSync(process.execPath, [renderer], {
+        cwd: directory,
+        env: {
+          ...live,
+          SMART_HOME_GPT_LIVE_AGENT: "unit-live",
+          SMART_HOME_GPT_LIVE_PROJECT_ENDPOINT:
+            "https://other.services.ai.azure.com/api/projects/other",
+        },
+        encoding: "utf8",
+      });
+      const manifest = JSON.parse(
+        readFileSync(join(directory, ".local/container-app.json"), "utf8"),
+      );
+      expect(manifest.properties.template.containers[0].env).toEqual(
+        expect.arrayContaining([
+          { name: "SMART_HOME_GPT_LIVE_AGENT", value: "unit-live" },
+          {
+            name: "SMART_HOME_GPT_LIVE_PROJECT_ENDPOINT",
+            value: "https://other.services.ai.azure.com/api/projects/other",
+          },
+        ]),
+      );
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
 });

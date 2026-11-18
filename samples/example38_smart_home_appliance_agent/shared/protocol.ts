@@ -5,10 +5,19 @@ export type DeviceId =
   "tv" | "fridge" | "ac" | "humidifier" | "lights" | "curtains";
 export type SceneId = "movie" | "comfort" | "away";
 
-/** Exact supported API model IDs; product display names are not aliases. */
+/** Exact realtime-protocol API model IDs; product display names are not aliases. */
 export const VOICE_MODEL_IDS = [
   "microsoft-realtime-flash-1",
   "gpt-realtime-2.1",
+] as const;
+
+/** Optional native GPT Live model; it uses the Live protocol, not the realtime relay. */
+export const GPT_LIVE_MODEL_ID = "gpt-live-1";
+
+/** Every selectable model, in default-preference order; GPT Live is never preferred. */
+export const SUPPORTED_MODEL_IDS = [
+  ...VOICE_MODEL_IDS,
+  GPT_LIVE_MODEL_ID,
 ] as const;
 
 export interface Device {

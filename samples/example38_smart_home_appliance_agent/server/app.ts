@@ -3,6 +3,7 @@ import { createServer, type Server } from "node:http";
 import express, { type ErrorRequestHandler, type Request } from "express";
 import { WebSocket, WebSocketServer } from "ws";
 import { ZodError } from "zod";
+import { GPT_LIVE_MODEL_ID } from "@shared/protocol";
 import { demoConfig, type RuntimeConfig } from "#server/config";
 import type { CloudAccess, Household } from "#server/cloud";
 import {
@@ -11,6 +12,7 @@ import {
   InputError,
   sceneSchema,
 } from "#server/home";
+import { GptLiveSession } from "#server/gpt-live";
 import { KnowledgeStore } from "#server/knowledge";
 import {
   sendEvent,
@@ -236,6 +238,11 @@ function attachVoice(
     }
     sockets.handleUpgrade(request, socket, head, (browser: WebSocket) => {
       const { home, knowledge } = household;
+      if (model === GPT_LIVE_MODEL_ID) {
+        const live = new GptLiveSession(browser, home, knowledge, voice);
+        void live.start(dependencies.config, { language });
+        return;
+      }
       const session = new VoiceSession(browser, home, knowledge, voice);
       void session.start(dependencies.config, model, { language });
     });

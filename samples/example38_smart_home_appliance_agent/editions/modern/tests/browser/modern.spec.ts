@@ -181,6 +181,9 @@ test("knowledge and offline model availability remain honest", async ({
   await expect(
     page.locator("#voice-model option[value='microsoft-realtime-flash-1']"),
   ).toBeDisabled();
+  const live = page.locator("#voice-model option[value='gpt-live-1']");
+  await expect(live).toBeDisabled();
+  await expect(live).toHaveAttribute("title", /SMART_HOME_GPT_LIVE_AGENT/);
   await expect(page.locator("#voice-message")).toBeDisabled();
   await page.getByRole("button", { name: "产品知识库", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();

@@ -82,6 +82,11 @@ To enable the optional GPT Realtime comparison in the deployed UI, also set
 `SMART_HOME_VERIFIED_MODELS`. The renderer requires that explicit Agent name
 when the comparison model is enabled.
 
+To enable the optional GPT Live model, set `SMART_HOME_GPT_LIVE_AGENT` and include
+`gpt-live-1` in `SMART_HOME_VERIFIED_MODELS`. Set
+`SMART_HOME_GPT_LIVE_PROJECT_ENDPOINT` only if that Agent lives in a different
+project; the managed identity then also needs access to that project.
+
 Generate independent high-entropy access/signing values; do not use placeholders,
 shared passwords, defaults, or test fixtures. `SMART_HOME_PUBLIC_ORIGIN` must be
 the final exact HTTPS origin, without path, trailing slash, or wildcard.

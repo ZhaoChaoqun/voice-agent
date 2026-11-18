@@ -23,8 +23,8 @@ deliberately execute them and require authorization in your target environment.
 
 Use Node.js **24.5+**, npm, Azure CLI, and your own Foundry resource/project.
 The default is **Microsoft Realtime Flash**, `microsoft-realtime-flash-1`.
-The only supported API model IDs are `microsoft-realtime-flash-1` and
-`gpt-realtime-2.1`; keep the selected template and
+The only supported API model IDs are `microsoft-realtime-flash-1`,
+`gpt-realtime-2.1`, and the optional preview `gpt-live-1`; keep the selected template and
 `SMART_HOME_VERIFIED_MODELS` aligned. Product names and unversioned IDs are not
 aliases. Do not assume model access, regions, or quota are interchangeable.
 
@@ -385,6 +385,13 @@ saved Agent and opens the Azure endpoint. These URLs are not interchangeable.
 Preserve same-origin checks, authentication, and household isolation when reusing
 the relay.
 
+`gpt-live-1` uses a different upstream route,
+`.../agents/<agent-name>/endpoint/protocols/voice/live/sessions?api-version=v1`,
+with the `Foundry-Features: VoiceAgents=V1Preview` header. Its household
+functions run on a Responses delegation, and Node returns their results with
+`response.item.create` and `response.create`. See
+[Optional GPT Live](README.md#optional-gpt-live) and `server/gpt-live.ts`.
+
 This sample does not implement WebRTC. For a browser WebRTC example, see
 [`foundry_voice_webrtc`](../foundry_voice_webrtc/README.md).
 
@@ -395,7 +402,7 @@ This sample does not implement WebRTC. For a browser WebRTC example, see
 The existing chain is:
 
 ```text
-Voice Agent function → Node VoiceSession → ToolRunner → HomeStore (simulated)
+Voice Agent function → Node VoiceSession or GptLiveSession → ToolRunner → HomeStore (simulated)
 ```
 
 HomeStore success proves only that simulated state was saved. First obtain your

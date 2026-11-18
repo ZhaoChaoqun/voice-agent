@@ -27,13 +27,15 @@ if (
     .split(",")
     .some(
       (model) =>
-        !["microsoft-realtime-flash-1", "gpt-realtime-2.1"].includes(
-          model.trim(),
-        ),
+        ![
+          "microsoft-realtime-flash-1",
+          "gpt-realtime-2.1",
+          "gpt-live-1",
+        ].includes(model.trim()),
     )
 )
   throw new Error(
-    "SMART_HOME_VERIFIED_MODELS must contain only microsoft-realtime-flash-1, gpt-realtime-2.1.",
+    "SMART_HOME_VERIFIED_MODELS must contain only microsoft-realtime-flash-1, gpt-realtime-2.1, gpt-live-1.",
   );
 const minimum = process.env.SMART_HOME_MIN_REPLICAS ?? "1";
 const webRoot = process.env.SMART_HOME_WEB_ROOT ?? "editions/habitat/dist";
@@ -109,6 +111,21 @@ if (
   verifiedModels.split(",").some((model) => model.trim() === "gpt-realtime-2.1")
 )
   env.SMART_HOME_REALTIME_AGENT = required("SMART_HOME_REALTIME_AGENT");
+if (verifiedModels.split(",").some((model) => model.trim() === "gpt-live-1")) {
+  env.SMART_HOME_GPT_LIVE_AGENT = required("SMART_HOME_GPT_LIVE_AGENT");
+  const liveEndpoint = process.env.SMART_HOME_GPT_LIVE_PROJECT_ENDPOINT;
+  if (liveEndpoint) {
+    if (
+      !/^https:\/\/[a-zA-Z0-9-]+\.services\.ai\.azure\.com\/api\/projects\/[a-zA-Z0-9_-]+$/.test(
+        liveEndpoint,
+      )
+    )
+      throw new Error(
+        "SMART_HOME_GPT_LIVE_PROJECT_ENDPOINT must be a Foundry project HTTPS endpoint.",
+      );
+    env.SMART_HOME_GPT_LIVE_PROJECT_ENDPOINT = liveEndpoint;
+  }
+}
 const manifest = {
   name: appName,
   type: "Microsoft.App/containerApps",
