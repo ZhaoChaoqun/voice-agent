@@ -123,7 +123,10 @@ sequenceDiagram
 
 GPT Live has no transcript-done or response-done event in this flow. The relay
 finalizes transcripts after a short pause and treats sustained silent output audio
-as the end of speech; both are heuristics. Live verification is pending.
+as the end of speech; both are heuristics. Live verification is pending. The
+first input transcript delta is the barge-in signal, because GPT Live has no
+speech-started event. The relay forwards only real microphone audio and allows at
+most four function-call rounds per delegation.
 
 ## Speech profile and pre/post-tool orchestration
 

@@ -12,11 +12,10 @@ import { sendEvent, type VoiceDependencies } from "#server/voice";
 const READY_TIMEOUT_MS = 20_000; // Bound token acquisition, Agent resolution and the Live handshake.
 const MAX_SESSION_MS = 30 * 60 * 1000; // Avoid abandoned billable voice connections.
 const MAX_AUDIO_LENGTH = 96_000; // About 1.5 seconds of 24 kHz mono PCM per browser frame.
-const AUDIO_CLOCK_MS = 100; // Live expects continuous, sample-paced input audio.
-const SILENCE_CHUNK = Buffer.alloc(4_800).toString("base64"); // 100 ms of mono PCM16 at 24 kHz.
 const TRANSCRIPT_SETTLE_MS = 1_200; // Live has no transcript-done event; a pause ends the visible message.
 const SPEECH_END_SILENT_CHUNKS = 8; // Consecutive all-zero Live audio chunks that end a spoken segment.
 const GREETING_READY_FALLBACK_MS = 12_000; // Open the microphone even if the greeting produces no speech.
+const MAX_TOOL_ROUNDS = 4; // Bound function-call rounds per delegation; Responses keeps tool_choice "auto".
 export const GPT_LIVE_HEADERS = { "Foundry-Features": "VoiceAgents=V1Preview" }; // Voice Agents preview opt-in.
 
 const audioEvent = z
@@ -113,7 +112,6 @@ export class GptLiveSession {
   private heardSpeech = false;
   private silentChunks = 0;
   private sequence = 0;
-  private lastBrowserAudioAt = 0;
   private assistantItem = "";
   private assistantText = "";
   private userItem = "";
@@ -122,8 +120,9 @@ export class GptLiveSession {
   private pendingCalls = new Map<string, PendingCall[]>();
   private finishedResponses = new Set<string>();
   private answeredCalls = new Set<string>();
+  private toolRounds = new Map<string, number>();
+  private stoppedDelegations = new Set<string>();
   private runner: ToolRunner;
-  private audioClock?: ReturnType<typeof setInterval>;
   private greetingFallback?: ReturnType<typeof setTimeout>;
   private assistantTimer?: ReturnType<typeof setTimeout>;
   private userTimer?: ReturnType<typeof setTimeout>;
@@ -244,7 +243,6 @@ export class GptLiveSession {
       if (!this.ready) return;
       if (event.audio.length % 4 !== 0)
         return this.rejectInput("Invalid PCM audio encoding.");
-      this.lastBrowserAudioAt = Date.now();
       return this.toLive({
         type: "session.input_audio.append",
         audio: event.audio,
@@ -292,7 +290,6 @@ export class GptLiveSession {
     if (this.sessionStarted) return;
     this.sessionStarted = true;
     clearTimeout(this.readyTimeout);
-    this.audioClock = setInterval(() => this.keepAudioClock(), AUDIO_CLOCK_MS);
     // Like the realtime relay, open the microphone only after the greeting so it cannot interrupt it.
     this.greetingFallback = setTimeout(
       () => this.publishReady(),
@@ -307,11 +304,6 @@ export class GptLiveSession {
     clearTimeout(this.greetingFallback);
     sendEvent(this.browser, { type: "demo.ready" });
     console.info("GPT Live greeting finished; voice input is ready");
-  }
-
-  private keepAudioClock(): void {
-    if (Date.now() - this.lastBrowserAudioAt < AUDIO_CLOCK_MS * 2) return;
-    this.toLive({ type: "session.input_audio.append", audio: SILENCE_CHUNK });
   }
 
   private assistantAudio(event: LiveEvent): void {
@@ -349,6 +341,8 @@ export class GptLiveSession {
 
   private userTranscript(event: LiveEvent): void {
     if (typeof event.delta !== "string" || !event.delta) return;
+    // The first input transcript delta is the earliest user-speech signal Live exposes;
+    // speech_started makes the browser drop queued assistant audio.
     if (!this.userItem) {
       this.finishAssistantTranscript();
       this.userItem = this.nextId("user");
@@ -402,7 +396,12 @@ export class GptLiveSession {
   /** Collect delegated function calls and answer them once their response completes. */
   private backendEvent(event: LiveEvent): void {
     const delegationId = event.delegation_id;
-    if (typeof delegationId !== "string" || !delegationId) return;
+    if (
+      typeof delegationId !== "string" ||
+      !delegationId ||
+      this.stoppedDelegations.has(delegationId)
+    )
+      return;
     const backend = (event.event ?? {}) as BackendEvent;
     const responseId =
       stringValue(backend.response?.id) ??
@@ -421,14 +420,28 @@ export class GptLiveSession {
       backend.type === "response.cancelled"
     ) {
       this.finishedResponses.add(key);
-      this.pendingCalls.delete(key);
+      const hadCalls = this.pendingCalls.delete(key);
+      // A cancelled response is a barge-in; failures after a filler or tool round need feedback.
+      if (
+        backend.type !== "response.cancelled" &&
+        (hadCalls || this.toolRounds.has(delegationId))
+      ) {
+        console.error("GPT Live delegated response ended early", {
+          status: backend.type,
+        });
+        sendEvent(this.browser, {
+          type: "demo.error",
+          message:
+            "GPT Live could not finish that household request. Please try again.",
+        });
+      }
       return;
     }
     if (backend.type === "response.completed") {
       this.finishedResponses.add(key);
       const calls = this.pendingCalls.get(key) ?? [];
       this.pendingCalls.delete(key);
-      if (calls.length) this.answerCalls(calls);
+      if (calls.length) this.answerCalls(delegationId, calls);
     }
   }
 
@@ -451,7 +464,22 @@ export class GptLiveSession {
     this.pendingCalls.set(key, calls);
   }
 
-  private answerCalls(calls: PendingCall[]): void {
+  private answerCalls(delegationId: string, calls: PendingCall[]): void {
+    const round = (this.toolRounds.get(delegationId) ?? 0) + 1;
+    this.toolRounds.set(delegationId, round);
+    if (round > MAX_TOOL_ROUNDS) {
+      // Each round has new call IDs, so call-ID deduplication alone cannot stop a loop.
+      this.stoppedDelegations.add(delegationId);
+      console.error("GPT Live delegation exceeded the tool-round limit", {
+        rounds: MAX_TOOL_ROUNDS,
+      });
+      sendEvent(this.browser, {
+        type: "demo.error",
+        message:
+          "GPT Live stopped a repeated household request. Please try again.",
+      });
+      return;
+    }
     for (const call of calls) {
       this.answeredCalls.add(call.callId);
       this.toLive({
@@ -536,7 +564,6 @@ export class GptLiveSession {
     clearTimeout(this.assistantTimer);
     clearTimeout(this.userTimer);
     clearTimeout(this.greetingFallback);
-    clearInterval(this.audioClock);
     this.unsubscribe();
     if (this.sessionStarted) this.toLive({ type: "session.close" });
     if (this.upstream?.readyState === 0) this.upstream.terminate();

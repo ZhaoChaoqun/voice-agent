@@ -298,16 +298,23 @@ At run time the relay opens
 `Foundry-Features: VoiceAgents=V1Preview` header and the `welcome_text` structured input.
 The relay translates events in both directions:
 
-| Browser or Live event                       | Relay action                                                                                                 |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Microphone `input_audio_buffer.append`      | Sent as `session.input_audio.append`; silence keeps the Live audio clock running when idle.                  |
-| Typed `conversation.item.create`            | Sent as `response.item.create` plus `response.create`, so the Responses backend answers it.                  |
-| `session.output_audio.delta`                | Forwarded as `response.output_audio.delta`; trailing silence after speech is dropped.                        |
-| `session.*_transcript.delta`                | Mapped to the browser's realtime transcript events; a short pause finalizes each message.                    |
-| Backend `function_call` in `response.event` | Run locally after `response.completed`; each `function_call_output` is returned, then one `response.create`. |
+| Browser or Live event                       | Relay action                                                                                                   |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Microphone `input_audio_buffer.append`      | Sent as `session.input_audio.append` once the greeting ends; only real microphone audio, no synthetic silence. |
+| Typed `conversation.item.create`            | Sent as `response.item.create` plus `response.create`, so the Responses backend answers it.                    |
+| `session.output_audio.delta`                | Forwarded as `response.output_audio.delta`; trailing silence after speech is dropped.                          |
+| `session.*_transcript.delta`                | Mapped to the browser's realtime transcript events; a short pause finalizes each message.                      |
+| Backend `function_call` in `response.event` | Run locally after `response.completed`; each `function_call_output` is returned, then one `response.create`.   |
+| Backend `response.failed` / `incomplete`    | Shown as an error when a household request was under way; `response.cancelled` (barge-in) stays silent.        |
 
 Realtime-only controls such as `response.cancel` and `conversation.item.truncate` are
-ignored, because GPT Live handles interruption itself.
+ignored: GPT Live stops its own output when the user interrupts. The relay forwards only
+real microphone audio, as the public GPT Live sample does. While the browser microphone is
+muted, no audio reaches GPT Live.
+
+Each delegation may run at most four rounds of function calls. A further round is not
+executed: the relay reports an error and does not continue that delegation, so a model
+that keeps calling tools cannot keep changing the household.
 
 **Limitations.** GPT Live is a preview. This integration has not been verified end to
 end against a live service: test it with your own `gpt-live-1` Agent before a
@@ -317,6 +324,16 @@ heuristics, not service events. Keep the GPT Live instructions compact: very lar
 instructions can fail with `context_injection_incomplete`. Typed input needs
 Responses (or managed) delegation. The tool-call acknowledgement comes from the GPT
 Live instructions, not the realtime `tool_choice` flow. WebRTC is not used.
+
+GPT Live exposes no speech-started event. The relay treats the first user input
+transcript delta as the barge-in signal and only then tells the browser to drop queued
+assistant audio, so already buffered assistant speech can keep playing until that first transcript arrives.
+
+The realtime Agents use server echo cancellation and personal noise suppression from
+their saved speech profile. `agents/live.json` sets neither. On the GPT Live path, echo
+and noise handling rely on the browser's `getUserMedia` `echoCancellation` and
+`noiseSuppression` constraints (`shared/ui/lib/audio.ts`) and on GPT Live itself. Headphones
+are recommended.
 
 ## Try these turns
 

@@ -175,13 +175,11 @@ describe("GPT Live relay", () => {
     });
   });
 
-  it("pumps silence to keep the Live audio clock while the microphone is idle", async () => {
+  it("forwards only real microphone audio, never synthetic silence", async () => {
     const { upstream } = await connected();
     upstream.receive({ type: "session.started" });
-    vi.advanceTimersByTime(300);
-    expect(upstream.ofType("session.input_audio.append")).toEqual(
-      Array(3).fill({ type: "session.input_audio.append", audio: silence }),
-    );
+    vi.advanceTimersByTime(60_000);
+    expect(upstream.ofType("session.input_audio.append")).toHaveLength(0);
   });
 
   it("opens the microphone after a fallback when the greeting produces no speech", async () => {
@@ -294,8 +292,114 @@ describe("GPT Live relay", () => {
     ).toEqual(["running", "success", "running", "success"]);
   });
 
-  it("drops calls from a failed delegation response without changing the home", async () => {
-    const { upstream, home } = await ready();
+  it("ends the assistant transcript and signals barge-in on the first user transcript delta", async () => {
+    const { browser, upstream } = await ready();
+    upstream.receive({ type: "session.output_audio.delta", delta: speech });
+    upstream.receive({
+      type: "session.output_transcript.delta",
+      delta: "电视已经",
+    });
+    browser.events = [];
+    upstream.receive({ type: "session.input_transcript.delta", delta: "等" });
+    expect(browser.events.map((event) => event.type)).toEqual([
+      "response.output_audio_transcript.done",
+      "input_audio_buffer.speech_started",
+    ]);
+    upstream.receive({ type: "session.output_audio.delta", delta: speech });
+    expect(browser.events.at(-1)?.item_id).not.toBe(browser.events[0]?.item_id);
+  });
+
+  it("stops a delegation that keeps requesting tools after the round limit", async () => {
+    const { browser, upstream, home } = await ready();
+    const round = (index: number) => {
+      const response = `resp_${index}`;
+      upstream.receive(
+        backend({ type: "response.created", response: { id: response } }),
+      );
+      upstream.receive(
+        backend({
+          type: "response.output_item.done",
+          response_id: response,
+          item: {
+            type: "function_call",
+            call_id: `call_${index}`,
+            name: "control_device",
+            arguments: JSON.stringify({
+              deviceId: "tv",
+              settings: { volume: index },
+            }),
+          },
+        }),
+      );
+      upstream.receive(
+        backend({ type: "response.completed", response: { id: response } }),
+      );
+    };
+    for (let index = 1; index <= 4; index += 1) round(index);
+    expect(upstream.ofType("response.create")).toHaveLength(4);
+    const revision = home.snapshot().revision;
+    upstream.events = [];
+    round(5);
+    expect(upstream.events).toHaveLength(0);
+    expect(home.snapshot().revision).toBe(revision);
+    expect(browser.ofType("demo.error").at(-1)?.message).toContain(
+      "repeated household request",
+    );
+    round(6);
+    expect(upstream.events).toHaveLength(0);
+  });
+
+  it("reports an incomplete response after a tool round but keeps a cancelled one silent", async () => {
+    const { browser, upstream } = await ready();
+    upstream.receive(
+      backend({ type: "response.created", response: { id: "resp_1" } }),
+    );
+    upstream.receive(
+      call("call_tv", "control_device", { deviceId: "tv", power: true }),
+    );
+    upstream.receive(
+      backend({ type: "response.completed", response: { id: "resp_1" } }),
+    );
+    upstream.receive(
+      backend({ type: "response.created", response: { id: "resp_2" } }),
+    );
+    upstream.receive(
+      backend({ type: "response.incomplete", response: { id: "resp_2" } }),
+    );
+    expect(browser.ofType("demo.error")).toHaveLength(1);
+
+    upstream.receive(
+      backend(
+        { type: "response.created", response: { id: "resp_3" } },
+        "del_2",
+      ),
+    );
+    upstream.receive(
+      backend(
+        {
+          type: "response.output_item.done",
+          response_id: "resp_3",
+          item: {
+            type: "function_call",
+            call_id: "call_lights",
+            name: "control_device",
+            arguments: "{}",
+          },
+        },
+        "del_2",
+      ),
+    );
+    upstream.receive(
+      backend(
+        { type: "response.cancelled", response: { id: "resp_3" } },
+        "del_2",
+      ),
+    );
+    expect(browser.ofType("demo.error")).toHaveLength(1);
+  });
+
+  it("drops calls from a failed delegation response and tells the browser", async () => {
+    const { browser, upstream, home } = await ready();
     upstream.receive(
       backend({ type: "response.created", response: { id: "resp_1" } }),
     );
@@ -310,6 +414,7 @@ describe("GPT Live relay", () => {
     );
     expect(upstream.events).toHaveLength(0);
     expect(home.snapshot().revision).toBe(0);
+    expect(browser.ofType("demo.error")).toHaveLength(1);
   });
 
   it("returns tool validation failures to the delegation instead of claiming success", async () => {
